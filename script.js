@@ -3877,6 +3877,26 @@ document.getElementById("btn-mercato").addEventListener("click", () => {
 
 // ==========================================
 
+// Aggiorna il pulsante del profilo in alto a sinistra: nickname + foto (se caricata)
+function aggiornaTopbarProfilo() {
+  const elUsername = document.getElementById("username");
+  if (elUsername) elUsername.innerText = nicknameUtente;
+
+  const elImg = document.getElementById("profilo-img");
+  const elPlaceholder = document.getElementById("profilo-placeholder");
+  if (elImg && elPlaceholder) {
+    const avatar = localStorage.getItem("user_avatar");
+    if (avatar) {
+      elImg.src = avatar;
+      elImg.style.display = "block";
+      elPlaceholder.style.display = "none";
+    } else {
+      elImg.style.display = "none";
+      elPlaceholder.style.display = "flex";
+    }
+  }
+}
+
 function apriPannelloProfiloEvocatore() {
 
   document.getElementById("battle-title-outcome").innerText = "Profilo Evocatore";
@@ -3976,26 +3996,6 @@ function apriPannelloProfiloEvocatore() {
   });
 
  
-
-// Aggiorna il pulsante del profilo in alto a sinistra: nickname + foto (se caricata)
-function aggiornaTopbarProfilo() {
-  const elUsername = document.getElementById("username");
-  if (elUsername) elUsername.innerText = nicknameUtente;
-
-  const elImg = document.getElementById("profilo-img");
-  const elPlaceholder = document.getElementById("profilo-placeholder");
-  if (elImg && elPlaceholder) {
-    const avatar = localStorage.getItem("user_avatar");
-    if (avatar) {
-      elImg.src = avatar;
-      elImg.style.display = "block";
-      elPlaceholder.style.display = "none";
-    } else {
-      elImg.style.display = "none";
-      elPlaceholder.style.display = "flex";
-    }
-  }
-}
 
   document.getElementById("btn-save-profile-data").addEventListener("click", () => {
 
