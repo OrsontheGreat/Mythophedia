@@ -1730,7 +1730,7 @@ function utenteHaAlmenoUnEsagono() {
 
     for (let c = 0; c < COLONNE_MAPPA; c++) {
 
-      if (mappaMondo[r] && mappaMondo[r][c] && mappaMondo[r][c].proprietario === nicknameUtente + " (Tu)") {
+      if (mappaMondo[r] && mappaMondo[r][c] && mappaMondo[r][c].proprietarioUid && utenteFirebaseAttuale && mappaMondo[r][c].proprietarioUid === utenteFirebaseAttuale.uid) {
 
         return true;
 
@@ -1784,7 +1784,7 @@ function confinaConEsagonoUtente(r, c) {
 
     if (v.r >= 0 && v.r < RIGHE_MAPPA && v.c >= 0 && v.c < COLONNE_MAPPA) {
 
-      if (mappaMondo[v.r] && mappaMondo[v.r][v.c] && mappaMondo[v.r][v.c].proprietario === nicknameUtente + " (Tu)") {
+      if (mappaMondo[v.r] && mappaMondo[v.r][v.c] && mappaMondo[v.r][v.c].proprietarioUid && utenteFirebaseAttuale && mappaMondo[v.r][v.c].proprietarioUid === utenteFirebaseAttuale.uid) {
 
         return true;
 
@@ -2179,7 +2179,8 @@ function mostraDettagliEsagono(esagono) {
 
   document.getElementById("info-hex-terrain").innerHTML = `${esagono.terrain} <span style="font-size:0.75rem; color:#aaa; display:block; font-weight:normal; margin-top:2px;">(Scontro su: <strong style="color:#ffcc66;">${infoCaratteristicheHTML}</strong>)</span>`;
 
-  document.getElementById("info-hex-owner").innerText = esagono.proprietario;
+  const eProprioEsagono = esagono.proprietarioUid && utenteFirebaseAttuale && esagono.proprietarioUid === utenteFirebaseAttuale.uid;
+  document.getElementById("info-hex-owner").innerText = esagono.proprietario + (eProprioEsagono ? " (Tu)" : "");
 
  
 
@@ -3763,7 +3764,7 @@ function risolviFineInvasioneMappa(mazzoAttaccoSelezionato, roundVintiGiocatore)
 
     esagonoSelezionatoDati.conquistato = true; 
 
-    esagonoSelezionatoDati.proprietario = nicknameUtente + " (Tu)";
+    esagonoSelezionatoDati.proprietario = nicknameUtente;
 
     esagonoSelezionatoDati.proprietarioUid = utenteFirebaseAttuale ? utenteFirebaseAttuale.uid : null;
 
@@ -10933,9 +10934,10 @@ aggiornaTopbarProfilo();
   musica.volume = 1.0;
 
   function avviaMusica() {
-    musica.play().catch(() => {}); // se il browser blocca ancora, ritenteremo al prossimo tocco
-    document.removeEventListener("click", avviaMusica);
-    document.removeEventListener("touchstart", avviaMusica);
+    musica.play().then(() => {
+      document.removeEventListener("click", avviaMusica);
+      document.removeEventListener("touchstart", avviaMusica);
+    }).catch(() => {}); // se il browser blocca ancora, gli ascoltatori restano attivi e riproveremo al prossimo tocco
   }
 
   document.addEventListener("click", avviaMusica);
