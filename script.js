@@ -3875,6 +3875,53 @@ function renderizzaSelezioneMondi() {
 
 }
 
+function calcolaClassificaSottomondo(mappa, uidUtente) {
+  const conteggi = {};
+  for (let r = 0; r < RIGHE_MAPPA; r++) {
+    for (let c = 0; c < COLONNE_MAPPA; c++) {
+      const esa = mappa && mappa[r] && mappa[r][c];
+      if (esa && esa.proprietarioUid) {
+        conteggi[esa.proprietarioUid] = (conteggi[esa.proprietarioUid] || 0) + 1;
+      }
+    }
+  }
+  const mioConteggio = conteggi[uidUtente] || 0;
+  if (mioConteggio === 0) return null;
+
+  const valoriUnici = [...new Set(Object.values(conteggi))].sort((a, b) => b - a);
+  const posizione = valoriUnici.indexOf(mioConteggio) + 1;
+  return { conteggio: mioConteggio, posizione };
+}
+
+function classeBadgeSottomondo(posizione) {
+  if (posizione === 1) return "sottomondo-badge-oro";
+  if (posizione === 2) return "sottomondo-badge-argento";
+  if (posizione === 3) return "sottomondo-badge-bronzo";
+  return "sottomondo-badge-normale";
+}
+
+function aggiornaBadgeSottomondi() {
+  if (!utenteFirebaseAttuale) return;
+  const uid = utenteFirebaseAttuale.uid;
+
+  STRUTTURA_SOTTOMONDI.forEach(sub => {
+    const chiave = `${mondoSelezionatoCorrente.id}_${sub.id}`;
+    dbFirebase.ref("mondi_reali/" + chiave).once("value").then(snapshot => {
+      const risultato = calcolaClassificaSottomondo(snapshot.val(), uid);
+      if (!risultato) return;
+
+      const btn = dynamicGrid.querySelector(`.sottomondo-btn[data-sub-id="${sub.id}"]`);
+      if (!btn || btn.querySelector(".sottomondo-badge")) return;
+
+      const badge = document.createElement("span");
+      badge.className = "sottomondo-badge " + classeBadgeSottomondo(risultato.posizione);
+      badge.innerText = risultato.posizione + "°";
+      badge.title = `${risultato.conteggio} esagon${risultato.conteggio === 1 ? "o" : "i"} conquistat${risultato.conteggio === 1 ? "o" : "i"}`;
+      btn.appendChild(badge);
+    }).catch(() => {});
+  });
+}
+
 function renderizzaSelezioneSottomondi() {
 
   livelloVistaSottomondi = "sottomondi";
@@ -3890,6 +3937,8 @@ function renderizzaSelezioneSottomondi() {
     const btn = document.createElement("button"); 
 
     btn.className = "sottomondo-btn"; 
+
+    btn.dataset.subId = sub.id;
 
     btn.innerHTML = `<strong class="sub-title">${sub.nome}</strong><span class="sub-info">${sub.info}</span>`;
 
@@ -3921,6 +3970,8 @@ function renderizzaSelezioneSottomondi() {
     dynamicGrid.appendChild(btn);
 
   });
+
+  aggiornaBadgeSottomondi();
 
 }
 

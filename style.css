@@ -825,7 +825,29 @@ html.forza-landscape .close-btn { font-size: 1.6rem; }
 
 .sottomondi-square-grid:not(.mondi-riga-singola):has(> :nth-child(5):last-child) > :nth-child(5) { grid-column: span 2; max-width: 50%; margin: 0 auto; width: 100%; }
 
-.sottomondo-btn { background: linear-gradient(135deg, rgba(30, 35, 45, 0.95), rgba(15, 20, 25, 0.98)); border: 2px solid #8a7343; padding: 20px 25px; border-radius: 10px; text-align: center; cursor: pointer; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 6px; box-shadow: 0 4px 10px rgba(0,0,0,0.4); transition: all 0.2s ease; }
+.sottomondo-btn { position: relative; background: linear-gradient(135deg, rgba(30, 35, 45, 0.95), rgba(15, 20, 25, 0.98)); border: 2px solid #8a7343; padding: 20px 25px; border-radius: 10px; text-align: center; cursor: pointer; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 6px; box-shadow: 0 4px 10px rgba(0,0,0,0.4); transition: all 0.2s ease; }
+
+.sottomondo-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  min-width: 26px;
+  height: 26px;
+  padding: 0 5px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: bold;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+  border: 1px solid rgba(0,0,0,0.3);
+}
+
+.sottomondo-badge-oro { background: #ffd700; color: #4a3a00; }
+.sottomondo-badge-argento { background: #d4d4d4; color: #3a3a3a; }
+.sottomondo-badge-bronzo { background: #cd7f32; color: #3a2410; }
+.sottomondo-badge-normale { background: #8a7343; color: #f5efe0; }
 
 .sottomondo-btn:hover { border-color: #ffcc66; transform: scale(1.02); }
 
