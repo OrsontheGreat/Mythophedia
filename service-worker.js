@@ -1,4 +1,4 @@
-const CACHE_NAME = "mythophedia-cache-v160";
+const CACHE_NAME = "mythophedia-cache-v162";
 const URLS_TO_CACHE = [
   "./",
   "./index.html",
