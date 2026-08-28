@@ -112,15 +112,23 @@ function potenziaMenuATendina() {
       wrapper.classList.toggle("fake-select-disabled", !!sel.disabled);
     }
 
-    // A ogni apertura creo un overlay nuovo di zecca (mai un elemento riciclato/spostato),
-    // esattamente come fa già il visualizzatore carte a schermo intero: evita qualunque
-    // residuo di layout non aggiornato che alcuni browser lasciano dopo aver spostato
-    // un nodo esistente da un contenitore all'altro.
+    // Invece di creare un livello indipendente sopra tutto (che si è dimostrato inaffidabile
+    // nel contenitore ruotato del gioco), riuso lo stesso .modal-card del modale già aperto
+    // attorno a questo select: nascondo temporaneamente il suo contenuto normale e mostro la
+    // lista al suo posto, dentro un box che sappiamo già essere correttamente posizionato e
+    // dimensionato sullo schermo, perché è quello visibile in quel momento.
     function apriLista() {
       if (sel.disabled) return;
 
-      const vecchio = document.getElementById("fake-select-overlay-attivo");
+      const modaleAperto = sel.closest(".modal-overlay");
+      const cardModale = modaleAperto ? modaleAperto.querySelector(".modal-card") : null;
+      if (!cardModale) return;
+
+      const vecchio = cardModale.querySelector("#fake-select-overlay-attivo");
       if (vecchio) vecchio.remove();
+
+      const figliOriginali = Array.from(cardModale.children).filter(f => f.id !== "fake-select-overlay-attivo");
+      figliOriginali.forEach(f => { f.dataset.nascostoPerScelta = "1"; f.style.display = "none"; });
 
       const overlay = document.createElement("div");
       overlay.id = "fake-select-overlay-attivo";
@@ -128,7 +136,7 @@ function potenziaMenuATendina() {
 
       function chiudiOverlay() {
         overlay.remove();
-        document.body.classList.remove("fake-select-aperto");
+        figliOriginali.forEach(f => { delete f.dataset.nascostoPerScelta; f.style.display = ""; });
       }
 
       const intestazione = document.createElement("div");
@@ -162,9 +170,7 @@ function potenziaMenuATendina() {
 
       overlay.addEventListener("click", (e) => { e.stopPropagation(); });
 
-      const involucroGioco = document.querySelector(".game-wrapper") || document.body;
-      involucroGioco.appendChild(overlay);
-      document.body.classList.add("fake-select-aperto");
+      cardModale.appendChild(overlay);
     }
 
     trigger.addEventListener("click", (e) => {
@@ -184,10 +190,15 @@ function potenziaMenuATendina() {
 }
 
 document.addEventListener("click", () => {
-  const overlayAttivo = document.getElementById("fake-select-overlay-attivo");
+  const overlayAttivo = document.querySelector("#fake-select-overlay-attivo");
   if (overlayAttivo) {
+    const cardModale = overlayAttivo.parentElement;
     overlayAttivo.remove();
-    document.body.classList.remove("fake-select-aperto");
+    if (cardModale) {
+      Array.from(cardModale.children).forEach(f => {
+        if (f.dataset.nascostoPerScelta) { delete f.dataset.nascostoPerScelta; f.style.display = ""; }
+      });
+    }
   }
 });
 
