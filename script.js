@@ -152,6 +152,11 @@ function potenziaMenuATendina() {
       if (sel.disabled) return;
       document.querySelectorAll(".fake-select-list").forEach(l => l.classList.add("hidden"));
       costruisciLista();
+      // Sposto la lista fuori da qualunque pannello con overflow:hidden (es. i modali),
+      // così su nessun browser rischia di venire tagliata: resta comunque un figlio
+      // dell'involucro ruotato del gioco, quindi segue correttamente l'orientamento forzato.
+      const involucroGioco = document.querySelector(".game-wrapper") || document.body;
+      involucroGioco.appendChild(lista);
       lista.classList.remove("hidden");
       document.body.classList.add("fake-select-aperto");
     }
