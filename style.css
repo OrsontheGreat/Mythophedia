@@ -2555,44 +2555,28 @@ html.narrow-700 .events-row { flex-direction: column; }
   transform: translateY(-2px);
 }
 
-/* ===== La Trappola nella Neve: griglia scavi 4x4 ===== */
+/* ===== La Trappola nella Neve: barre di energia dell'inseguimento ===== */
 
-.trappola-griglia {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
+.trappola-barra-energia {
   width: 100%;
-  max-width: 340px;
+  height: 16px;
+  background: rgba(20, 20, 25, 0.5);
+  border: 1px solid #5a4a2a;
+  border-radius: 8px;
+  overflow: hidden;
 }
 
-.trappola-cella {
-  aspect-ratio: 1 / 1;
-  background: rgba(230, 240, 250, 0.15);
-  border: 2px solid #5a7a9a;
-  border-radius: 10px;
-  font-size: 1.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.15s ease;
+.trappola-barra-riempimento {
+  height: 100%;
+  transition: width 0.4s ease;
 }
 
-.trappola-cella-candidata:hover {
-  border-color: #ffcc66;
-  background: rgba(255, 204, 102, 0.2);
-  transform: translateY(-2px);
+.trappola-barra-giocatore {
+  background: linear-gradient(90deg, #4a9a5a, #7ee787);
 }
 
-.trappola-cella-esclusa {
-  opacity: 0.4;
-  cursor: not-allowed;
-  background: rgba(20, 20, 25, 0.4);
-}
-
-.trappola-cella-inattiva {
-  opacity: 0.25;
-  cursor: not-allowed;
+.trappola-barra-cinghiale {
+  background: linear-gradient(90deg, #9a4a2a, #d97a4a);
 }
 
 /* ===== Il Toro Furioso: barra a moto oscillante con zona bersaglio ===== */
