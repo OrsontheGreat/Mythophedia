@@ -102,12 +102,8 @@ function potenziaMenuATendina() {
     trigger.className = "fake-select-trigger";
     if (sel.id === "modal-sort-select") { trigger.classList.add("sort-select"); wrapper.id = "modal-sort-select-wrapper"; }
 
-    const lista = document.createElement("div");
-    lista.className = "fake-select-list hidden";
-
     sel.parentNode.insertBefore(wrapper, sel);
     wrapper.appendChild(trigger);
-    wrapper.appendChild(lista);
     wrapper.appendChild(sel);
 
     function aggiornaTesto() {
@@ -116,8 +112,24 @@ function potenziaMenuATendina() {
       wrapper.classList.toggle("fake-select-disabled", !!sel.disabled);
     }
 
-    function costruisciLista() {
-      lista.innerHTML = "";
+    // A ogni apertura creo un overlay nuovo di zecca (mai un elemento riciclato/spostato),
+    // esattamente come fa già il visualizzatore carte a schermo intero: evita qualunque
+    // residuo di layout non aggiornato che alcuni browser lasciano dopo aver spostato
+    // un nodo esistente da un contenitore all'altro.
+    function apriLista() {
+      if (sel.disabled) return;
+
+      const vecchio = document.getElementById("fake-select-overlay-attivo");
+      if (vecchio) vecchio.remove();
+
+      const overlay = document.createElement("div");
+      overlay.id = "fake-select-overlay-attivo";
+      overlay.className = "fake-select-list";
+
+      function chiudiOverlay() {
+        overlay.remove();
+        document.body.classList.remove("fake-select-aperto");
+      }
 
       const intestazione = document.createElement("div");
       intestazione.className = "fake-select-list-header";
@@ -128,47 +140,36 @@ function potenziaMenuATendina() {
       btnChiudi.type = "button";
       btnChiudi.className = "fake-select-list-chiudi";
       btnChiudi.innerText = "✕";
-      btnChiudi.addEventListener("click", (e) => { e.stopPropagation(); chiudiLista(); });
+      btnChiudi.addEventListener("click", (e) => { e.stopPropagation(); chiudiOverlay(); });
       intestazione.appendChild(titolo);
       intestazione.appendChild(btnChiudi);
-      lista.appendChild(intestazione);
+      overlay.appendChild(intestazione);
 
       Array.from(sel.options).forEach((opt, idx) => {
         const voce = document.createElement("div");
         voce.className = "fake-select-option" + (opt.disabled ? " disabled" : "") + (idx === sel.selectedIndex ? " selected" : "");
         voce.textContent = opt.textContent;
         if (!opt.disabled) {
-          voce.addEventListener("click", () => {
+          voce.addEventListener("click", (e) => {
+            e.stopPropagation();
             sel.value = opt.value;
             sel.dispatchEvent(new Event("change", { bubbles: true }));
-            chiudiLista();
+            chiudiOverlay();
           });
         }
-        lista.appendChild(voce);
+        overlay.appendChild(voce);
       });
-    }
 
-    function apriLista() {
-      if (sel.disabled) return;
-      document.querySelectorAll(".fake-select-list").forEach(l => l.classList.add("hidden"));
-      costruisciLista();
-      // Sposto la lista fuori da qualunque pannello con overflow:hidden (es. i modali),
-      // così su nessun browser rischia di venire tagliata: resta comunque un figlio
-      // dell'involucro ruotato del gioco, quindi segue correttamente l'orientamento forzato.
+      overlay.addEventListener("click", (e) => { e.stopPropagation(); });
+
       const involucroGioco = document.querySelector(".game-wrapper") || document.body;
-      involucroGioco.appendChild(lista);
-      lista.classList.remove("hidden");
+      involucroGioco.appendChild(overlay);
       document.body.classList.add("fake-select-aperto");
-    }
-
-    function chiudiLista() {
-      lista.classList.add("hidden");
-      document.body.classList.remove("fake-select-aperto");
     }
 
     trigger.addEventListener("click", (e) => {
       e.stopPropagation();
-      if (lista.classList.contains("hidden")) apriLista(); else chiudiLista();
+      apriLista();
     });
 
     // Restiamo sincronizzati se il resto del codice cambia opzioni/valore/stato disabled del select originale
@@ -183,7 +184,11 @@ function potenziaMenuATendina() {
 }
 
 document.addEventListener("click", () => {
-  document.querySelectorAll(".fake-select-list").forEach(l => l.classList.add("hidden"));
+  const overlayAttivo = document.getElementById("fake-select-overlay-attivo");
+  if (overlayAttivo) {
+    overlayAttivo.remove();
+    document.body.classList.remove("fake-select-aperto");
+  }
 });
 
 document.addEventListener("DOMContentLoaded", () => setTimeout(potenziaMenuATendina, 0));
