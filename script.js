@@ -5581,7 +5581,7 @@ function dataOggiStringaFatiche() { return new Date().toISOString().slice(0, 10)
 let raStato = { dataUltimoRitiro: "" };
 
 const RA_DRACME_BASE = 80;
-const RA_PROBABILITA_FRAMMENTO = 0.15;
+const RA_PROBABILITA_DOPPIO_FRAMMENTO = 0.15;
 
 function dataOggiStringaRa() { return new Date().toISOString().slice(0, 10); }
 
@@ -5595,11 +5595,10 @@ function ritiraDonoRa() {
   raStato.dataUltimoRitiro = dataOggiStringaRa();
   dracmeAttuali += RA_DRACME_BASE;
 
-  let messaggio = `☀️ Ra ti dona ${RA_DRACME_BASE} Dracme.`;
-  if (Math.random() < RA_PROBABILITA_FRAMMENTO) {
-    ambraAttuale += 1;
-    messaggio += " E un raro Frammento d'Ambra!";
-  }
+  const frammenti = Math.random() < RA_PROBABILITA_DOPPIO_FRAMMENTO ? 2 : 1;
+  ambraAttuale += frammenti;
+
+  const messaggio = `☀️ Ra ti dona ${RA_DRACME_BASE} Dracme e ${frammenti} Frammento${frammenti > 1 ? "i" : ""} d'Ambra!`;
 
   mostraToast(messaggio);
   aggiornaTopbarProfilo();
@@ -7522,7 +7521,13 @@ function generaDomandaAmazzone(nomiEsclusi) {
   if (carteConLore.length === 0) return null;
 
   const carta = carteConLore[Math.floor(Math.random() * carteConLore.length)];
-  const testo = LORE_CARTE[carta.nome];
+  const testoCompleto = LORE_CARTE[carta.nome];
+  const fraseBase = testoCompleto.split("<br><br>")[0];
+
+  // Maschero ogni occorrenza diretta del nome della creatura (in qualunque punto della frase),
+  // così la risposta non viene mai svelata dal testo stesso, indipendentemente dalla scheda.
+  const regexNome = new RegExp(carta.nome.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi");
+  const testo = fraseBase.replace(regexNome, "questa creatura");
 
   const altriNomi = CARTE_FISSE.map(c => c.nome).filter(n => n !== carta.nome);
   const distrattori = [];
