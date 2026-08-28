@@ -34,6 +34,10 @@ body {
 
 }
 
+body.fake-select-aperto {
+  overflow: hidden;
+}
+
 * {
 
   box-sizing: border-box;
@@ -571,39 +575,66 @@ html.forza-landscape .close-btn { font-size: 1.6rem; }
 
 .fake-select-list {
 
-  position: absolute;
+  position: fixed;
 
-  top: 100%;
+  inset: 0;
 
-  left: 0;
+  z-index: 5000;
 
-  right: 0;
-
-  z-index: 200;
-
-  max-height: 240px;
+  max-height: none;
 
   overflow-y: auto;
 
-  background: #14141c;
+  background: #0d0d14;
 
-  border: 1px solid #c9a054;
+  border: none;
 
-  border-radius: 6px;
+  border-radius: 0;
 
-  margin-top: 4px;
+  margin-top: 0;
 
-  box-shadow: 0 8px 20px rgba(0,0,0,0.7);
+  box-shadow: none;
+
+  display: flex;
+
+  flex-direction: column;
 
 }
 
 .fake-select-list.hidden { display: none; }
 
+.fake-select-list-header {
+  position: sticky;
+  top: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  background: #14141c;
+  border-bottom: 1px solid #c9a054;
+  font-family: 'Cinzel', 'Georgia', serif;
+  color: #ffcc66;
+  font-size: 1rem;
+  z-index: 1;
+}
+
+.fake-select-list-chiudi {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid #8a7343;
+  color: #e0d5c1;
+  border-radius: 50%;
+  width: 34px;
+  height: 34px;
+  font-size: 1rem;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
 .fake-select-option {
 
-  padding: 10px 12px;
+  padding: 16px 18px;
 
-  font-size: 0.9rem;
+  font-size: 1.05rem;
 
   color: #e0d5c1;
 

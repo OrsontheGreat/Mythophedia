@@ -118,6 +118,21 @@ function potenziaMenuATendina() {
 
     function costruisciLista() {
       lista.innerHTML = "";
+
+      const intestazione = document.createElement("div");
+      intestazione.className = "fake-select-list-header";
+      const titolo = document.createElement("span");
+      const etichettaVicina = sel.previousElementSibling && sel.previousElementSibling.tagName === "SPAN" ? sel.previousElementSibling.textContent.trim() : "";
+      titolo.innerText = etichettaVicina ? `Scegli — ${etichettaVicina}` : "Scegli";
+      const btnChiudi = document.createElement("button");
+      btnChiudi.type = "button";
+      btnChiudi.className = "fake-select-list-chiudi";
+      btnChiudi.innerText = "✕";
+      btnChiudi.addEventListener("click", (e) => { e.stopPropagation(); chiudiLista(); });
+      intestazione.appendChild(titolo);
+      intestazione.appendChild(btnChiudi);
+      lista.appendChild(intestazione);
+
       Array.from(sel.options).forEach((opt, idx) => {
         const voce = document.createElement("div");
         voce.className = "fake-select-option" + (opt.disabled ? " disabled" : "") + (idx === sel.selectedIndex ? " selected" : "");
@@ -138,10 +153,12 @@ function potenziaMenuATendina() {
       document.querySelectorAll(".fake-select-list").forEach(l => l.classList.add("hidden"));
       costruisciLista();
       lista.classList.remove("hidden");
+      document.body.classList.add("fake-select-aperto");
     }
 
     function chiudiLista() {
       lista.classList.add("hidden");
+      document.body.classList.remove("fake-select-aperto");
     }
 
     trigger.addEventListener("click", (e) => {
