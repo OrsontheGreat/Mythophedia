@@ -3083,7 +3083,7 @@ function risolviFineDuelloArena(sfida, roundVintiGiocatore) {
 
   }
 
-  epilogoHTML += `<div style="text-align:center; margin-top:12px;"><button type="button" class="events-btn" style="max-width:260px; margin:0 auto;" onclick="mostraResocontoBattaglia()">📊 Vedi Statistiche di Battaglia</button></div>`;
+  epilogoHTML += `<div style="text-align:center; margin-top:12px;"><button type="button" class="events-btn btn-vedi-statistiche" style="max-width:260px; margin:0 auto;">📊 Vedi Statistiche di Battaglia</button></div>`;
 
  
 
@@ -3672,6 +3672,15 @@ document.getElementById("close-battle-log-modal")?.addEventListener("click", () 
   document.getElementById("battle-log-modal").classList.add("hidden");
 });
 
+// Il pulsante "Vedi Statistiche di Battaglia" viene inserito dinamicamente in tre punti diversi
+// (sottomondi, guerra di clan, duello) tramite insertAdjacentHTML: un onclick inline non
+// funzionerebbe perché cercherebbe la funzione nello spazio globale, mentre questo codice vive
+// dentro la closure del gioco. Un ascoltatore delegato sul documento intercetta il click
+// indipendentemente da quale delle tre schermate ha creato il pulsante.
+document.addEventListener("click", (e) => {
+  if (e.target.closest(".btn-vedi-statistiche")) mostraResocontoBattaglia();
+});
+
 document.getElementById("btn-attacca-esagono").addEventListener("click", () => {
 
   if (!esagonoSelezionatoDati) return;
@@ -3983,7 +3992,7 @@ function risolviFineInvasioneMappa(mazzoAttaccoSelezionato, roundVintiGiocatore)
 
   epilogoHTML += `<p style="text-align:center; margin-top:8px; font-weight:bold; color:#ecc94b;">Ricompensa: +${guadagnoDracme} Dracme</p>`;
 
-  epilogoHTML += `<div style="text-align:center; margin-top:12px;"><button type="button" class="events-btn" style="max-width:260px; margin:0 auto;" onclick="mostraResocontoBattaglia()">📊 Vedi Statistiche di Battaglia</button></div>`;
+  epilogoHTML += `<div style="text-align:center; margin-top:12px;"><button type="button" class="events-btn btn-vedi-statistiche" style="max-width:260px; margin:0 auto;">📊 Vedi Statistiche di Battaglia</button></div>`;
 
   document.getElementById("battle-report-content").insertAdjacentHTML("beforeend", epilogoHTML);
 
@@ -10715,7 +10724,7 @@ function risolviFineAssaltoGuerra(mazzoAttaccoGuerra, roundVintiGuerra) {
 
   }
 
-  epilogoHTML += `<div style="text-align:center; margin-top:12px;"><button type="button" class="events-btn" style="max-width:260px; margin:0 auto;" onclick="mostraResocontoBattaglia()">📊 Vedi Statistiche di Battaglia</button></div>`;
+  epilogoHTML += `<div style="text-align:center; margin-top:12px;"><button type="button" class="events-btn btn-vedi-statistiche" style="max-width:260px; margin:0 auto;">📊 Vedi Statistiche di Battaglia</button></div>`;
 
   document.getElementById("battle-report-content").insertAdjacentHTML("beforeend", epilogoHTML);
 
