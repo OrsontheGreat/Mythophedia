@@ -1024,6 +1024,24 @@ html.forza-landscape .close-btn { font-size: 1.6rem; }
 
 .hex-conquistato { background: linear-gradient(135deg, #e6b800, #ffcc00) !important; color: #000 !important; animation: pulseGlow 2s infinite alternate; font-weight: 900; box-shadow: inset 0 0 12px rgba(255,255,255,0.6); text-shadow: 0 1px 2px #fff; border: 1px solid #fff !important; }
 
+.hex-conquistato-rosso { background: linear-gradient(135deg, #a3231e, #e64539) !important; color: #fff !important; animation: pulseGlow 2s infinite alternate; font-weight: 900; box-shadow: inset 0 0 12px rgba(255,255,255,0.4); text-shadow: 0 1px 2px #000; border: 1px solid #fff !important; }
+.hex-conquistato-verde { background: linear-gradient(135deg, #1e7a3d, #34c759) !important; color: #fff !important; animation: pulseGlow 2s infinite alternate; font-weight: 900; box-shadow: inset 0 0 12px rgba(255,255,255,0.4); text-shadow: 0 1px 2px #000; border: 1px solid #fff !important; }
+.hex-conquistato-blu { background: linear-gradient(135deg, #1a5a9e, #3b9ce0) !important; color: #fff !important; animation: pulseGlow 2s infinite alternate; font-weight: 900; box-shadow: inset 0 0 12px rgba(255,255,255,0.4); text-shadow: 0 1px 2px #000; border: 1px solid #fff !important; }
+.hex-conquistato-viola { background: linear-gradient(135deg, #6a2c9e, #a259d9) !important; color: #fff !important; animation: pulseGlow 2s infinite alternate; font-weight: 900; box-shadow: inset 0 0 12px rgba(255,255,255,0.4); text-shadow: 0 1px 2px #000; border: 1px solid #fff !important; }
+.hex-conquistato-arancio { background: linear-gradient(135deg, #b85c00, #ff9433) !important; color: #000 !important; animation: pulseGlow 2s infinite alternate; font-weight: 900; box-shadow: inset 0 0 12px rgba(255,255,255,0.5); text-shadow: 0 1px 2px #fff; border: 1px solid #fff !important; }
+.hex-conquistato-ciano { background: linear-gradient(135deg, #0a8a8a, #34d6d6) !important; color: #000 !important; animation: pulseGlow 2s infinite alternate; font-weight: 900; box-shadow: inset 0 0 12px rgba(255,255,255,0.5); text-shadow: 0 1px 2px #fff; border: 1px solid #fff !important; }
+.hex-conquistato-rosa { background: linear-gradient(135deg, #b8306b, #ff5fa2) !important; color: #fff !important; animation: pulseGlow 2s infinite alternate; font-weight: 900; box-shadow: inset 0 0 12px rgba(255,255,255,0.4); text-shadow: 0 1px 2px #000; border: 1px solid #fff !important; }
+
+.hex-battaglia-in-corso {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  font-size: 1rem;
+  animation: pulseGlow 0.8s infinite alternate;
+  filter: drop-shadow(0 0 3px #000);
+  pointer-events: none;
+}
+
 .hex-fazione-alleata { background: linear-gradient(135deg, #2b6cb0, #4299e1) !important; color: #fff !important; border: 1px solid #90cdf4 !important; box-shadow: 0 0 8px rgba(66, 153, 225, 0.6); }
 
 .hex-fazione-bot1 { background: linear-gradient(135deg, #9b2c2c, #e53e3e) !important; color: #fff !important; border: 1px solid #feb2b2 !important; }

@@ -2168,6 +2168,62 @@ function generaDatiMappaSicura(callback) {
 
 const gridElement = document.getElementById("hex-grid");
 
+// Oro riservato a te; ogni altro proprietario riceve uno tra 7 colori distinti, sempre lo
+// stesso per la stessa persona (calcolato dal suo identificativo unico, non dal nickname).
+const COLORI_ALTRI_GIOCATORI = ["hex-conquistato-rosso", "hex-conquistato-verde", "hex-conquistato-blu", "hex-conquistato-viola", "hex-conquistato-arancio", "hex-conquistato-ciano", "hex-conquistato-rosa"];
+
+function classeColoreProprietario(proprietarioUid) {
+  if (proprietarioUid && utenteFirebaseAttuale && proprietarioUid === utenteFirebaseAttuale.uid) {
+    return "hex-conquistato";
+  }
+  if (!proprietarioUid) return "hex-conquistato";
+  let hash = 0;
+  for (let i = 0; i < proprietarioUid.length; i++) hash = (hash * 31 + proprietarioUid.charCodeAt(i)) >>> 0;
+  return COLORI_ALTRI_GIOCATORI[hash % COLORI_ALTRI_GIOCATORI.length];
+}
+
+// ===== Visibilità in tempo reale delle battaglie in corso sui sottomondi =====
+// Quando un giocatore avvia un attacco, segnaliamo "battaglia in corso" su un nodo Firebase
+// separato dalla mappa vera e propria (per non appesantire il caricamento normale della mappa).
+// Chi ha la mappa aperta resta in ascolto live di questo nodo e vede un piccolo indicatore
+// sull'esagono interessato. Se il segnale non viene rimosso a fine battaglia (perché l'app si
+// chiude di colpo, connessione persa, ecc.), Firebase lo cancella comunque da sola grazie a
+// onDisconnect: chi abbandona a metà semplicemente non porta a termine la conquista, esattamente
+// come una sconfitta normale, quindi non serve altra logica speciale per questo caso.
+
+let ascoltoBattaglieInCorso = null;
+let battaglieInCorsoAttuali = {};
+
+function segnalaInizioBattaglia(chiaveMappa, riga, colonna) {
+  if (!utenteFirebaseAttuale) return;
+  const rif = dbFirebase.ref(`battaglie_in_corso/${chiaveMappa}/${riga}_${colonna}`);
+  rif.set({ uid: utenteFirebaseAttuale.uid, nome: nicknameUtente, timestamp: Date.now() });
+  rif.onDisconnect().remove();
+}
+
+function segnalaFineBattaglia(chiaveMappa, riga, colonna) {
+  if (!utenteFirebaseAttuale) return;
+  dbFirebase.ref(`battaglie_in_corso/${chiaveMappa}/${riga}_${colonna}`).remove().catch(() => {});
+}
+
+function avviaAscoltoBattaglieInCorso(chiaveMappa) {
+  fermaAscoltoBattaglieInCorso();
+  battaglieInCorsoAttuali = {};
+  ascoltoBattaglieInCorso = dbFirebase.ref(`battaglie_in_corso/${chiaveMappa}`);
+  ascoltoBattaglieInCorso.on("value", (snapshot) => {
+    battaglieInCorsoAttuali = snapshot.val() || {};
+    renderizzaMappaVisiva();
+  });
+}
+
+function fermaAscoltoBattaglieInCorso() {
+  if (ascoltoBattaglieInCorso) {
+    ascoltoBattaglieInCorso.off();
+    ascoltoBattaglieInCorso = null;
+  }
+  battaglieInCorsoAttuali = {};
+}
+
 function renderizzaMappaVisiva() {
 
   if (!gridElement) return;
@@ -2186,13 +2242,22 @@ function renderizzaMappaVisiva() {
 
       let classeTerreno = "hex-" + esagono.terrain.toLowerCase();
 
-      if (esagono.conquistato) classeTerreno = "hex-conquistato";
+      if (esagono.conquistato) classeTerreno = classeColoreProprietario(esagono.proprietarioUid);
 
       hexDiv.className = "hexagon " + classeTerreno;
 
       hexDiv.id = `hex-cell-${esagono.riga}-${esagono.colonna}`;
 
       hexDiv.innerText = esagono.riga + "," + esagono.colonna;
+
+      const battagliaQui = battaglieInCorsoAttuali[`${esagono.riga}_${esagono.colonna}`];
+      if (battagliaQui) {
+        const badge = document.createElement("span");
+        badge.className = "hex-battaglia-in-corso";
+        badge.title = `${battagliaQui.nome} sta attaccando`;
+        badge.innerText = "⚔️";
+        hexDiv.appendChild(badge);
+      }
 
  
 
@@ -3739,6 +3804,8 @@ document.getElementById("btn-attacca-esagono").addEventListener("click", () => {
 
   nuovoRegistroBattaglia();
 
+  segnalaInizioBattaglia(`${mondoSelezionatoCorrente.id}_${sottomondoSelezionatoCorrente.id}`, esagonoSelezionatoDati.riga, esagonoSelezionatoDati.colonna);
+
   document.getElementById("battle-title-outcome").innerText = "INVASIONE TERRITORIALE...";
 
   document.getElementById("battle-result-modal").classList.remove("hidden");
@@ -3917,6 +3984,8 @@ document.getElementById("btn-attacca-esagono").addEventListener("click", () => {
 });
 
 function risolviFineInvasioneMappa(mazzoAttaccoSelezionato, roundVintiGiocatore) {
+
+  segnalaFineBattaglia(`${mondoSelezionatoCorrente.id}_${sottomondoSelezionatoCorrente.id}`, esagonoSelezionatoDati.riga, esagonoSelezionatoDati.colonna);
 
   let guadagnoDracme = roundVintiGiocatore * 100; 
 
@@ -4141,6 +4210,8 @@ function renderizzaSelezioneSottomondi() {
 
         worldsModal.classList.remove("hidden");
 
+        avviaAscoltoBattaglieInCorso(`${mondoSelezionatoCorrente.id}_${sottomondoSelezionatoCorrente.id}`);
+
       });
 
     });
@@ -4186,6 +4257,8 @@ document.getElementById("close-worlds-modal").addEventListener("click", () => {
   worldsModal.classList.add("hidden"); 
 
   sottomondiModal.classList.remove("hidden"); 
+
+  fermaAscoltoBattaglieInCorso();
 
 });
 
@@ -9631,6 +9704,15 @@ function renderizzaMappaGuerraVisiva() {
 
       hexDiv.id = `war-hex-cell-${esagono.r}-${esagono.c}`;
 
+      const battagliaGuerraQui = battaglieInCorsoAttuali[`${esagono.r}_${esagono.c}`];
+      if (battagliaGuerraQui) {
+        const badgeGuerra = document.createElement("span");
+        badgeGuerra.className = "hex-battaglia-in-corso";
+        badgeGuerra.title = `${battagliaGuerraQui.nome} sta attaccando`;
+        badgeGuerra.innerText = "⚔️";
+        hexDiv.appendChild(badgeGuerra);
+      }
+
       
 
       if (esagono.tipo === "cittadella") hexDiv.innerText = "👑";
@@ -10469,6 +10551,8 @@ document.getElementById("btn-avvia-guerra-placeholder")?.addEventListener("click
 
       document.getElementById("clan-war-modal").classList.remove("hidden");
 
+      if (clanMioAttuale.reale) avviaAscoltoBattaglieInCorso(`guerra_${clanMioAttuale.firebaseId}`);
+
     });
 
   });
@@ -10478,6 +10562,8 @@ document.getElementById("btn-avvia-guerra-placeholder")?.addEventListener("click
 document.getElementById("close-clan-war-modal")?.addEventListener("click", () => {
 
   document.getElementById("clan-war-modal").classList.add("hidden");
+
+  fermaAscoltoBattaglieInCorso();
 
 });
 
@@ -10518,6 +10604,8 @@ document.getElementById("btn-attacca-esagono-guerra")?.addEventListener("click",
   let roundVintiGuerra = 0;
 
   nuovoRegistroBattaglia();
+
+  segnalaInizioBattaglia(`guerra_${clanMioAttuale.firebaseId}`, esagonoGuerraSelezionatoDati.r, esagonoGuerraSelezionatoDati.c);
 
   document.getElementById("battle-title-outcome").innerText = "ASSALTO AL SETTORE...";
 
@@ -10671,6 +10759,8 @@ document.getElementById("btn-attacca-esagono-guerra")?.addEventListener("click",
 });
 
 function risolviFineAssaltoGuerra(mazzoAttaccoGuerra, roundVintiGuerra) {
+
+  segnalaFineBattaglia(`guerra_${clanMioAttuale.firebaseId}`, esagonoGuerraSelezionatoDati.r, esagonoGuerraSelezionatoDati.c);
 
   const vintoAssalto = (roundVintiGuerra >= 3);
 
