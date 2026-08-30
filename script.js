@@ -3682,12 +3682,21 @@ function mostraResocontoBattaglia() {
   const cardModale = document.querySelector("#battle-result-modal .modal-card");
   if (!cardModale) return;
 
+  // Questo modale usa height:auto (si adatta al contenuto): nascondendo tutto il contenuto
+  // normale, senza altro riferimento la scatola collasserebbe a zero altezza, portandosi dietro
+  // anche il nostro overlay (che si aspetta di riempire lo spazio del genitore). La blocchiamo
+  // a un'altezza fissa in pixel, misurata adesso, finché il resoconto resta aperto.
+  const altezzaCongelata = cardModale.getBoundingClientRect().height;
+  const altezzaOriginale = cardModale.style.height;
+  cardModale.style.height = altezzaCongelata + "px";
+
   const figliOriginali = Array.from(cardModale.children).filter(f => f.id !== "resoconto-battaglia-overlay");
   figliOriginali.forEach(f => { f.dataset.nascostoPerResoconto = "1"; f.style.display = "none"; });
 
   document.getElementById("resoconto-battaglia-chiudi")?.addEventListener("click", (e) => {
     e.stopPropagation();
     overlay.remove();
+    cardModale.style.height = altezzaOriginale;
     figliOriginali.forEach(f => { delete f.dataset.nascostoPerResoconto; f.style.display = ""; });
   });
 
