@@ -4,7 +4,7 @@
   "description": "Gioco di carte strategico con creature mitologiche",
   "start_url": "./index.html",
   "scope": "./",
-  "display": "standalone",
+  "display": "fullscreen",
   "orientation": "landscape",
   "background_color": "#0a0a0f",
   "theme_color": "#0a0a0f",

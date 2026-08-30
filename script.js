@@ -79,6 +79,15 @@ document.addEventListener("touchstart", aggiornaOrientamentoELayout, { once: tru
 document.addEventListener("DOMContentLoaded", aggiornaOrientamentoELayout);
 aggiornaOrientamentoELayout();
 
+// Tentativo di schermo intero nativo al primo tocco: il manifest.json chiede già la modalità
+// "fullscreen", ma su alcuni telefoni/versioni Android non basta da sola a nascondere la barra
+// di stato (orologio, batteria) — questo è un secondo tentativo via API del browser, innocuo
+// se il sistema lo ignora o non lo supporta.
+document.addEventListener("touchstart", () => {
+  const el = document.documentElement;
+  if (el.requestFullscreen) el.requestFullscreen().catch(() => {});
+}, { once: true, passive: true });
+
 // ===== Menu a tendina personalizzati (compatibili con la rotazione forzata orizzontale) =====
 // I <select> nativi vengono disegnati dal sistema operativo/browser e NON seguono la rotazione
 // CSS applicata al resto della pagina: risultavano quindi "storti" su telefono, leggibili solo
