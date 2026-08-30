@@ -2867,6 +2867,8 @@ document.getElementById("btn-conferma-avvia-duello").addEventListener("click", (
 
   let roundVintiGiocatore = 0;
 
+  nuovoRegistroBattaglia();
+
   document.getElementById("battle-title-outcome").innerText = " IN ARENA: DUELLO ATTIVO...";
 
   document.getElementById("battle-report-content").innerHTML = `
@@ -2930,6 +2932,18 @@ document.getElementById("btn-conferma-avvia-duello").addEventListener("click", (
     let esito = (mioVFin >= nemVFin);
 
     if (esito) roundVintiGiocatore++;
+
+    const spiegaMioDuello = spiegaModificatoreTerreno(miaC.tratti || [], sfida.terreno);
+    const spiegaNemDuello = spiegaModificatoreTerreno(nemC.tratti || [], sfida.terreno);
+    registraRoundBattaglia({
+      numeroRound: roundIndex + 1,
+      mioNome: miaC.nome,
+      nemicoNome: nemC.nome,
+      statistiche: sfida.statisticheCoinvolte,
+      mioBase: mioVBase, mioModificatore: mioM, mioSpiegazioneModificatore: spiegaMioDuello.spiegazione, mioFinale: mioVFin,
+      nemicoBase: nemVBase, nemicoModificatore: nemM, nemicoSpiegazioneModificatore: spiegaNemDuello.spiegazione, nemicoFinale: nemVFin,
+      vinto: esito
+    });
 
  
 
@@ -3068,6 +3082,8 @@ function risolviFineDuelloArena(sfida, roundVintiGiocatore) {
     aggiungiXP(2);
 
   }
+
+  epilogoHTML += `<div style="text-align:center; margin-top:12px;"><button type="button" class="events-btn" style="max-width:260px; margin:0 auto;" onclick="mostraResocontoBattaglia()">📊 Vedi Statistiche di Battaglia</button></div>`;
 
  
 
@@ -3571,6 +3587,113 @@ function calcolaModificatoreTerreno(tratti, terreno) {
 
 }
 
+// ===== Resoconto di Battaglia: registro dettagliato round per round, condiviso da sottomondi, guerre di clan e duelli =====
+
+let registroBattaglia = [];
+
+function nuovoRegistroBattaglia() {
+  registroBattaglia = [];
+}
+
+// Duplica la logica di calcolaModificatoreTerreno ma restituisce anche una spiegazione testuale
+// di quale tratto ha causato il bonus/penalità, usata solo per il resoconto: la funzione originale
+// resta invariata ovunque venga già usata per il calcolo vero e proprio dello scontro.
+function spiegaModificatoreTerreno(tratti, terreno) {
+  let valore = 0.0;
+  let spiegazioni = [];
+  const terrMod = terreno.toLowerCase();
+
+  (tratti || []).forEach(t => {
+    const tratto = String(t).toLowerCase().trim();
+    let bonus = 0;
+
+    if (tratto === "volo") {
+      if (terrMod === "aria") bonus = 2.0;
+      if (terrMod === "acqua") bonus = -2.0;
+    } else if (tratto === "arrampicata" || tratto === "equilibrio") {
+      if (terrMod === "foresta" || terrMod === "terra") bonus = 2.0;
+      if (terrMod === "acqua" || terrMod === "aria") bonus = -2.0;
+    } else if (tratto === "nuoto") {
+      if (terrMod === "acqua") bonus = 2.0;
+      if (terrMod === "aria") bonus = -2.0;
+    }
+
+    if (bonus !== 0) {
+      valore += bonus;
+      spiegazioni.push(`${t} (${bonus > 0 ? "+" : ""}${bonus.toFixed(1)})`);
+    }
+  });
+
+  return { valore: parseFloat(valore.toFixed(1)), spiegazione: spiegazioni.join(", ") };
+}
+
+function registraRoundBattaglia(dati) {
+  registroBattaglia.push(dati);
+}
+
+function mostraResocontoBattaglia() {
+  if (registroBattaglia.length === 0) return;
+
+  const vecchio = document.getElementById("resoconto-battaglia-overlay");
+  if (vecchio) vecchio.remove();
+
+  const righeHTML = registroBattaglia.map(r => {
+    const coloreEsito = r.vinto ? "#48bb78" : "#f56565";
+    const testoEsito = r.vinto ? "VINTO" : "PERSO";
+    const nomiStatistiche = r.statistiche.map(s => String(s).toUpperCase()).join(" + ");
+
+    return `
+      <div style="background: rgba(255,255,255,0.04); border: 1px solid #3a3222; border-left: 4px solid ${coloreEsito}; border-radius: 8px; padding: 12px 14px; margin-bottom: 10px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          <span style="font-weight:bold; color:#ffcc66;">Round ${r.numeroRound}</span>
+          <span style="font-weight:bold; color:${coloreEsito};">${testoEsito}</span>
+        </div>
+        <div style="font-size:0.78rem; color:#a89a7a; margin-bottom:8px;">Statistiche in gioco: <b style="color:#e0d5c1;">${nomiStatistiche}</b></div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <div>
+            <div style="color:#e0d5c1; font-weight:bold; margin-bottom:4px;">🛡️ ${r.mioNome} (tua)</div>
+            <div style="font-size:0.82rem; color:#c9c0ab;">Base: ${r.mioBase.toFixed(1)}</div>
+            ${r.mioModificatore !== 0 ? `<div style="font-size:0.82rem; color:${r.mioModificatore > 0 ? "#7ee787" : "#f56565"};">Terreno: ${r.mioModificatore > 0 ? "+" : ""}${r.mioModificatore.toFixed(1)}${r.mioSpiegazioneModificatore ? ` (${r.mioSpiegazioneModificatore})` : ""}</div>` : ""}
+            ${r.bonusExtraNome ? `<div style="font-size:0.82rem; color:#7ee787;">${r.bonusExtraNome}: +${r.bonusExtra.toFixed(1)}</div>` : ""}
+            <div style="font-size:0.9rem; color:#ffcc66; font-weight:bold; margin-top:3px;">Finale: ${r.mioFinale.toFixed(1)}</div>
+          </div>
+          <div>
+            <div style="color:#e0d5c1; font-weight:bold; margin-bottom:4px;">⚔️ ${r.nemicoNome}</div>
+            <div style="font-size:0.82rem; color:#c9c0ab;">Base: ${r.nemicoBase.toFixed(1)}</div>
+            ${r.nemicoModificatore !== 0 ? `<div style="font-size:0.82rem; color:${r.nemicoModificatore > 0 ? "#7ee787" : "#f56565"};">Terreno: ${r.nemicoModificatore > 0 ? "+" : ""}${r.nemicoModificatore.toFixed(1)}${r.nemicoSpiegazioneModificatore ? ` (${r.nemicoSpiegazioneModificatore})` : ""}</div>` : ""}
+            <div style="font-size:0.9rem; color:#ffcc66; font-weight:bold; margin-top:3px;">Finale: ${r.nemicoFinale.toFixed(1)}</div>
+          </div>
+        </div>
+      </div>`;
+  }).join("");
+
+  const overlay = document.createElement("div");
+  overlay.id = "resoconto-battaglia-overlay";
+  overlay.className = "fake-select-list";
+  overlay.innerHTML = `
+    <div class="fake-select-list-header">
+      <span>📊 Resoconto della Battaglia</span>
+      <button type="button" class="fake-select-list-chiudi" id="resoconto-battaglia-chiudi">✕</button>
+    </div>
+    <div style="padding: 14px;">${righeHTML}</div>`;
+
+  overlay.addEventListener("click", (e) => { e.stopPropagation(); });
+
+  const cardModale = document.querySelector("#battle-result-modal .modal-card");
+  if (!cardModale) return;
+
+  const figliOriginali = Array.from(cardModale.children).filter(f => f.id !== "resoconto-battaglia-overlay");
+  figliOriginali.forEach(f => { f.dataset.nascostoPerResoconto = "1"; f.style.display = "none"; });
+
+  document.getElementById("resoconto-battaglia-chiudi")?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    overlay.remove();
+    figliOriginali.forEach(f => { delete f.dataset.nascostoPerResoconto; f.style.display = ""; });
+  });
+
+  cardModale.appendChild(overlay);
+}
+
 document.getElementById("btn-attacca-esagono").addEventListener("click", () => {
 
   if (!esagonoSelezionatoDati) return;
@@ -3625,6 +3748,8 @@ document.getElementById("btn-attacca-esagono").addEventListener("click", () => {
 
   let roundVintiGiocatore = 0;
 
+  nuovoRegistroBattaglia();
+
   document.getElementById("battle-title-outcome").innerText = "INVASIONE TERRITORIALE...";
 
   document.getElementById("battle-result-modal").classList.remove("hidden");
@@ -3678,6 +3803,21 @@ document.getElementById("btn-attacca-esagono").addEventListener("click", () => {
     const esitoRound = (mioValFinale >= nemicoValFinale); 
 
     if (esitoRound) roundVintiGiocatore++;
+
+    // Nel resoconto post-battaglia sveliamo sempre la vera identità del mostro, anche nella
+    // Nebbia di Guerra dove durante lo scontro resta nascosta: il resoconto racconta cosa è
+    // davvero successo, non ripete il mistero a battaglia ormai conclusa.
+    const spiegaMio = spiegaModificatoreTerreno(miaCarta.tratti || miaCarta.traits || [], esagonoSelezionatoDati.terrain);
+    const spiegaNemico = spiegaModificatoreTerreno(mostroNemico.tratti || mostroNemico.traits || [], esagonoSelezionatoDati.terrain);
+    registraRoundBattaglia({
+      numeroRound: mapRoundIdx + 1,
+      mioNome: miaCarta.nome,
+      nemicoNome: mostroNemico.nome,
+      statistiche: statisticheSettimanaliMondo,
+      mioBase: mioValBase, mioModificatore: mioMod, mioSpiegazioneModificatore: spiegaMio.spiegazione, mioFinale: mioValFinale,
+      nemicoBase: nemicoValBase, nemicoModificatore: nemicoMod, nemicoSpiegazioneModificatore: spiegaNemico.spiegazione, nemicoFinale: nemicoValFinale,
+      vinto: esitoRound
+    });
 
  
 
@@ -3862,6 +4002,8 @@ function risolviFineInvasioneMappa(mazzoAttaccoSelezionato, roundVintiGiocatore)
  
 
   epilogoHTML += `<p style="text-align:center; margin-top:8px; font-weight:bold; color:#ecc94b;">Ricompensa: +${guadagnoDracme} Dracme</p>`;
+
+  epilogoHTML += `<div style="text-align:center; margin-top:12px;"><button type="button" class="events-btn" style="max-width:260px; margin:0 auto;" onclick="mostraResocontoBattaglia()">📊 Vedi Statistiche di Battaglia</button></div>`;
 
   document.getElementById("battle-report-content").insertAdjacentHTML("beforeend", epilogoHTML);
 
@@ -10377,6 +10519,8 @@ document.getElementById("btn-attacca-esagono-guerra")?.addEventListener("click",
 
   let roundVintiGuerra = 0;
 
+  nuovoRegistroBattaglia();
+
   document.getElementById("battle-title-outcome").innerText = "ASSALTO AL SETTORE...";
 
   document.getElementById("battle-result-modal").classList.remove("hidden");
@@ -10426,6 +10570,19 @@ document.getElementById("btn-attacca-esagono-guerra")?.addEventListener("click",
     const esitoRound = (mioValFinale >= nemicoValFinale);
 
     if (esitoRound) roundVintiGuerra++;
+
+    const spiegaMioGuerra = spiegaModificatoreTerreno(miaCarta.tratti || [], esagonoGuerraSelezionatoDati.terrain);
+    const spiegaNemicoGuerra = spiegaModificatoreTerreno(mostroNemico.tratti || [], esagonoGuerraSelezionatoDati.terrain);
+    registraRoundBattaglia({
+      numeroRound: warRoundIdx + 1,
+      mioNome: miaCarta.nome,
+      nemicoNome: mostroNemico.nome,
+      statistiche: statsRound,
+      mioBase: mioValBase, mioModificatore: mioMod, mioSpiegazioneModificatore: spiegaMioGuerra.spiegazione, mioFinale: mioValFinale,
+      nemicoBase: nemicoValBase, nemicoModificatore: nemicoMod, nemicoSpiegazioneModificatore: spiegaNemicoGuerra.spiegazione, nemicoFinale: nemicoValFinale,
+      bonusExtra: bonusPredatore, bonusExtraNome: bonusPredatore > 0 ? "Marchio del Predatore" : null,
+      vinto: esitoRound
+    });
 
     let roundCardId = `clash-war-row-${warRoundIdx}`;
 
@@ -10568,6 +10725,8 @@ function risolviFineAssaltoGuerra(mazzoAttaccoGuerra, roundVintiGuerra) {
     epilogoHTML += `<p style="text-align:center; color:#f56565; font-weight:bold;">Il mazzo in prima linea ha resistito. Round vinti: ${roundVintiGuerra} su 5.</p>`;
 
   }
+
+  epilogoHTML += `<div style="text-align:center; margin-top:12px;"><button type="button" class="events-btn" style="max-width:260px; margin:0 auto;" onclick="mostraResocontoBattaglia()">📊 Vedi Statistiche di Battaglia</button></div>`;
 
   document.getElementById("battle-report-content").insertAdjacentHTML("beforeend", epilogoHTML);
 
