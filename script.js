@@ -3634,9 +3634,6 @@ function registraRoundBattaglia(dati) {
 function mostraResocontoBattaglia() {
   if (registroBattaglia.length === 0) return;
 
-  const vecchio = document.getElementById("resoconto-battaglia-overlay");
-  if (vecchio) vecchio.remove();
-
   const righeHTML = registroBattaglia.map(r => {
     const coloreEsito = r.vinto ? "#48bb78" : "#f56565";
     const testoEsito = r.vinto ? "VINTO" : "PERSO";
@@ -3667,41 +3664,13 @@ function mostraResocontoBattaglia() {
       </div>`;
   }).join("");
 
-  const overlay = document.createElement("div");
-  overlay.id = "resoconto-battaglia-overlay";
-  overlay.className = "fake-select-list";
-  overlay.innerHTML = `
-    <div class="fake-select-list-header">
-      <span>📊 Resoconto della Battaglia</span>
-      <button type="button" class="fake-select-list-chiudi" id="resoconto-battaglia-chiudi">✕</button>
-    </div>
-    <div style="padding: 14px;">${righeHTML}</div>`;
-
-  overlay.addEventListener("click", (e) => { e.stopPropagation(); });
-
-  const cardModale = document.querySelector("#battle-result-modal .modal-card");
-  if (!cardModale) return;
-
-  // Questo modale usa height:auto (si adatta al contenuto): nascondendo tutto il contenuto
-  // normale, senza altro riferimento la scatola collasserebbe a zero altezza, portandosi dietro
-  // anche il nostro overlay (che si aspetta di riempire lo spazio del genitore). La blocchiamo
-  // a un'altezza fissa in pixel, misurata adesso, finché il resoconto resta aperto.
-  const altezzaCongelata = cardModale.getBoundingClientRect().height;
-  const altezzaOriginale = cardModale.style.height;
-  cardModale.style.height = altezzaCongelata + "px";
-
-  const figliOriginali = Array.from(cardModale.children).filter(f => f.id !== "resoconto-battaglia-overlay");
-  figliOriginali.forEach(f => { f.dataset.nascostoPerResoconto = "1"; f.style.display = "none"; });
-
-  document.getElementById("resoconto-battaglia-chiudi")?.addEventListener("click", (e) => {
-    e.stopPropagation();
-    overlay.remove();
-    cardModale.style.height = altezzaOriginale;
-    figliOriginali.forEach(f => { delete f.dataset.nascostoPerResoconto; f.style.display = ""; });
-  });
-
-  cardModale.appendChild(overlay);
+  document.getElementById("battle-log-content").innerHTML = righeHTML;
+  document.getElementById("battle-log-modal").classList.remove("hidden");
 }
+
+document.getElementById("close-battle-log-modal")?.addEventListener("click", () => {
+  document.getElementById("battle-log-modal").classList.add("hidden");
+});
 
 document.getElementById("btn-attacca-esagono").addEventListener("click", () => {
 
@@ -10451,6 +10420,15 @@ function risolviRicompensaSettimanaGuerra(adesso) {
   amnistiaUsataQuestaSettimana = false;
 
   mappaGuerraClan = [];
+
+  // Il solo reset della variabile locale non basta: se i vecchi dati restano su Firebase,
+  // al prossimo caricamento la mappa verrebbe ripescata identica a prima, vanificando il
+  // reset settimanale (esattamente il bug segnalato: guerra "già iniziata" con territori
+  // già conquistati). Cancelliamo quindi anche il nodo remoto.
+  if (clanMioAttuale && clanMioAttuale.reale && clanMioAttuale.firebaseId) {
+    dbFirebase.ref("guerre_reali/" + clanMioAttuale.firebaseId).remove()
+      .catch((err) => console.error("Errore azzeramento mappa guerra:", err));
+  }
 
   localStorage.setItem("mythophedia_ultimo_calcolo_dominio", adesso.toString());
 
