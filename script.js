@@ -2929,7 +2929,7 @@ document.getElementById("btn-conferma-avvia-duello").addEventListener("click", (
 
  
 
-    let esito = (mioVFin >= nemVFin);
+    let esito = (mioVFin > nemVFin);
 
     if (esito) roundVintiGiocatore++;
 
@@ -3688,7 +3688,9 @@ document.getElementById("btn-attacca-esagono").addEventListener("click", () => {
 
  
 
-  if (esagonoSelezionatoDati.conquistato) {
+  const eDavveroMioQuestoEsagono = esagonoSelezionatoDati.proprietarioUid && utenteFirebaseAttuale && esagonoSelezionatoDati.proprietarioUid === utenteFirebaseAttuale.uid;
+
+  if (esagonoSelezionatoDati.conquistato && eDavveroMioQuestoEsagono) {
 
     deckGiocatore.forEach(c => {
 
@@ -3778,7 +3780,7 @@ document.getElementById("btn-attacca-esagono").addEventListener("click", () => {
 
  
 
-    const esitoRound = (mioValFinale >= nemicoValFinale); 
+    const esitoRound = (mioValFinale > nemicoValFinale); 
 
     if (esitoRound) roundVintiGiocatore++;
 
@@ -10554,7 +10556,7 @@ document.getElementById("btn-attacca-esagono-guerra")?.addEventListener("click",
 
     let nemicoValFinale = parseFloat((nemicoValBase + nemicoMod).toFixed(1));
 
-    const esitoRound = (mioValFinale >= nemicoValFinale);
+    const esitoRound = (mioValFinale > nemicoValFinale);
 
     if (esitoRound) roundVintiGuerra++;
 
