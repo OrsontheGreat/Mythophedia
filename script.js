@@ -8608,9 +8608,36 @@ function apriAddestramento() {
   aggiornaEvidenziazioneAddestramento();
   salvaProgressoCloud();
 
-  addestramentoTappaAttuale = 0;
-  avviaTappaAddestramento();
   document.getElementById("addestramento-modal").classList.remove("hidden");
+
+  if (addestramentoPremioRitirato) {
+    mostraHubAddestramento();
+  } else {
+    addestramentoTappaAttuale = 0;
+    avviaTappaAddestramento();
+  }
+}
+
+function mostraHubAddestramento() {
+  const contenitore = document.getElementById("addestramento-content");
+  contenitore.innerHTML = `
+    <div class="tutorial-chirone-box" style="max-width:520px;">
+      <img src="img/carte/chirone.jpg" class="tutorial-chirone-ritratto" onerror="this.style.display='none';">
+      <div class="tutorial-chirone-testo">
+        <p style="font-weight:bold; color:#ffcc66;">Bentornato, Evocatore.</p>
+        <p style="margin-top:8px;">Vuoi ripassare le 8 tappe guidate, o scendere ancora più a fondo nei Sotterranei?</p>
+      </div>
+    </div>
+    <div style="display:flex; gap:10px;">
+      <button type="button" id="addestramento-hub-tappe-btn" class="events-btn" style="max-width:220px;">Rifai le 8 Tappe</button>
+      <button type="button" id="addestramento-hub-sotterranei-btn" class="events-btn events-btn-main" style="max-width:220px;">🕳️ I Sotterranei</button>
+    </div>`;
+
+  document.getElementById("addestramento-hub-tappe-btn").addEventListener("click", () => {
+    addestramentoTappaAttuale = 0;
+    avviaTappaAddestramento();
+  });
+  document.getElementById("addestramento-hub-sotterranei-btn").addEventListener("click", apriSotterranei);
 }
 
 function avviaTappaAddestramento() {
@@ -8806,20 +8833,357 @@ function completaAddestramento() {
       <div class="tutorial-chirone-testo">
         <p style="font-weight:bold; color:#7ee787;">Sei pronto, Evocatore.</p>
         <p style="margin-top:8px;">Hai visto come si calcola un round, come si vince una battaglia, e soprattutto come il terreno può cambiare tutto. Ora tocca a te: vai a mettere alla prova quello che hai imparato nei Sottomondi e nelle Guerre di Clan.</p>
+        <p style="margin-top:8px;">Se invece preferisci allenarti da solo, senza dover affrontare altri giocatori, ti aspetto più a fondo: nei <b style="color:#ffcc66;">Sotterranei</b>.</p>
         ${premioHTML}
       </div>
     </div>
-    <button type="button" id="addestramento-chiudi-finale-btn" class="events-btn events-btn-main" style="max-width:220px;">Chiudi</button>`;
+    <div style="display:flex; gap:10px;">
+      <button type="button" id="addestramento-chiudi-finale-btn" class="events-btn" style="max-width:180px;">Chiudi</button>
+      <button type="button" id="addestramento-vai-sotterranei-btn" class="events-btn events-btn-main" style="max-width:220px;">🕳️ I Sotterranei</button>
+    </div>`;
 
   document.getElementById("addestramento-chiudi-finale-btn").addEventListener("click", () => {
     document.getElementById("addestramento-modal").classList.add("hidden");
   });
+  document.getElementById("addestramento-vai-sotterranei-btn").addEventListener("click", apriSotterranei);
 }
 
 function aggiornaEvidenziazioneAddestramento() {
   const btn = document.getElementById("btn-duelli");
   if (!btn) return;
   btn.classList.toggle("map-tile-evidenziata", !!addestramentoDaEvidenziare);
+}
+
+// ===== I Sotterranei: viaggio infinito contro bot per chi vuole giocare da solo =====
+
+let sotterraneiLivelloAttuale = 1;
+let sotterraneiLivelloMassimoConPremio = 0;
+let sotterraneiVittorieOggi = 0;
+let sotterraneiDataVittorie = "";
+let sotterraneiSquadraBot = [];
+let sotterraneiTerreno = null;
+let sotterraneiStatistiche = ["ferocia"];
+
+const SOTTERRANEI_BLOCCO = 30;
+const SOTTERRANEI_VITTORIE_MAX_GIORNO = 10;
+
+function assicuraGiornoSotterranei() {
+  const oggi = new Date().toISOString().slice(0, 10);
+  if (sotterraneiDataVittorie !== oggi) {
+    sotterraneiDataVittorie = oggi;
+    sotterraneiVittorieOggi = 0;
+  }
+}
+
+// La rarità sale un gradino alla volta, ma con calma: 30 livelli di rarità pura, 30 misti con
+// quella successiva, poi 30 puri della successiva — così per ogni passaggio, fino al tetto
+// naturale di rarità Leggendaria. Oltre quel tetto (livello 330), un moltiplicatore molto lento
+// garantisce una scalata davvero infinita.
+function calcolaParametriSotterraneo(livello) {
+  const indiceBlocco = Math.floor((livello - 1) / SOTTERRANEI_BLOCCO);
+  const posizioneNelBlocco = (livello - 1) % SOTTERRANEI_BLOCCO;
+  const stelle = Math.min(8, Math.round((posizioneNelBlocco / (SOTTERRANEI_BLOCCO - 1)) * 8));
+
+  let tipo, rarita, raritaA, raritaB;
+  if (indiceBlocco >= 10) {
+    tipo = "pura";
+    rarita = 6;
+  } else if (indiceBlocco % 2 === 0) {
+    tipo = "pura";
+    rarita = Math.floor(indiceBlocco / 2) + 1;
+  } else {
+    tipo = "mista";
+    raritaA = Math.floor((indiceBlocco - 1) / 2) + 1;
+    raritaB = raritaA + 1;
+  }
+
+  const livelloOltreTetto = Math.max(0, livello - SOTTERRANEI_BLOCCO * 11);
+  const moltiplicatoreExtra = 1 + livelloOltreTetto * 0.01;
+
+  return { tipo, rarita, raritaA, raritaB, stelle, moltiplicatoreExtra };
+}
+
+function generaBotSotterraneo(livello) {
+  const p = calcolaParametriSotterraneo(livello);
+  const squadra = [];
+
+  for (let i = 0; i < 5; i++) {
+    const raritaScelta = p.tipo === "pura" ? p.rarita : (Math.random() < 0.5 ? p.raritaA : p.raritaB);
+    const pool = CARTE_FISSE.filter(c => c.livello === raritaScelta);
+    const base = pool[Math.floor(Math.random() * pool.length)];
+
+    const bonusPerStella = raritaScelta === 1 ? 0.7 : raritaScelta === 6 ? 0.3 : 0.6;
+    const bonusTotalePerStat = (bonusPerStella * p.stelle) / 4;
+
+    const statistiche = {};
+    ["ferocia", "balzo", "corazza", "istinto"].forEach(s => {
+      statistiche[s] = parseFloat(((base.statisticheFisse[s] + bonusTotalePerStat) * p.moltiplicatoreExtra).toFixed(1));
+    });
+
+    squadra.push({ nome: base.nome, immagine: base.immagine, tratti: base.tratti || [], statistiche, stelle: p.stelle, livello: raritaScelta });
+  }
+
+  return squadra;
+}
+
+function apriSotterranei() {
+  assicuraGiornoSotterranei();
+  renderizzaHubSotterranei();
+}
+
+function renderizzaHubSotterranei() {
+  assicuraGiornoSotterranei();
+  const contenitore = document.getElementById("addestramento-content");
+  const vittorieRimaste = SOTTERRANEI_VITTORIE_MAX_GIORNO - sotterraneiVittorieOggi;
+  const bloccato = vittorieRimaste <= 0;
+  const p = calcolaParametriSotterraneo(sotterraneiLivelloAttuale);
+  const testoRarita = p.tipo === "pura" ? ETICHETTE_LIVELLI[p.rarita] : `${ETICHETTE_LIVELLI[p.raritaA]} / ${ETICHETTE_LIVELLI[p.raritaB]}`;
+
+  contenitore.innerHTML = `
+    <div class="tutorial-chirone-box" style="max-width:560px;">
+      <img src="img/carte/chirone.jpg" class="tutorial-chirone-ritratto" onerror="this.style.display='none';">
+      <div class="tutorial-chirone-testo">
+        <p style="font-weight:bold; color:#ffcc66;">🕳️ Livello ${sotterraneiLivelloAttuale}</p>
+        <p style="margin-top:6px;">Nemici di rarità <b>${testoRarita}</b>, evoluzione a ${p.stelle} ⭐${p.moltiplicatoreExtra > 1 ? ` (potenziamento extra: +${Math.round((p.moltiplicatoreExtra - 1) * 100)}%)` : ""}.</p>
+        <p style="margin-top:6px; font-size:0.78rem; color:#a89a7a;">5 vittorie su 5 = 3 stelle (300 Dracme) · 4 = 2 stelle (200) · 3 = 1 stella (100) · meno di 3 = nessun premio, si ripete il livello.</p>
+        <p style="margin-top:6px; font-size:0.78rem; color:${bloccato ? '#f56565' : '#7ee787'};">Vittorie oggi: ${sotterraneiVittorieOggi} / ${SOTTERRANEI_VITTORIE_MAX_GIORNO}</p>
+      </div>
+    </div>
+    <button type="button" id="sotterranei-inizia-btn" class="events-btn events-btn-main" style="max-width:240px;" ${bloccato ? "disabled" : ""}>
+      ${bloccato ? "Torna domani per continuare" : "Scendi in battaglia"}
+    </button>`;
+
+  document.getElementById("sotterranei-inizia-btn")?.addEventListener("click", allestisciSquadraSotterranei);
+}
+
+const SOTTERRANEI_TERRENI = ["aria", "acqua", "foresta", "terra"];
+
+function allestisciSquadraSotterranei() {
+  sotterraneiSquadraBot = generaBotSotterraneo(sotterraneiLivelloAttuale);
+  sotterraneiTerreno = SOTTERRANEI_TERRENI[Math.floor(Math.random() * SOTTERRANEI_TERRENI.length)];
+  const combinazioniStat = [["ferocia"], ["balzo"], ["corazza"], ["istinto"], ["ferocia", "corazza"], ["balzo", "istinto"]];
+  sotterraneiStatistiche = combinazioniStat[Math.floor(Math.random() * combinazioniStat.length)];
+
+  const contenitore = document.getElementById("addestramento-content");
+  const slotsHTML = Array.from({ length: 5 }, (_, i) => `
+    <div class="select-row">
+      <span>${i + 1}°:</span>
+      <select id="sott-deploy-slot-${i}" class="deploy-select"></select>
+    </div>`).join("");
+
+  contenitore.innerHTML = `
+    <div style="text-align:center; width:100%;">
+      <p style="color:#ffcc66; font-weight:bold;">Livello ${sotterraneiLivelloAttuale} — Terreno: ${terrenoEmoji(sotterraneiTerreno)}</p>
+      <p style="color:#a89a7a; font-size:0.78rem;">Statistiche in gioco: <b style="color:#e0d5c1;">${sotterraneiStatistiche.map(s => s.toUpperCase()).join(" + ")}</b></p>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:8px; width:100%; max-width:360px;">${slotsHTML}</div>
+    <button type="button" id="sott-attacca-btn" class="events-btn events-btn-main" style="max-width:220px;" disabled>Scegli le tue 5 creature</button>`;
+
+  popolaSelectSchieramentoSotterraneo();
+  potenziaMenuATendina();
+}
+
+function popolaSelectSchieramentoSotterraneo() {
+  let valoriSelezionati = [];
+  for (let i = 0; i < 5; i++) {
+    const s = document.getElementById(`sott-deploy-slot-${i}`);
+    if (s && s.value) valoriSelezionati.push(s.value);
+  }
+
+  for (let i = 0; i < 5; i++) {
+    const select = document.getElementById(`sott-deploy-slot-${i}`);
+    if (!select) continue;
+    const currentVal = select.value;
+    select.innerHTML = '<option value="">-- Seleziona --</option>';
+
+    deckGiocatore.forEach(carta => {
+      controllaERinfrescaFatica(carta);
+      let vigore = calcolaVigorePercentuale(carta);
+      if (carta.isJolly || carta.bloccataInDuello || carta.occupataInDifesa || carta.inizioRiposo || vigore <= 0) return;
+      if (valoriSelezionati.includes(carta.id) && carta.id !== currentVal) return;
+
+      const option = document.createElement("option");
+      option.value = carta.id;
+      let stringaTratti = carta.tratti && carta.tratti.length > 0 ? ` [${carta.tratti.join(",")}]` : " [Nessuno]";
+      option.innerText = `${iconaCartaTesto(carta)} ${carta.nome} [ ${vigore}%] F:${carta.statistiche.ferocia} B:${carta.statistiche.balzo} C:${carta.statistiche.corazza} I:${carta.statistiche.istinto}${stringaTratti}`;
+      if (carta.id === currentVal) option.selected = true;
+      select.appendChild(option);
+    });
+
+    select.removeEventListener("change", gestisciCambioSelectSotterraneo);
+    select.addEventListener("change", gestisciCambioSelectSotterraneo);
+  }
+}
+
+function gestisciCambioSelectSotterraneo() {
+  popolaSelectSchieramentoSotterraneo();
+  const btn = document.getElementById("sott-attacca-btn");
+  let scelti = [];
+  let valido = true;
+  for (let i = 0; i < 5; i++) {
+    const val = document.getElementById(`sott-deploy-slot-${i}`).value;
+    if (!val || scelti.includes(val)) valido = false;
+    else scelti.push(val);
+  }
+  if (btn) {
+    btn.disabled = !valido;
+    btn.innerText = valido ? "⚔️ Scendi in battaglia" : "Scegli le tue 5 creature";
+  }
+}
+
+document.getElementById("addestramento-modal")?.addEventListener("click", (e) => {
+  if (e.target && e.target.id === "sott-attacca-btn" && !e.target.disabled) {
+    avviaBattagliaSotterraneo();
+  }
+});
+
+function avviaBattagliaSotterraneo() {
+  let mazzoSotterraneo = [];
+  for (let i = 0; i < 5; i++) {
+    const cardId = document.getElementById(`sott-deploy-slot-${i}`).value;
+    mazzoSotterraneo.push(deckGiocatore.find(c => c.id === cardId));
+  }
+
+  document.getElementById("addestramento-modal").classList.add("hidden");
+
+  let roundVintiSotterraneo = 0;
+  nuovoRegistroBattaglia();
+  document.getElementById("battle-title-outcome").innerText = "DISCESA NEI SOTTERRANEI...";
+  document.getElementById("battle-result-modal").classList.remove("hidden");
+  let sottRoundIdx = 0;
+
+  function eseguiProssimoRoundSotterraneo() {
+    if (sottRoundIdx >= 5) {
+      risolviFineSotterraneo(mazzoSotterraneo, roundVintiSotterraneo);
+      return;
+    }
+
+    const miaCarta = mazzoSotterraneo[sottRoundIdx];
+    const mostroNemico = sotterraneiSquadraBot[sottRoundIdx];
+
+    let sommaMioVal = 0, sommaNemicoVal = 0;
+    sotterraneiStatistiche.forEach(stat => {
+      sommaMioVal += miaCarta.statistiche[stat];
+      sommaNemicoVal += mostroNemico.statistiche[stat];
+    });
+
+    let mioValBase = parseFloat((sommaMioVal / sotterraneiStatistiche.length).toFixed(1));
+    let nemicoValBase = parseFloat((sommaNemicoVal / sotterraneiStatistiche.length).toFixed(1));
+    let mioMod = calcolaModificatoreTerreno(miaCarta.tratti || [], sotterraneiTerreno);
+    let nemicoMod = calcolaModificatoreTerreno(mostroNemico.tratti || [], sotterraneiTerreno);
+    let mioValFinale = parseFloat((mioValBase + mioMod).toFixed(1));
+    let nemicoValFinale = parseFloat((nemicoValBase + nemicoMod).toFixed(1));
+
+    const esitoRound = (mioValFinale > nemicoValFinale);
+    if (esitoRound) roundVintiSotterraneo++;
+
+    const spiegaMio = spiegaModificatoreTerreno(miaCarta.tratti || [], sotterraneiTerreno);
+    const spiegaNemico = spiegaModificatoreTerreno(mostroNemico.tratti || [], sotterraneiTerreno);
+    registraRoundBattaglia({
+      numeroRound: sottRoundIdx + 1,
+      mioNome: miaCarta.nome,
+      nemicoNome: mostroNemico.nome,
+      statistiche: sotterraneiStatistiche,
+      mioBase: mioValBase, mioModificatore: mioMod, mioSpiegazioneModificatore: spiegaMio.spiegazione, mioFinale: mioValFinale,
+      nemicoBase: nemicoValBase, nemicoModificatore: nemicoMod, nemicoSpiegazioneModificatore: spiegaNemico.spiegazione, nemicoFinale: nemicoValFinale,
+      vinto: esitoRound
+    });
+
+    let roundCardId = `clash-sott-row-${sottRoundIdx}`;
+    let rLineHTML = `
+      <div class="battle-arena-row" id="${roundCardId}">
+        <div class="mini-card-anim" id="my-sott-card-${sottRoundIdx}">
+          <div style="font-size:0.8rem; font-weight:bold; color:#ffcc66;">${miaCarta.nome}</div>
+          <div style="font-size:1.5rem; margin:5px 0;">${miniImmagineCarta(miaCarta, 40)}</div>
+          <div style="font-size:0.75rem; font-weight:bold; color:#fff;">PUNTI: ${mioValFinale}</div>
+        </div>
+        <div class="vs-clash-text" id="vs-text-sott-${sottRoundIdx}">ROUND ${sottRoundIdx + 1}</div>
+        <div class="mini-card-anim" id="nem-sott-card-${sottRoundIdx}">
+          <div style="font-size:0.8rem; font-weight:bold; color:#f56565;">${mostroNemico.nome}</div>
+          <div style="font-size:1.5rem; margin:5px 0;">${miniImmagineCarta(mostroNemico, 40)}</div>
+          <div style="font-size:0.75rem; font-weight:bold; color:#fff;">PUNTI: ${nemicoValFinale}</div>
+        </div>
+      </div>`;
+
+    if (sottRoundIdx === 0) {
+      document.getElementById("battle-report-content").innerHTML = rLineHTML;
+    } else {
+      document.getElementById("battle-report-content").insertAdjacentHTML("beforeend", rLineHTML);
+    }
+
+    let targetRow = document.getElementById(roundCardId);
+    if (targetRow) targetRow.scrollIntoView({ behavior: 'smooth', block: 'end' });
+
+    setTimeout(() => {
+      document.getElementById(`my-sott-card-${sottRoundIdx}`).classList.add("mia-card-scatto");
+      document.getElementById(`nem-sott-card-${sottRoundIdx}`).classList.add("nemica-card-scatto");
+      document.getElementById(`vs-text-sott-${sottRoundIdx}`).classList.add("shake");
+
+      setTimeout(() => {
+        if (esitoRound) {
+          document.getElementById(`nem-sott-card-${sottRoundIdx}`).classList.add("card-sconfitta");
+          document.getElementById(`vs-text-sott-${sottRoundIdx}`).innerHTML = "VINCI";
+          document.getElementById(`vs-text-sott-${sottRoundIdx}`).style.color = "#48bb78";
+        } else {
+          document.getElementById(`my-sott-card-${sottRoundIdx}`).classList.add("card-sconfitta");
+          document.getElementById(`vs-text-sott-${sottRoundIdx}`).innerHTML = "PERDI";
+          document.getElementById(`vs-text-sott-${sottRoundIdx}`).style.color = "#f56565";
+        }
+        applicaSfiancamento(miaCarta, "mondo");
+        sottRoundIdx++;
+        setTimeout(eseguiProssimoRoundSotterraneo, 1000);
+      }, 400);
+    }, 600);
+  }
+
+  setTimeout(eseguiProssimoRoundSotterraneo, 500);
+}
+
+function risolviFineSotterraneo(mazzoSotterraneo, roundVinti) {
+  assicuraGiornoSotterranei();
+
+  const stelleGuadagnate = roundVinti >= 5 ? 3 : roundVinti === 4 ? 2 : roundVinti === 3 ? 1 : 0;
+  const superato = stelleGuadagnate > 0;
+  const primaVoltaSuQuestoLivello = sotterraneiLivelloAttuale > sotterraneiLivelloMassimoConPremio;
+  const guadagnoDracme = (superato && primaVoltaSuQuestoLivello) ? stelleGuadagnate * 100 : 0;
+
+  let epilogoHTML = `<div class="info-divider"></div>`;
+  document.getElementById("battle-title-outcome").innerText = superato ? "Sotterranei — Superato!" : "Sotterranei — Sconfitta";
+
+  epilogoHTML += `<p style="text-align:center; font-size:1.3rem;">${"⭐".repeat(stelleGuadagnate)}${"☆".repeat(3 - stelleGuadagnate)}</p>`;
+  epilogoHTML += `<p style="text-align:center; color:#e0d5c1;">Round vinti: ${roundVinti} su 5</p>`;
+
+  if (guadagnoDracme > 0) {
+    dracmeAttuali += guadagnoDracme;
+    document.getElementById("dracme-count").innerText = dracmeAttuali;
+    epilogoHTML += `<p style="text-align:center; font-weight:bold; color:#ecc94b;">Ricompensa: +${guadagnoDracme} Dracme</p>`;
+  } else if (superato) {
+    epilogoHTML += `<p style="text-align:center; color:#a89a7a; font-size:0.8rem;">Livello già superato in passato: nessuna nuova ricompensa.</p>`;
+  }
+
+  if (superato) {
+    if (primaVoltaSuQuestoLivello) sotterraneiLivelloMassimoConPremio = sotterraneiLivelloAttuale;
+    sotterraneiVittorieOggi++;
+    sotterraneiLivelloAttuale++;
+    epilogoHTML += `<p style="text-align:center; color:#7ee787; font-weight:bold;">Livello superato! Ora sei al livello ${sotterraneiLivelloAttuale}.</p>`;
+  } else {
+    epilogoHTML += `<p style="text-align:center; color:#f56565; font-weight:bold;">Servono almeno 3 vittorie su 5 per superare il livello. Riprova quando vuoi.</p>`;
+  }
+
+  salvaProgressoCloud();
+
+  epilogoHTML += `<div style="text-align:center; margin-top:12px; display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+    <button type="button" class="events-btn btn-vedi-statistiche" style="max-width:220px;">📊 Vedi Statistiche di Battaglia</button>
+    <button type="button" class="events-btn events-btn-main" id="sott-torna-hub-btn" style="max-width:220px;">Torna ai Sotterranei</button>
+  </div>`;
+
+  document.getElementById("battle-report-content").insertAdjacentHTML("beforeend", epilogoHTML);
+
+  document.getElementById("sott-torna-hub-btn").addEventListener("click", () => {
+    document.getElementById("battle-result-modal").classList.add("hidden");
+    document.getElementById("addestramento-modal").classList.remove("hidden");
+    renderizzaHubSotterranei();
+  });
 }
 
 // ===== Tracciamento completamento delle 11 Fatiche, per sbloccare Cerbero =====
@@ -11305,6 +11669,10 @@ function raccogliDatiSalvataggio() {
     addestramentoPremioRitirato: addestramentoPremioRitirato,
     addestramentoApertoAlmenoUnaVolta: addestramentoApertoAlmenoUnaVolta,
     addestramentoDaEvidenziare: addestramentoDaEvidenziare,
+    sotterraneiLivelloAttuale: sotterraneiLivelloAttuale,
+    sotterraneiLivelloMassimoConPremio: sotterraneiLivelloMassimoConPremio,
+    sotterraneiVittorieOggi: sotterraneiVittorieOggi,
+    sotterraneiDataVittorie: sotterraneiDataVittorie,
     ultimoSalvataggio: Date.now()
   };
 }
@@ -11549,6 +11917,18 @@ function applicaDatiCaricati(dati) {
   if (typeof dati.addestramentoDaEvidenziare === "boolean") {
     addestramentoDaEvidenziare = dati.addestramentoDaEvidenziare;
     aggiornaEvidenziazioneAddestramento();
+  }
+  if (typeof dati.sotterraneiLivelloAttuale === "number") {
+    sotterraneiLivelloAttuale = dati.sotterraneiLivelloAttuale;
+  }
+  if (typeof dati.sotterraneiLivelloMassimoConPremio === "number") {
+    sotterraneiLivelloMassimoConPremio = dati.sotterraneiLivelloMassimoConPremio;
+  }
+  if (typeof dati.sotterraneiVittorieOggi === "number") {
+    sotterraneiVittorieOggi = dati.sotterraneiVittorieOggi;
+  }
+  if (typeof dati.sotterraneiDataVittorie === "string") {
+    sotterraneiDataVittorie = dati.sotterraneiDataVittorie;
   }
   if (dati.tributoRaStato && typeof dati.tributoRaStato === "object") {
     tributoRaStato = Object.assign({ scambiOggi: 0, dataUltimoScambio: "" }, dati.tributoRaStato);
