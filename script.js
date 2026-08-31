@@ -96,7 +96,7 @@ document.addEventListener("touchstart", () => {
 // .value, .disabled o le <option> su questi elementi, continua a funzionare senza modifiche.
 function potenziaMenuATendina() {
 
-  const selettori = document.querySelectorAll("select.deploy-select, #modal-sort-select");
+  const selettori = document.querySelectorAll("select.deploy-select, #modal-sort-select, #modal-rarita-select");
 
   selettori.forEach(sel => {
 
@@ -1327,7 +1327,7 @@ function mostraCartaFullscreen(carta, opzioniExtra) {
 
   const bottonePlastificaHTML = carta.isJolly ? "" : `
     <button type="button" class="attack-btn" id="fs-card-plastifica-btn" style="width:100%; margin-top:8px; background:${carta.plastificata ? "linear-gradient(to bottom, #4a5568, #2d3748)" : "linear-gradient(to bottom, #3182ce, #2262a8)"}; border-color:${carta.plastificata ? "#2d3748" : "#2262a8"};">
-      ${carta.plastificata ? "📦 Rimuovi Plastificazione" : "📦 Plastifica (protegge dai sacrifici)"}
+      ${carta.plastificata ? "📦 Rimuovi Plastificazione" : "📦 Plastifica"}
     </button>`;
 
   const overlay = document.createElement("div");
@@ -4330,6 +4330,7 @@ const CARTE_PER_PAGINA_RACCOGLITORE = 60;
 const CARTE_PER_META_PAGINA_RACCOGLITORE = 30;
 let paginaCorrenteRaccoglitore = 0;
 let carteOrdinateRaccoglitoreCorrente = [];
+let filtroRaritaRaccoglitoreCorrente = localStorage.getItem("mythophedia_filtro_rarita_raccoglitore") || "";
 
 // Punto d'ingresso: ricalcola l'ordinamento e riparte dalla prima pagina (usato dal pulsante
 // "Il Raccoglitore" e dal menu a tendina). mantieniPagina=true viene usato dai tasti Avanti/Indietro.
@@ -4348,11 +4349,25 @@ function renderizzaRaccoglitore(criterio, mantieniPagina) {
   const selettore = document.getElementById("modal-sort-select");
   if (selettore && selettore.value !== criterio) selettore.value = criterio;
 
-  carteOrdinateRaccoglitoreCorrente = ordinaCarteRaccoglitore(deckGiocatore, criterio);
+  const selettoreRarita = document.getElementById("modal-rarita-select");
+  if (selettoreRarita && selettoreRarita.value !== filtroRaritaRaccoglitoreCorrente) selettoreRarita.value = filtroRaritaRaccoglitoreCorrente;
+
+  const deckFiltratoPerRarita = filtroRaritaRaccoglitoreCorrente
+    ? deckGiocatore.filter(c => c.livello === parseInt(filtroRaritaRaccoglitoreCorrente))
+    : deckGiocatore;
+
+  carteOrdinateRaccoglitoreCorrente = ordinaCarteRaccoglitore(deckFiltratoPerRarita, criterio);
   if (!mantieniPagina) paginaCorrenteRaccoglitore = 0;
 
   renderizzaPaginaRaccoglitore();
 }
+
+function gestisciCambioFiltroRaritaRaccoglitore() {
+  filtroRaritaRaccoglitoreCorrente = document.getElementById("modal-rarita-select").value;
+  localStorage.setItem("mythophedia_filtro_rarita_raccoglitore", filtroRaritaRaccoglitoreCorrente);
+  renderizzaRaccoglitore();
+}
+document.getElementById("modal-rarita-select")?.addEventListener("change", gestisciCambioFiltroRaritaRaccoglitore);
 
 // Genera l'HTML di una singola tasca/carta del raccoglitore
 function generaHTMLCartaRaccoglitore(carta) {
@@ -4459,7 +4474,9 @@ function renderizzaPaginaRaccoglitore() {
   const footer = document.querySelector(".raccoglitore-footer");
   if (footer) footer.classList.remove("hidden");
 
-  modalTitle.innerText = `${deckGiocatore.length} carte`;
+  modalTitle.innerText = filtroRaritaRaccoglitoreCorrente
+    ? `${carteOrdinateRaccoglitoreCorrente.length} carte (su ${deckGiocatore.length})`
+    : `${deckGiocatore.length} carte`;
 
   const totalePagine = Math.max(1, Math.ceil(carteOrdinateRaccoglitoreCorrente.length / CARTE_PER_PAGINA_RACCOGLITORE));
   if (paginaCorrenteRaccoglitore >= totalePagine) paginaCorrenteRaccoglitore = totalePagine - 1;
@@ -6948,7 +6965,7 @@ let miraStato = { tentativiOggi: 0, dataUltimoTentativo: "" };
 const MIRA_TENTATIVI_MAX = 3;
 const MIRA_FRECCE_MAX = 15;
 const MIRA_NUM_UCCELLI = 2;
-const MIRA_VELOCITA = 1.9;
+const MIRA_VELOCITA = 2.6;
 const MIRA_TICK_MS = 40;
 
 const MIRA_PREMI = [

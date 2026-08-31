@@ -819,6 +819,8 @@ html.forza-landscape .close-btn { font-size: 1.6rem; }
 
 .raccoglitore-controlli-header { display: flex; align-items: center; gap: 8px; flex-wrap: nowrap; margin: 0 10px; }
 
+.raccoglitore-controlli-header .fake-select-wrapper { flex: 0 1 150px; min-width: 90px; }
+
 .raccoglitore-paginazione-header { display: flex; align-items: center; gap: 6px; }
 
 .raccoglitore-nav-btn-compatto { background: linear-gradient(to bottom, #6b4d1e, #4a3413); color: #f0e2c0; border: 1px solid #c9a054; border-radius: 6px; padding: 5px 10px; font-family: 'Cinzel', 'Georgia', serif; font-size: 0.85rem; cursor: pointer; line-height: 1; }
