@@ -5055,17 +5055,19 @@ function acquistaPacchetto(id) {
 
  
 
+  const nomiPossedutiPrimaDelPacco = new Set(deckGiocatore.map(c => c.nome));
+
   deckGiocatore = deckGiocatore.concat(nuoveCarte);
 
   aggiornaPulsantiLateraliRarita();
 
   document.getElementById("battle-title-outcome").innerText = "Spacchettamento!";
 
-  mostraPaccoDaAprire(pack, nuoveCarte);
+  mostraPaccoDaAprire(pack, nuoveCarte, nomiPossedutiPrimaDelPacco);
 
 }
 
-function mostraPaccoDaAprire(pack, nuoveCarte) {
+function mostraPaccoDaAprire(pack, nuoveCarte, nomiPossedutiPrimaDelPacco) {
 
   document.getElementById("battle-report-content").innerHTML = `
     <div class="pack-apertura-scena">
@@ -5079,11 +5081,11 @@ function mostraPaccoDaAprire(pack, nuoveCarte) {
 
   document.getElementById("battle-result-modal").classList.remove("hidden");
 
-  document.getElementById("pack-fisico-clic").addEventListener("click", () => apriAnimazionePacco(pack, nuoveCarte), { once: true });
+  document.getElementById("pack-fisico-clic").addEventListener("click", () => apriAnimazionePacco(pack, nuoveCarte, nomiPossedutiPrimaDelPacco), { once: true });
 
 }
 
-function apriAnimazionePacco(pack, nuoveCarte) {
+function apriAnimazionePacco(pack, nuoveCarte, nomiPossedutiPrimaDelPacco) {
 
   const pacco = document.getElementById("pack-fisico-clic");
   document.getElementById("pack-tocca-testo")?.remove();
@@ -5094,16 +5096,17 @@ function apriAnimazionePacco(pack, nuoveCarte) {
 
   pacco.classList.add("pack-in-apertura");
 
-  setTimeout(() => mostraGrigliaCarteEstratte(pack, nuoveCarte), 650);
+  setTimeout(() => mostraGrigliaCarteEstratte(pack, nuoveCarte, nomiPossedutiPrimaDelPacco), 650);
 
 }
 
-function mostraGrigliaCarteEstratte(pack, nuoveCarte) {
+function mostraGrigliaCarteEstratte(pack, nuoveCarte, nomiPossedutiPrimaDelPacco) {
 
   let cartineFlipHTML = nuoveCarte.map((c, idx) => {
 
     let raro = c.livello >= 3 ? " rare-glow" : "";
     let anticipazione = c.livello >= 4 ? " pack-flip-anticipazione" : "";
+    let eNuova = nomiPossedutiPrimaDelPacco && !nomiPossedutiPrimaDelPacco.has(c.nome);
 
     return `
 
@@ -5114,6 +5117,8 @@ function mostraGrigliaCarteEstratte(pack, nuoveCarte) {
           <div class="pack-flip-front">🎴</div>
 
           <div class="pack-flip-back">
+
+            ${eNuova ? '<span class="pack-flip-badge-nuova">nuova!</span>' : ''}
 
             <div style="font-size:1.8rem;">${miniImmagineCarta(c, 40)}</div>
 

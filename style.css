@@ -1540,12 +1540,14 @@ html.narrow-420 #clan-join-creation-view {
   justify-content: center;
   height: 100%;
   gap: 22px;
+  overflow: hidden;
 }
 
 .pack-fisico {
   position: relative;
-  width: 170px;
-  height: 230px;
+  width: min(170px, calc(var(--app-height) * 37 / 100 * 170 / 230));
+  height: min(230px, calc(var(--app-height) * 37 / 100));
+  aspect-ratio: 170 / 230;
   cursor: pointer;
   filter: drop-shadow(0 0 18px rgba(255, 204, 102, 0.45));
 }
@@ -1717,6 +1719,22 @@ html.narrow-420 #clan-join-creation-view {
 
   box-shadow: 0 0 14px rgba(246, 224, 94, 0.7);
 
+}
+
+.pack-flip-badge-nuova {
+  position: absolute;
+  top: 8px;
+  left: -14px;
+  transform: rotate(-35deg);
+  background: linear-gradient(135deg, #e64539, #a3231e);
+  color: #fff;
+  font-size: 0.5rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 1px 14px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.6);
+  z-index: 2;
 }
 /* ===== Guida consultabile ===== */
 .stat-btn.clickable-stat {
