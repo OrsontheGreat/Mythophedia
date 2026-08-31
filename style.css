@@ -300,6 +300,26 @@ body, html {
 
 .map-tile-label { font-size: 0.78rem; font-weight: bold; text-transform: uppercase; text-align: center; color: #ffcc66; line-height: 1.2; text-shadow: 0 0 6px rgba(0,0,0,0.9), 0 0 12px rgba(0,0,0,0.7), 1px 1px 2px rgba(0,0,0,1); }
 
+.map-tile-evidenziata .map-tile-img-wrap {
+  animation: mapTileEvidenziataPulse 1.3s infinite alternate;
+  border-radius: 12px;
+}
+
+@keyframes mapTileEvidenziataPulse {
+  0% { filter: drop-shadow(0 0 4px #ffcc66); }
+  100% { filter: drop-shadow(0 0 18px #ffcc66) drop-shadow(0 0 8px #fff6d5); }
+}
+
+.addestramento-opzione-clic {
+  cursor: pointer;
+  transition: transform 0.15s ease;
+  border-radius: 10px;
+}
+
+.addestramento-opzione-clic:hover {
+  transform: translateY(-3px);
+}
+
 .map-tile-counter { font-size: 0.65rem; color: #a89a7a; margin-top: -4px; text-shadow: 0 0 4px rgba(0,0,0,0.95), 1px 1px 2px rgba(0,0,0,1); }
 
 /* ===== Piastrelle Fatiche: griglia 4x3 numerata, niente scroll ===== */

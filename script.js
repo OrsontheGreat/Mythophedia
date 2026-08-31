@@ -3352,21 +3352,7 @@ function controllaSfideRealiVinte() {
 
 document.getElementById("btn-duelli").addEventListener("click", () => {
 
-  generaSfideArtificiali();
-
-  controllaSfideRealiVinte();
-
-  caricaSfideRealiCondivise(() => {
-
-    renderizzaBachecaDuelli();
-
-  });
-
-  gestisciConfigurazioneSelettoriStatisticheArena();
-
-  popolaSelectMazzoDuelli();
-
-  document.getElementById("duels-modal").classList.remove("hidden");
+  apriAddestramento();
 
 });
 
@@ -3374,6 +3360,10 @@ document.getElementById("close-duels-modal").addEventListener("click", () => {
 
   document.getElementById("duels-modal").classList.add("hidden");
 
+});
+
+document.getElementById("close-addestramento-modal").addEventListener("click", () => {
+  document.getElementById("addestramento-modal").classList.add("hidden");
 });
 
  
@@ -8368,7 +8358,7 @@ const TUTORIAL_PASSI = [
   },
   {
     selettore: "#btn-duelli",
-    testo: "Il Colosseo ospita i Duelli: sfide dirette contro altri giocatori, con una posta in Dracme in palio per chi vince."
+    testo: "Il Colosseo ospita il mio Addestramento: un percorso in più tappe, sempre disponibile quando vuoi, per imparare a fondo come funzionano gli scontri — incluso il modificatore di terreno, che vedremo tra poco."
   },
   {
     selettore: "#btn-mercato",
@@ -8473,7 +8463,340 @@ function chiudiTutorialChirone() {
 
   tutorialCompletato = true;
   localStorage.setItem("mythophedia_tutorial_completato", "true");
+
+  // Al termine del tutorial iniziale, la formella dell'Addestramento si illumina per invitare
+  // il giocatore a provarlo — resta accesa finché non lo apre almeno una volta.
+  if (!addestramentoApertoAlmenoUnaVolta) {
+    addestramentoDaEvidenziare = true;
+    aggiornaEvidenziazioneAddestramento();
+  }
+
   salvaProgressoCloud();
+}
+
+// ===== Addestramento nel Colosseo: percorso guidato in 8 tappe sulla meccanica di combattimento =====
+
+let addestramentoTappaAttuale = 0;
+let addestramentoRoundAttuale = 0;
+let addestramentoRoundVinti = 0;
+let addestramentoAttesaScelta = false;
+let addestramentoPremioRitirato = false;
+let addestramentoApertoAlmenoUnaVolta = false;
+let addestramentoDaEvidenziare = false;
+
+const ADDESTRAMENTO_TAPPE = [
+  {
+    titolo: "Il primo scontro",
+    narrazione: "Cominciamo dal principio. Una creatura contro una creatura, nessun terreno particolare: la regola più semplice di tutte.",
+    modalita: "osserva",
+    terreno: null,
+    statistiche: ["ferocia"],
+    round: [{ mia: "Grifone Recluta", nemica: "Ceto Minore" }],
+    spiegazione: "Hai vinto perché la tua Ferocia era più alta di quella nemica. È la base di ogni scontro: chi ha il valore più alto in quel round, vince quel round."
+  },
+  {
+    titolo: "Più di uno scontro",
+    narrazione: "Nei Sottomondi e nelle Guerre di Clan non si combatte una sola volta: si schierano più creature, una contro una, in round successivi.",
+    modalita: "osserva",
+    terreno: null,
+    statistiche: ["ferocia"],
+    round: [
+      { mia: "Grifone Recluta", nemica: "Ceto Minore" },
+      { mia: "Aura Marina", nemica: "Idriade" },
+      { mia: "Boggart", nemica: "Cariddi Minore" }
+    ],
+    spiegazione: "Hai perso il terzo round, ma va bene così: la battaglia si vince a maggioranza. Bastano più round vinti che persi — qui 2 su 3."
+  },
+  {
+    titolo: "Più statistiche insieme",
+    narrazione: "A volte conta più di una statistica insieme, mediata tra loro. Guarda con attenzione il primo round qui sotto.",
+    modalita: "osserva",
+    terreno: null,
+    statistiche: ["ferocia", "corazza"],
+    round: [
+      { mia: "Ippocampo Selvatico", nemica: "Cariddi Minore" },
+      { mia: "Alseide", nemica: "Amadriade" },
+      { mia: "Boggart", nemica: "Centauro" }
+    ],
+    spiegazione: "Nel primo round, guardando solo la Ferocia la nemica ti avrebbe battuto — ma qui contava la media di Ferocia e Corazza insieme, e in quella hai vinto tu. Leggi sempre quali statistiche sono in gioco prima di scegliere."
+  },
+  {
+    titolo: "Il terreno conta",
+    narrazione: "Ed eccoci al punto più importante: il terreno. Alcuni tratti vengono premiati o penalizzati a seconda di dove si combatte. Guarda cosa succede in Aria.",
+    modalita: "osserva",
+    terreno: "aria",
+    statistiche: ["balzo"],
+    round: [
+      { mia: "Ieraco", nemica: "Aura Marina" },
+      { mia: "Grifone Recluta", nemica: "Idriade" },
+      { mia: "Arpìa Cacciatrice", nemica: "Ippocampo Selvatico" }
+    ],
+    spiegazione: "Le tue creature alate hanno il tratto Volo: in Aria ricevono +2. Le nemiche invece hanno Nuoto, che in Aria viene penalizzato di -2. Il terreno ha reso una vittoria già probabile, schiacciante."
+  },
+  {
+    titolo: "Anche in negativo",
+    narrazione: "Le stesse identiche creature della tappa precedente. Stavolta però il terreno è un altro: Acqua.",
+    modalita: "osserva",
+    terreno: "acqua",
+    statistiche: ["balzo"],
+    round: [
+      { mia: "Ieraco", nemica: "Aura Marina" },
+      { mia: "Grifone Recluta", nemica: "Idriade" },
+      { mia: "Arpìa Cacciatrice", nemica: "Ippocampo Selvatico" }
+    ],
+    spiegazione: "In acqua le tue ali non servono a nulla, anzi pesano (-2), mentre le nemiche nuotano che è un piacere (+2). Stesse creature, stesse statistiche di base — ma il terreno sbagliato ha ribaltato completamente lo scontro."
+  },
+  {
+    titolo: "Scegli tu il terreno giusto",
+    narrazione: "Ora tocca a te. Terreno: Foresta. Per ogni round scegli quale delle due creature schierare — pensa a quale tratto viene premiato qui.",
+    modalita: "scegli",
+    terreno: "foresta",
+    statistiche: ["ferocia"],
+    round: [
+      { opzioni: ["Amadriade", "Ieraco"], nemica: "Cariddi Minore" },
+      { opzioni: ["Cerva di Cerinea", "Grifone Recluta"], nemica: "Telchino" },
+      { opzioni: ["Nanuq", "Arpìa Cacciatrice"], nemica: "Makara" }
+    ]
+  },
+  {
+    titolo: "Più creature, più scelte",
+    narrazione: "Cambiamo terreno: Acqua. Le stesse creature che in Foresta non ti sarebbero servite qui potrebbero essere perfette — o il contrario.",
+    modalita: "scegli",
+    terreno: "acqua",
+    statistiche: ["ferocia"],
+    round: [
+      { opzioni: ["Aura Marina", "Ieraco"], nemica: "Grifone Recluta" },
+      { opzioni: ["Cariddi Minore", "Aura Volante"], nemica: "Ippogrifo" },
+      { opzioni: ["Ippocampo Selvatico", "Fenice Pulcino"], nemica: "Keres della Cenere" }
+    ]
+  },
+  {
+    titolo: "La prova finale",
+    narrazione: "Ultima tappa: una vera battaglia a 5 round, come quelle che troverai sui Sottomondi. Terreni diversi, statistiche diverse. Mettiamo alla prova tutto quello che hai imparato.",
+    modalita: "osserva",
+    terreno: null,
+    statistiche: ["ferocia"],
+    round: [
+      { mia: "Alseide", nemica: "Amadriade", terreno: null, statistiche: ["ferocia"] },
+      { mia: "Ieraco", nemica: "Ippocampo Selvatico", terreno: "aria", statistiche: ["balzo"] },
+      { mia: "Aura Marina", nemica: "Grifone Recluta", terreno: "aria", statistiche: ["ferocia"] },
+      { mia: "Nanuq", nemica: "Cariddi Minore", terreno: "foresta", statistiche: ["ferocia"] },
+      { mia: "Centauro", nemica: "Boggart", terreno: null, statistiche: ["corazza"] }
+    ],
+    spiegazione: "Hai vinto la battaglia! Nota come nel terzo round, nonostante l'Aria ti fosse favorevole in linea di massima, la statistica di base della nemica era così alta da vincere comunque — il terreno aiuta, ma non è mai l'unica cosa che conta."
+  }
+];
+
+function valoreConTerreno(nomeCarta, statistiche, terreno) {
+  const carta = CARTE_FISSE.find(c => c.nome === nomeCarta);
+  const s = carta.statisticheFisse;
+  const base = statistiche.reduce((tot, st) => tot + s[st], 0) / statistiche.length;
+  const mod = terreno ? calcolaModificatoreTerreno(carta.tratti || [], terreno) : 0;
+  return { carta, base: parseFloat(base.toFixed(1)), mod, finale: parseFloat((base + mod).toFixed(1)) };
+}
+
+function apriAddestramento() {
+  addestramentoApertoAlmenoUnaVolta = true;
+  addestramentoDaEvidenziare = false;
+  aggiornaEvidenziazioneAddestramento();
+  salvaProgressoCloud();
+
+  addestramentoTappaAttuale = 0;
+  avviaTappaAddestramento();
+  document.getElementById("addestramento-modal").classList.remove("hidden");
+}
+
+function avviaTappaAddestramento() {
+  addestramentoRoundAttuale = 0;
+  addestramentoRoundVinti = 0;
+  addestramentoAttesaScelta = false;
+  renderizzaAddestramento();
+}
+
+function terrenoEmoji(terreno) {
+  return { aria: "🌬️ Aria", acqua: "🌊 Acqua", foresta: "🌲 Foresta", terra: "⛰️ Terra" }[terreno] || null;
+}
+
+function renderizzaAddestramento() {
+  const tappa = ADDESTRAMENTO_TAPPE[addestramentoTappaAttuale];
+  const contenitore = document.getElementById("addestramento-content");
+  const numeroRound = tappa.round.length;
+  const inizioRound = addestramentoRoundAttuale === 0 && !addestramentoAttesaScelta;
+
+  let intestazioneHTML = `
+    <div style="text-align:center; width:100%;">
+      <p style="color:#a89a7a; font-size:0.8rem;">Tappa ${addestramentoTappaAttuale + 1} di ${ADDESTRAMENTO_TAPPE.length}</p>
+      <h3 style="color:#ffcc66; margin:2px 0 8px;">${tappa.titolo}</h3>
+    </div>`;
+
+  if (inizioRound && addestramentoRoundAttuale === 0) {
+    contenitore.innerHTML = intestazioneHTML + `
+      <div class="tutorial-chirone-box" style="max-width:520px;">
+        <img src="img/carte/chirone.jpg" class="tutorial-chirone-ritratto" onerror="this.style.display='none';">
+        <div class="tutorial-chirone-testo">${tappa.narrazione}</div>
+      </div>
+      <button type="button" id="addestramento-inizia-round-btn" class="events-btn events-btn-main" style="max-width:220px;">Inizia</button>`;
+    document.getElementById("addestramento-inizia-round-btn").addEventListener("click", () => renderizzaRoundAddestramento());
+    return;
+  }
+
+  renderizzaRoundAddestramento();
+}
+
+function renderizzaRoundAddestramento() {
+  const tappa = ADDESTRAMENTO_TAPPE[addestramentoTappaAttuale];
+  const contenitore = document.getElementById("addestramento-content");
+  const round = tappa.round[addestramentoRoundAttuale];
+  const terrenoRound = round.terreno !== undefined ? round.terreno : tappa.terreno;
+  const statRound = round.statistiche || tappa.statistiche;
+
+  const badgeTerreno = terrenoEmoji(terrenoRound);
+
+  const intestazione = `
+    <div style="text-align:center; width:100%;">
+      <p style="color:#a89a7a; font-size:0.8rem;">Tappa ${addestramentoTappaAttuale + 1} di ${ADDESTRAMENTO_TAPPE.length} — Round ${addestramentoRoundAttuale + 1} di ${tappa.round.length}</p>
+      ${badgeTerreno ? `<p style="color:#ffcc66; font-weight:bold;">Terreno: ${badgeTerreno}</p>` : `<p style="color:#a89a7a;">Nessun terreno particolare</p>`}
+      <p style="color:#a89a7a; font-size:0.78rem;">Statistiche in gioco: <b style="color:#e0d5c1;">${statRound.map(s => s.toUpperCase()).join(" + ")}</b></p>
+    </div>`;
+
+  if (tappa.modalita === "osserva") {
+    const mia = valoreConTerreno(round.mia, statRound, terrenoRound);
+    const nem = valoreConTerreno(round.nemica, statRound, terrenoRound);
+
+    contenitore.innerHTML = intestazione + `
+      <div style="display:flex; gap:16px; justify-content:center; width:100%; flex-wrap:wrap;">
+        ${costruisciCartaEsempioTutorial(round.mia)}
+        ${costruisciCartaEsempioTutorial(round.nemica)}
+      </div>
+      <button type="button" id="addestramento-rivela-btn" class="events-btn events-btn-main" style="max-width:220px;">Rivela il risultato</button>
+      <div id="addestramento-esito-box" class="hidden"></div>`;
+
+    document.getElementById("addestramento-rivela-btn").addEventListener("click", () => {
+      mostraEsitoRoundAddestramento(mia, nem, mia.finale > nem.finale);
+    });
+
+  } else {
+    // modalità "scegli": due carte candidate, il giocatore ne tocca una
+    contenitore.innerHTML = intestazione + `
+      <p style="text-align:center; color:#e0d5c1; font-size:0.85rem;">Quale delle due schieri?</p>
+      <div style="display:flex; gap:16px; justify-content:center; width:100%; flex-wrap:wrap;" id="addestramento-opzioni-riga">
+        ${round.opzioni.map(nome => `<div class="addestramento-opzione-clic" data-nome="${nome}">${costruisciCartaEsempioTutorial(nome)}</div>`).join("")}
+      </div>
+      <p style="text-align:center; color:#a89a7a; font-size:0.78rem;">Nemica in campo:</p>
+      <div style="display:flex; justify-content:center;">${costruisciCartaEsempioTutorial(round.nemica)}</div>`;
+
+    document.querySelectorAll(".addestramento-opzione-clic").forEach(el => {
+      el.addEventListener("click", () => {
+        const nomeScelto = el.dataset.nome;
+        const nomeScartato = round.opzioni.find(n => n !== nomeScelto);
+        const mia = valoreConTerreno(nomeScelto, statRound, terrenoRound);
+        const nem = valoreConTerreno(round.nemica, statRound, terrenoRound);
+        const scartata = valoreConTerreno(nomeScartato, statRound, terrenoRound);
+        mostraEsitoRoundAddestramento(mia, nem, mia.finale > nem.finale, scartata);
+      });
+    });
+  }
+}
+
+function mostraEsitoRoundAddestramento(mia, nem, vinto, scartata) {
+  if (vinto) addestramentoRoundVinti++;
+
+  const box = document.getElementById("addestramento-esito-box") || document.createElement("div");
+  box.id = "addestramento-esito-box";
+  box.classList.remove("hidden");
+
+  const rigaMod = (v) => v.mod !== 0 ? ` <span style="color:${v.mod > 0 ? '#7ee787' : '#f56565'};">${v.mod > 0 ? "+" : ""}${v.mod.toFixed(1)} terreno</span>` : "";
+
+  let html = `
+    <div style="background:rgba(0,0,0,0.4); border-radius:8px; padding:12px; margin-top:10px; text-align:center;">
+      <p style="font-size:1.1rem; font-weight:bold; color:${vinto ? '#7ee787' : '#f56565'};">${vinto ? "Round vinto!" : "Round perso"}</p>
+      <p style="font-size:0.85rem; color:#e0d5c1;">${mia.carta.nome}: base ${mia.base.toFixed(1)}${rigaMod(mia)} → <b>${mia.finale.toFixed(1)}</b></p>
+      <p style="font-size:0.85rem; color:#e0d5c1;">${nem.carta.nome}: base ${nem.base.toFixed(1)}${rigaMod(nem)} → <b>${nem.finale.toFixed(1)}</b></p>
+      ${scartata ? `<p style="font-size:0.78rem; color:#a89a7a; margin-top:6px;">Se avessi schierato ${scartata.carta.nome} invece: sarebbe arrivata a <b>${scartata.finale.toFixed(1)}</b> — ${scartata.finale > nem.finale ? "avrebbe vinto comunque" : "avrebbe perso"}.</p>` : ""}
+    </div>
+    <button type="button" id="addestramento-avanti-round-btn" class="events-btn events-btn-main" style="max-width:220px; margin-top:10px;">
+      ${addestramentoRoundAttuale + 1 < ADDESTRAMENTO_TAPPE[addestramentoTappaAttuale].round.length ? "Round successivo" : "Vedi risultato tappa"}
+    </button>`;
+
+  const contenitore = document.getElementById("addestramento-content");
+  contenitore.insertAdjacentHTML("beforeend", html);
+  document.getElementById(`addestramento-rivela-btn`)?.remove();
+  document.getElementById("addestramento-opzioni-riga")?.querySelectorAll(".addestramento-opzione-clic").forEach(el => el.style.pointerEvents = "none");
+
+  document.getElementById("addestramento-avanti-round-btn").addEventListener("click", () => {
+    addestramentoRoundAttuale++;
+    if (addestramentoRoundAttuale < ADDESTRAMENTO_TAPPE[addestramentoTappaAttuale].round.length) {
+      renderizzaRoundAddestramento();
+    } else {
+      mostraRisultatoTappaAddestramento();
+    }
+  });
+}
+
+function mostraRisultatoTappaAddestramento() {
+  const tappa = ADDESTRAMENTO_TAPPE[addestramentoTappaAttuale];
+  const totale = tappa.round.length;
+  const vinta = addestramentoRoundVinti > totale / 2;
+  const ultimaTappa = addestramentoTappaAttuale === ADDESTRAMENTO_TAPPE.length - 1;
+
+  const contenitore = document.getElementById("addestramento-content");
+  contenitore.innerHTML = `
+    <div class="tutorial-chirone-box" style="max-width:520px;">
+      <img src="img/carte/chirone.jpg" class="tutorial-chirone-ritratto" onerror="this.style.display='none';">
+      <div class="tutorial-chirone-testo">
+        <p style="font-weight:bold; color:${vinta ? '#7ee787' : '#f56565'};">${vinta ? `Battaglia vinta! (${addestramentoRoundVinti} round su ${totale})` : `Battaglia persa (${addestramentoRoundVinti} round su ${totale})`}</p>
+        ${tappa.spiegazione ? `<p style="margin-top:8px;">${tappa.spiegazione}</p>` : ""}
+      </div>
+    </div>
+    <button type="button" id="addestramento-prossima-tappa-btn" class="events-btn events-btn-main" style="max-width:260px;">
+      ${ultimaTappa ? "Completa l'Addestramento" : "Tappa successiva"}
+    </button>`;
+
+  document.getElementById("addestramento-prossima-tappa-btn").addEventListener("click", () => {
+    if (ultimaTappa) {
+      completaAddestramento();
+    } else {
+      addestramentoTappaAttuale++;
+      avviaTappaAddestramento();
+    }
+  });
+}
+
+function completaAddestramento() {
+  const contenitore = document.getElementById("addestramento-content");
+  const primaVolta = !addestramentoPremioRitirato;
+
+  let premioHTML = "";
+  if (primaVolta) {
+    addestramentoPremioRitirato = true;
+    dracmeAttuali += 2000;
+    ambraAttuale += 5;
+    document.getElementById("dracme-count").innerText = dracmeAttuali;
+    document.getElementById("ambra-count").innerText = ambraAttuale;
+    salvaProgressoCloud();
+    premioHTML = `<p style="color:#ffcc66; font-weight:bold; margin-top:10px;">🎁 Premio di laurea: 2000 Dracme e 5 Frammenti d'Ambra!</p>`;
+  }
+
+  contenitore.innerHTML = `
+    <div class="tutorial-chirone-box" style="max-width:520px;">
+      <img src="img/carte/chirone.jpg" class="tutorial-chirone-ritratto" onerror="this.style.display='none';">
+      <div class="tutorial-chirone-testo">
+        <p style="font-weight:bold; color:#7ee787;">Sei pronto, Evocatore.</p>
+        <p style="margin-top:8px;">Hai visto come si calcola un round, come si vince una battaglia, e soprattutto come il terreno può cambiare tutto. Ora tocca a te: vai a mettere alla prova quello che hai imparato nei Sottomondi e nelle Guerre di Clan.</p>
+        ${premioHTML}
+      </div>
+    </div>
+    <button type="button" id="addestramento-chiudi-finale-btn" class="events-btn events-btn-main" style="max-width:220px;">Chiudi</button>`;
+
+  document.getElementById("addestramento-chiudi-finale-btn").addEventListener("click", () => {
+    document.getElementById("addestramento-modal").classList.add("hidden");
+  });
+}
+
+function aggiornaEvidenziazioneAddestramento() {
+  const btn = document.getElementById("btn-duelli");
+  if (!btn) return;
+  btn.classList.toggle("map-tile-evidenziata", !!addestramentoDaEvidenziare);
 }
 
 // ===== Tracciamento completamento delle 11 Fatiche, per sbloccare Cerbero =====
@@ -10956,6 +11279,9 @@ function raccogliDatiSalvataggio() {
     faticheCompletateStato: faticheCompletateStato,
     tutorialCompletato: tutorialCompletato,
     tributoRaStato: tributoRaStato,
+    addestramentoPremioRitirato: addestramentoPremioRitirato,
+    addestramentoApertoAlmenoUnaVolta: addestramentoApertoAlmenoUnaVolta,
+    addestramentoDaEvidenziare: addestramentoDaEvidenziare,
     ultimoSalvataggio: Date.now()
   };
 }
@@ -11190,6 +11516,16 @@ function applicaDatiCaricati(dati) {
   }
   if (typeof dati.tutorialCompletato === "boolean") {
     tutorialCompletato = dati.tutorialCompletato;
+  }
+  if (typeof dati.addestramentoPremioRitirato === "boolean") {
+    addestramentoPremioRitirato = dati.addestramentoPremioRitirato;
+  }
+  if (typeof dati.addestramentoApertoAlmenoUnaVolta === "boolean") {
+    addestramentoApertoAlmenoUnaVolta = dati.addestramentoApertoAlmenoUnaVolta;
+  }
+  if (typeof dati.addestramentoDaEvidenziare === "boolean") {
+    addestramentoDaEvidenziare = dati.addestramentoDaEvidenziare;
+    aggiornaEvidenziazioneAddestramento();
   }
   if (dati.tributoRaStato && typeof dati.tributoRaStato === "object") {
     tributoRaStato = Object.assign({ scambiOggi: 0, dataUltimoScambio: "" }, dati.tributoRaStato);
