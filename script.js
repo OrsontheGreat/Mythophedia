@@ -8522,29 +8522,31 @@ const ADDESTRAMENTO_TAPPE = [
   },
   {
     titolo: "Il terreno conta",
-    narrazione: "Ed eccoci al punto più importante: il terreno. Alcuni tratti vengono premiati o penalizzati a seconda di dove si combatte. Guarda cosa succede in Aria.",
-    modalita: "osserva",
+    narrazione: "Ed eccoci al punto più importante: il terreno. Alcuni tratti vengono premiati o penalizzati a seconda di dove si combatte. Terreno: Aria. Scegli con attenzione.",
+    modalita: "scegli",
     terreno: "aria",
     statistiche: ["balzo"],
     round: [
-      { mia: "Ieraco", nemica: "Aura Marina" },
-      { mia: "Grifone Recluta", nemica: "Idriade" },
-      { mia: "Arpìa Cacciatrice", nemica: "Ippocampo Selvatico" }
+      { opzioni: ["Ieraco", "Aura Marina"], nemica: "Grifone Recluta", suggerimento: "In Aria, chi vola prende un bel vantaggio. Chi nuota, invece, ci si trova male." },
+      { opzioni: ["Arpìa Cacciatrice", "Idriade"], nemica: "Cariddi Minore", suggerimento: "Stesso principio del round precedente: guarda quale tratto ha ciascuna creatura." },
+      { opzioni: ["Grifone Recluta", "Ippocampo Selvatico"], nemica: "Aura Marina", suggerimento: "Ultimo indizio: il cielo aperto non è casa di chi nuota." }
     ],
-    spiegazione: "Le tue creature alate hanno il tratto Volo: in Aria ricevono +2. Le nemiche invece hanno Nuoto, che in Aria viene penalizzato di -2. Il terreno ha reso una vittoria già probabile, schiacciante."
+    spiegazioneVittoria: "Hai scelto sempre le creature con il tratto Volo: in Aria ricevono +2, mentre chi nuota va in penalità di -2. Il terreno giusto ha reso ogni scontro una vittoria netta.",
+    spiegazioneSconfitta: "Qualcosa non ha funzionato: ricorda che in Aria il tratto Volo viene premiato (+2) e il tratto Nuoto penalizzato (-2). Riprova osservando bene i tratti delle due opzioni."
   },
   {
     titolo: "Anche in negativo",
-    narrazione: "Le stesse identiche creature della tappa precedente. Stavolta però il terreno è un altro: Acqua.",
-    modalita: "osserva",
+    narrazione: "Stesso principio, ma stavolta il terreno è Acqua: chi era favorito prima ora potrebbe non esserlo più.",
+    modalita: "scegli",
     terreno: "acqua",
     statistiche: ["balzo"],
     round: [
-      { mia: "Ieraco", nemica: "Aura Marina" },
-      { mia: "Grifone Recluta", nemica: "Idriade" },
-      { mia: "Arpìa Cacciatrice", nemica: "Ippocampo Selvatico" }
+      { opzioni: ["Aura Marina", "Ieraco"], nemica: "Arpìa Cacciatrice", suggerimento: "In Acqua le regole si ribaltano rispetto all'Aria: chi nuota è a casa sua." },
+      { opzioni: ["Cariddi Minore", "Aura Volante"], nemica: "Grifone Recluta", suggerimento: "Le ali qui non aiutano affatto — anzi." },
+      { opzioni: ["Ceto Minore", "Fenice Pulcino"], nemica: "Ippogrifo", suggerimento: "Ultimo round: stesso ragionamento di prima." }
     ],
-    spiegazione: "In acqua le tue ali non servono a nulla, anzi pesano (-2), mentre le nemiche nuotano che è un piacere (+2). Stesse creature, stesse statistiche di base — ma il terreno sbagliato ha ribaltato completamente lo scontro."
+    spiegazioneVittoria: "In Acqua è il tratto Nuoto a ricevere +2, mentre Volo scende di -2. Le stesse identiche creature possono essere perfette o pessime, a seconda solo del terreno.",
+    spiegazioneSconfitta: "In Acqua il tratto Nuoto viene premiato (+2), Volo penalizzato (-2) — l'esatto contrario dell'Aria. Riprova."
   },
   {
     titolo: "Scegli tu il terreno giusto",
@@ -8553,10 +8555,12 @@ const ADDESTRAMENTO_TAPPE = [
     terreno: "foresta",
     statistiche: ["ferocia"],
     round: [
-      { opzioni: ["Amadriade", "Ieraco"], nemica: "Cariddi Minore" },
-      { opzioni: ["Cerva di Cerinea", "Grifone Recluta"], nemica: "Telchino" },
-      { opzioni: ["Nanuq", "Arpìa Cacciatrice"], nemica: "Makara" }
-    ]
+      { opzioni: ["Amadriade", "Ieraco"], nemica: "Cariddi Minore", suggerimento: "In Foresta non è il Volo a essere premiato, ma un altro tratto legato all'equilibrio sul terreno." },
+      { opzioni: ["Cerva di Cerinea", "Grifone Recluta"], nemica: "Telchino", suggerimento: "Stesso ragionamento del round precedente." },
+      { opzioni: ["Nanuq", "Arpìa Cacciatrice"], nemica: "Makara", suggerimento: "Ultimo indizio: chi si muove bene tra gli alberi e sul terreno accidentato." }
+    ],
+    spiegazioneVittoria: "In Foresta (e in Terra) sono i tratti Arrampicata ed Equilibrio a ricevere +2. Volo e Nuoto qui non contano nulla, né in bene né in male.",
+    spiegazioneSconfitta: "In Foresta il bonus va ai tratti Arrampicata ed Equilibrio (+2). Volo e Nuoto restano neutri, non aiutano. Riprova."
   },
   {
     titolo: "Più creature, più scelte",
@@ -8565,25 +8569,28 @@ const ADDESTRAMENTO_TAPPE = [
     terreno: "acqua",
     statistiche: ["ferocia"],
     round: [
-      { opzioni: ["Aura Marina", "Ieraco"], nemica: "Grifone Recluta" },
-      { opzioni: ["Cariddi Minore", "Aura Volante"], nemica: "Ippogrifo" },
-      { opzioni: ["Ippocampo Selvatico", "Fenice Pulcino"], nemica: "Keres della Cenere" }
-    ]
+      { opzioni: ["Aura Marina", "Ieraco"], nemica: "Grifone Recluta", suggerimento: "Siamo di nuovo in Acqua: quale tratto era favorito, te lo ricordi dalla tappa 5?" },
+      { opzioni: ["Cariddi Minore", "Aura Volante"], nemica: "Ippogrifo", suggerimento: "Stesso ragionamento." },
+      { opzioni: ["Ippocampo Selvatico", "Fenice Pulcino"], nemica: "Keres della Cenere", suggerimento: "Ultimo round di questa tappa." }
+    ],
+    spiegazioneVittoria: "Bene: in Acqua il Nuoto resta premiato, il Volo penalizzato — esattamente come nella tappa precedente. La stessa regola vale sempre, indipendentemente da quali creature specifiche hai in mano.",
+    spiegazioneSconfitta: "In Acqua il tratto Nuoto è premiato (+2), il Volo penalizzato (-2). Riprova ricordando questa regola."
   },
   {
     titolo: "La prova finale",
-    narrazione: "Ultima tappa: una vera battaglia a 5 round, come quelle che troverai sui Sottomondi. Terreni diversi, statistiche diverse. Mettiamo alla prova tutto quello che hai imparato.",
-    modalita: "osserva",
+    narrazione: "Ultima tappa: una vera battaglia a 5 round, come quelle che troverai sui Sottomondi. Terreni diversi, statistiche diverse, e ogni volta una scelta vera da fare.",
+    modalita: "scegli",
     terreno: null,
     statistiche: ["ferocia"],
     round: [
-      { mia: "Alseide", nemica: "Amadriade", terreno: null, statistiche: ["ferocia"] },
-      { mia: "Ieraco", nemica: "Ippocampo Selvatico", terreno: "aria", statistiche: ["balzo"] },
-      { mia: "Aura Marina", nemica: "Grifone Recluta", terreno: "aria", statistiche: ["ferocia"] },
-      { mia: "Nanuq", nemica: "Cariddi Minore", terreno: "foresta", statistiche: ["ferocia"] },
-      { mia: "Centauro", nemica: "Boggart", terreno: null, statistiche: ["corazza"] }
+      { opzioni: ["Pegaso", "Ieraco"], nemica: "Uccello Stinfalide", terreno: "foresta", statistiche: ["ferocia"], suggerimento: "Foresta: pensa a equilibrio e arrampicata." },
+      { opzioni: ["Aura Marina", "Aura Volante"], nemica: "Grifone Recluta", terreno: "acqua", statistiche: ["balzo"], suggerimento: "Acqua: chi nuota è favorito." },
+      { opzioni: ["Fenice Pulcino", "Cariddi Minore"], nemica: "Arpìa Cacciatrice", terreno: "aria", statistiche: ["ferocia"], suggerimento: "Aria: stavolta il volo è premiato." },
+      { opzioni: ["Anfisbena", "Ceto Minore"], nemica: "Ippogrifo", terreno: "terra", statistiche: ["corazza"], suggerimento: "Terra: come la Foresta, premia lo stesso genere di tratto." },
+      { opzioni: ["Scylla Recluta", "Serpenti del Niflheimr"], nemica: "Nachtrabe", terreno: null, statistiche: ["istinto"], suggerimento: "Nessun terreno qui: guarda solo chi ha la statistica più alta." }
     ],
-    spiegazione: "Hai vinto la battaglia! Nota come nel terzo round, nonostante l'Aria ti fosse favorevole in linea di massima, la statistica di base della nemica era così alta da vincere comunque — il terreno aiuta, ma non è mai l'unica cosa che conta."
+    spiegazioneVittoria: "Hai superato la prova finale! Hai dimostrato di saper leggere terreno, tratti e statistiche insieme — esattamente quello che serve per giocare bene nei Sottomondi e nelle Guerre di Clan.",
+    spiegazioneSconfitta: "Quasi! Ripensa a ogni round: terreno, tratto premiato, statistica più alta. Riprova la prova finale quando vuoi."
   }
 ];
 
@@ -8652,41 +8659,55 @@ function renderizzaRoundAddestramento() {
 
   const badgeTerreno = terrenoEmoji(terrenoRound);
 
-  const intestazione = `
-    <div style="text-align:center; width:100%;">
-      <p style="color:#a89a7a; font-size:0.8rem;">Tappa ${addestramentoTappaAttuale + 1} di ${ADDESTRAMENTO_TAPPE.length} — Round ${addestramentoRoundAttuale + 1} di ${tappa.round.length}</p>
-      ${badgeTerreno ? `<p style="color:#ffcc66; font-weight:bold;">Terreno: ${badgeTerreno}</p>` : `<p style="color:#a89a7a;">Nessun terreno particolare</p>`}
-      <p style="color:#a89a7a; font-size:0.78rem;">Statistiche in gioco: <b style="color:#e0d5c1;">${statRound.map(s => s.toUpperCase()).join(" + ")}</b></p>
+  // Layout a due colonne per sfruttare lo spazio orizzontale (il gioco è quasi sempre in
+  // orizzontale su mobile): a sinistra Chirone con le informazioni e l'eventuale suggerimento,
+  // a destra le carte e l'azione. L'area azione viene sostituita sul posto, non aggiunta sotto,
+  // per non far crescere l'altezza della pagina ed evitare lo scroll.
+  contenitore.innerHTML = `
+    <div style="display:flex; gap:16px; width:100%; height:100%; align-items:stretch;">
+      <div style="flex:0 0 190px; display:flex; flex-direction:column; gap:8px;">
+        <img src="img/carte/chirone.jpg" style="width:56px; height:56px; border-radius:50%; object-fit:cover; border:2px solid #ffcc66; align-self:center;" onerror="this.style.display='none';">
+        <p style="text-align:center; color:#a89a7a; font-size:0.72rem; margin:0;">Tappa ${addestramentoTappaAttuale + 1}/${ADDESTRAMENTO_TAPPE.length} — Round ${addestramentoRoundAttuale + 1}/${tappa.round.length}</p>
+        <div style="background:rgba(0,0,0,0.35); border:1px solid #5c4d31; border-radius:8px; padding:8px; font-size:0.75rem;">
+          <p style="margin:0 0 4px; color:${badgeTerreno ? '#ffcc66' : '#a89a7a'}; font-weight:bold;">${badgeTerreno || "Nessun terreno"}</p>
+          <p style="margin:0; color:#e0d5c1;">Statistiche: <b>${statRound.map(s => s.toUpperCase()).join(" + ")}</b></p>
+        </div>
+        ${round.suggerimento ? `<div style="background:rgba(0,0,0,0.35); border:1px solid #5c4d31; border-radius:8px; padding:8px; font-size:0.75rem; color:#e0d5c1;"><b style="color:#ffcc66;">Chirone:</b> ${round.suggerimento}</div>` : ""}
+      </div>
+      <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; min-width:0;">
+        <div id="addestramento-carte-zona" style="display:flex; gap:14px; justify-content:center; flex-wrap:wrap; width:100%;"></div>
+        <div id="addestramento-azione-zona" style="display:flex; flex-direction:column; align-items:center; gap:8px;"></div>
+      </div>
     </div>`;
+
+  const zonaCarte = document.getElementById("addestramento-carte-zona");
+  const zonaAzione = document.getElementById("addestramento-azione-zona");
 
   if (tappa.modalita === "osserva") {
     const mia = valoreConTerreno(round.mia, statRound, terrenoRound);
     const nem = valoreConTerreno(round.nemica, statRound, terrenoRound);
 
-    contenitore.innerHTML = intestazione + `
-      <div style="display:flex; gap:16px; justify-content:center; width:100%; flex-wrap:wrap;">
-        ${costruisciCartaEsempioTutorial(round.mia)}
-        ${costruisciCartaEsempioTutorial(round.nemica)}
-      </div>
-      <button type="button" id="addestramento-rivela-btn" class="events-btn events-btn-main" style="max-width:220px;">Rivela il risultato</button>
-      <div id="addestramento-esito-box" class="hidden"></div>`;
+    zonaCarte.innerHTML = costruisciCartaEsempioTutorial(round.mia) + costruisciCartaEsempioTutorial(round.nemica);
+    zonaAzione.innerHTML = `<button type="button" id="addestramento-rivela-btn" class="events-btn events-btn-main" style="max-width:220px;">Rivela il risultato</button>`;
 
     document.getElementById("addestramento-rivela-btn").addEventListener("click", () => {
       mostraEsitoRoundAddestramento(mia, nem, mia.finale > nem.finale);
     });
 
   } else {
-    // modalità "scegli": due carte candidate, il giocatore ne tocca una
-    contenitore.innerHTML = intestazione + `
-      <p style="text-align:center; color:#e0d5c1; font-size:0.85rem;">Quale delle due schieri?</p>
-      <div style="display:flex; gap:16px; justify-content:center; width:100%; flex-wrap:wrap;" id="addestramento-opzioni-riga">
+    zonaCarte.innerHTML = `
+      <div style="display:flex; gap:14px; flex-wrap:wrap; justify-content:center;">
         ${round.opzioni.map(nome => `<div class="addestramento-opzione-clic" data-nome="${nome}">${costruisciCartaEsempioTutorial(nome)}</div>`).join("")}
       </div>
-      <p style="text-align:center; color:#a89a7a; font-size:0.78rem;">Nemica in campo:</p>
-      <div style="display:flex; justify-content:center;">${costruisciCartaEsempioTutorial(round.nemica)}</div>`;
+      <div style="display:flex; flex-direction:column; align-items:center; gap:4px;">
+        <span style="color:#a89a7a; font-size:0.72rem;">Nemica:</span>
+        ${costruisciCartaEsempioTutorial(round.nemica)}
+      </div>`;
+    zonaAzione.innerHTML = `<p style="color:#e0d5c1; font-size:0.8rem; margin:0;">Tocca la carta che vuoi schierare</p>`;
 
     document.querySelectorAll(".addestramento-opzione-clic").forEach(el => {
       el.addEventListener("click", () => {
+        document.querySelectorAll(".addestramento-opzione-clic").forEach(e => e.style.pointerEvents = "none");
         const nomeScelto = el.dataset.nome;
         const nomeScartato = round.opzioni.find(n => n !== nomeScelto);
         const mia = valoreConTerreno(nomeScelto, statRound, terrenoRound);
@@ -8701,27 +8722,19 @@ function renderizzaRoundAddestramento() {
 function mostraEsitoRoundAddestramento(mia, nem, vinto, scartata) {
   if (vinto) addestramentoRoundVinti++;
 
-  const box = document.getElementById("addestramento-esito-box") || document.createElement("div");
-  box.id = "addestramento-esito-box";
-  box.classList.remove("hidden");
-
   const rigaMod = (v) => v.mod !== 0 ? ` <span style="color:${v.mod > 0 ? '#7ee787' : '#f56565'};">${v.mod > 0 ? "+" : ""}${v.mod.toFixed(1)} terreno</span>` : "";
 
-  let html = `
-    <div style="background:rgba(0,0,0,0.4); border-radius:8px; padding:12px; margin-top:10px; text-align:center;">
-      <p style="font-size:1.1rem; font-weight:bold; color:${vinto ? '#7ee787' : '#f56565'};">${vinto ? "Round vinto!" : "Round perso"}</p>
-      <p style="font-size:0.85rem; color:#e0d5c1;">${mia.carta.nome}: base ${mia.base.toFixed(1)}${rigaMod(mia)} → <b>${mia.finale.toFixed(1)}</b></p>
-      <p style="font-size:0.85rem; color:#e0d5c1;">${nem.carta.nome}: base ${nem.base.toFixed(1)}${rigaMod(nem)} → <b>${nem.finale.toFixed(1)}</b></p>
-      ${scartata ? `<p style="font-size:0.78rem; color:#a89a7a; margin-top:6px;">Se avessi schierato ${scartata.carta.nome} invece: sarebbe arrivata a <b>${scartata.finale.toFixed(1)}</b> — ${scartata.finale > nem.finale ? "avrebbe vinto comunque" : "avrebbe perso"}.</p>` : ""}
+  const zonaAzione = document.getElementById("addestramento-azione-zona");
+  zonaAzione.innerHTML = `
+    <div style="background:rgba(0,0,0,0.4); border-radius:8px; padding:10px 14px; text-align:center;">
+      <p style="font-size:1rem; font-weight:bold; margin:0 0 4px; color:${vinto ? '#7ee787' : '#f56565'};">${vinto ? "Round vinto!" : "Round perso"}</p>
+      <p style="font-size:0.8rem; color:#e0d5c1; margin:2px 0;">${mia.carta.nome}: base ${mia.base.toFixed(1)}${rigaMod(mia)} → <b>${mia.finale.toFixed(1)}</b></p>
+      <p style="font-size:0.8rem; color:#e0d5c1; margin:2px 0;">${nem.carta.nome}: base ${nem.base.toFixed(1)}${rigaMod(nem)} → <b>${nem.finale.toFixed(1)}</b></p>
+      ${scartata ? `<p style="font-size:0.72rem; color:#a89a7a; margin-top:5px;">Con ${scartata.carta.nome}: <b>${scartata.finale.toFixed(1)}</b> — ${scartata.finale > nem.finale ? "avrebbe vinto comunque" : "avrebbe perso"}.</p>` : ""}
     </div>
-    <button type="button" id="addestramento-avanti-round-btn" class="events-btn events-btn-main" style="max-width:220px; margin-top:10px;">
+    <button type="button" id="addestramento-avanti-round-btn" class="events-btn events-btn-main" style="max-width:220px;">
       ${addestramentoRoundAttuale + 1 < ADDESTRAMENTO_TAPPE[addestramentoTappaAttuale].round.length ? "Round successivo" : "Vedi risultato tappa"}
     </button>`;
-
-  const contenitore = document.getElementById("addestramento-content");
-  contenitore.insertAdjacentHTML("beforeend", html);
-  document.getElementById(`addestramento-rivela-btn`)?.remove();
-  document.getElementById("addestramento-opzioni-riga")?.querySelectorAll(".addestramento-opzione-clic").forEach(el => el.style.pointerEvents = "none");
 
   document.getElementById("addestramento-avanti-round-btn").addEventListener("click", () => {
     addestramentoRoundAttuale++;
@@ -8739,21 +8752,31 @@ function mostraRisultatoTappaAddestramento() {
   const vinta = addestramentoRoundVinti > totale / 2;
   const ultimaTappa = addestramentoTappaAttuale === ADDESTRAMENTO_TAPPE.length - 1;
 
+  // Nelle tappe a scelta vera, sbagliare ha una conseguenza reale: bisogna rifare la tappa.
+  // Nelle tappe puramente dimostrative (1-3) il risultato è già calibrato per finire in vittoria.
+  const daRipetere = tappa.modalita === "scegli" && !vinta;
+
+  const spiegazioneTesto = vinta
+    ? (tappa.spiegazioneVittoria || tappa.spiegazione || "")
+    : (tappa.spiegazioneSconfitta || "");
+
   const contenitore = document.getElementById("addestramento-content");
   contenitore.innerHTML = `
-    <div class="tutorial-chirone-box" style="max-width:520px;">
+    <div class="tutorial-chirone-box" style="max-width:560px;">
       <img src="img/carte/chirone.jpg" class="tutorial-chirone-ritratto" onerror="this.style.display='none';">
       <div class="tutorial-chirone-testo">
         <p style="font-weight:bold; color:${vinta ? '#7ee787' : '#f56565'};">${vinta ? `Battaglia vinta! (${addestramentoRoundVinti} round su ${totale})` : `Battaglia persa (${addestramentoRoundVinti} round su ${totale})`}</p>
-        ${tappa.spiegazione ? `<p style="margin-top:8px;">${tappa.spiegazione}</p>` : ""}
+        ${spiegazioneTesto ? `<p style="margin-top:8px;">${spiegazioneTesto}</p>` : ""}
       </div>
     </div>
     <button type="button" id="addestramento-prossima-tappa-btn" class="events-btn events-btn-main" style="max-width:260px;">
-      ${ultimaTappa ? "Completa l'Addestramento" : "Tappa successiva"}
+      ${daRipetere ? "Riprova la tappa" : (ultimaTappa ? "Completa l'Addestramento" : "Tappa successiva")}
     </button>`;
 
   document.getElementById("addestramento-prossima-tappa-btn").addEventListener("click", () => {
-    if (ultimaTappa) {
+    if (daRipetere) {
+      avviaTappaAddestramento();
+    } else if (ultimaTappa) {
       completaAddestramento();
     } else {
       addestramentoTappaAttuale++;

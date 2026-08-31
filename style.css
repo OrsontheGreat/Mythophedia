@@ -2513,6 +2513,12 @@ html.narrow-700 .events-row { flex-direction: column; }
   flex-shrink: 0;
 }
 
+.tutorial-chirone-testo {
+  color: #e0d5c1;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
 .tutorial-chirone-testo p {
   color: #e0d5c1;
   font-size: 0.85rem;
@@ -2585,6 +2591,9 @@ html.narrow-700 .events-row { flex-direction: column; }
   font-size: 0.66rem;
   text-align: center;
 }
+
+#addestramento-content .tutorial-carta-esempio { width: min(140px, calc(var(--app-height) * 22 / 100 / 0.757)); }
+#addestramento-content .tutorial-carta-esempio-img { width: 100%; height: min(185px, calc(var(--app-height) * 29 / 100)); }
 
 .tutorial-carta-esempio-tratto {
   color: #7ee787;
