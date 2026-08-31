@@ -1325,6 +1325,11 @@ function mostraCartaFullscreen(carta, opzioniExtra) {
     </div>`;
   }
 
+  const bottonePlastificaHTML = carta.isJolly ? "" : `
+    <button type="button" class="attack-btn" id="fs-card-plastifica-btn" style="width:100%; margin-top:8px; background:${carta.plastificata ? "linear-gradient(to bottom, #4a5568, #2d3748)" : "linear-gradient(to bottom, #3182ce, #2262a8)"}; border-color:${carta.plastificata ? "#2d3748" : "#2262a8"};">
+      ${carta.plastificata ? "📦 Rimuovi Plastificazione" : "📦 Plastifica (protegge dai sacrifici)"}
+    </button>`;
+
   const overlay = document.createElement("div");
   overlay.id = "card-fullscreen-overlay";
   overlay.className = "card-fullscreen-overlay";
@@ -1347,6 +1352,7 @@ function mostraCartaFullscreen(carta, opzioniExtra) {
           </div>
           ${trattiHTML}
           ${bottoneAzioneHTML}
+          ${bottonePlastificaHTML}
         </div>
       </div>
     </div>`;
@@ -1373,6 +1379,12 @@ function mostraCartaFullscreen(carta, opzioniExtra) {
     overlay.remove();
     document.querySelectorAll(".modal-overlay:not(.hidden)").forEach(m => { if (m.id !== "evolution-modal") m.classList.add("hidden"); });
     apriFinestraEvoluzione(carta);
+  });
+
+  document.getElementById("fs-card-plastifica-btn")?.addEventListener("click", () => {
+    carta.plastificata = !carta.plastificata;
+    salvaProgressoCloud();
+    mostraCartaFullscreen(carta, opzioniExtra);
   });
 }
 
@@ -4413,6 +4425,7 @@ function generaHTMLCartaRaccoglitore(carta) {
 
   return `
     <div class="creature-card ${carta.occupataInDifesa || carta.bloccataInDuello || pctVigore <= 0 ? 'occupata' : ''}">
+      ${carta.plastificata ? '<span class="plastificata-badge" title="Plastificata: protetta dai sacrifici">📦</span>' : ''}
       ${badgeHTML}
       ${livelloTagHTML}
       <div class="card-name" style="margin-top:${carta.occupataInDifesa || carta.bloccataInDuello || pctVigore <= 0 ? '45px' : (carta.isJolly ? '0' : '20px')};">${carta.nome} ${carta.isJolly ? '' : `(${carta.stelle} ★)`}</div>
@@ -4688,7 +4701,7 @@ function popolaSelectSacrifici() {
 
   let stelleRichieste = Math.max(0, creaturaInEvoluzione.stelle - 1);
 
-  let poolIdonee = deckGiocatore.filter(c => c.id !== creaturaInEvoluzione.id && c.livello === lvlRichiesto && (c.isJolly || c.stelle === stelleRichieste) && !c.occupataInDifesa && !c.bloccataInDuello && calcolaVigorePercentuale(c) > 0);
+  let poolIdonee = deckGiocatore.filter(c => c.id !== creaturaInEvoluzione.id && c.livello === lvlRichiesto && (c.isJolly || c.stelle === stelleRichieste) && !c.occupataInDifesa && !c.bloccataInDuello && !c.plastificata && calcolaVigorePercentuale(c) > 0);
 
   for (let i = 0; i < 4; i++) {
 
@@ -7069,11 +7082,23 @@ function sparaMiraColpito(indice) {
   miraBloccaClick = false;
 }
 
-function sparaMiraMancato() {
+function sparaMiraMancato(xPerc, yPerc) {
   if (miraBloccaClick || !miraInPartita || miraFrecceRimaste <= 0) return;
   miraBloccaClick = true;
 
   miraFrecceRimaste--;
+
+  const campo = document.getElementById("mira-campo");
+  if (campo && typeof xPerc === "number") {
+    const segno = document.createElement("span");
+    segno.className = "mira-mancato-segno";
+    segno.style.left = xPerc + "%";
+    segno.style.top = yPerc + "%";
+    segno.innerText = "✕";
+    campo.appendChild(segno);
+    setTimeout(() => segno.remove(), 400);
+  }
+
   aggiornaContatoriMira();
   concludiSeFineFrecceMira();
 
@@ -7142,7 +7167,10 @@ function collegaEventiMira() {
   if (campo) {
     campo.addEventListener("click", (e) => {
       if (e.target.closest(".mira-uccello-hit")) return;
-      sparaMiraMancato();
+      const rect = campo.getBoundingClientRect();
+      const xPerc = ((e.clientX - rect.left) / rect.width) * 100;
+      const yPerc = ((e.clientY - rect.top) / rect.height) * 100;
+      sparaMiraMancato(xPerc, yPerc);
     });
   }
 
