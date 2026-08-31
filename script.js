@@ -4465,8 +4465,8 @@ function renderizzaPaginaRaccoglitore() {
   if (footer) footer.classList.remove("hidden");
 
   modalTitle.innerText = filtroRaritaRaccoglitoreCorrente
-    ? `${carteOrdinateRaccoglitoreCorrente.length} carte (su ${deckGiocatore.length})`
-    : `${deckGiocatore.length} carte`;
+    ? `${carteOrdinateRaccoglitoreCorrente.length} carte (su ${deckGiocatore.length}/${slotMassimiDeck})`
+    : `${deckGiocatore.length}/${slotMassimiDeck} carte`;
 
   const totalePagine = Math.max(1, Math.ceil(carteOrdinateRaccoglitoreCorrente.length / CARTE_PER_PAGINA_RACCOGLITORE));
   if (paginaCorrenteRaccoglitore >= totalePagine) paginaCorrenteRaccoglitore = totalePagine - 1;
@@ -8963,7 +8963,7 @@ function costruisciMappaSotterranei() {
       ${!p.corrente ? `<text x="${p.x}" y="${p.y + 32}" text-anchor="middle" font-size="13">✅</text>` : ""}
     </g>`).join("");
 
-  return `<svg viewBox="0 0 ${larghezza} ${altezza}" style="width:100%; max-width:520px; height:auto;">${lineaHTML}${nodiHTML}</svg>`;
+  return `<svg viewBox="0 0 ${larghezza} ${altezza}" style="width:min(100%, 520px, calc(var(--app-height) * 40 / 100 * 600 / 140)); height:auto;">${lineaHTML}${nodiHTML}</svg>`;
 }
 
 function renderizzaHubSotterranei() {
@@ -8998,18 +8998,21 @@ function allestisciSquadraSotterranei() {
 
   const contenitore = document.getElementById("addestramento-content");
   const slotsHTML = Array.from({ length: 5 }, (_, i) => `
-    <div class="select-row">
+    <div class="select-row sott-select-row">
       <span>${i + 1}°:</span>
       <select id="sott-deploy-slot-${i}" class="deploy-select"></select>
     </div>`).join("");
 
   contenitore.innerHTML = `
-    <div style="text-align:center; width:100%;">
-      <p style="color:#ffcc66; font-weight:bold;">Livello ${sotterraneiLivelloAttuale} — Terreno: ${terrenoEmoji(sotterraneiTerreno)}</p>
-      <p style="color:#a89a7a; font-size:0.78rem;">Statistiche in gioco: <b style="color:#e0d5c1;">${sotterraneiStatistiche.map(s => s.toUpperCase()).join(" + ")}</b></p>
-    </div>
-    <div style="display:flex; flex-direction:column; gap:8px; width:100%; max-width:360px;">${slotsHTML}</div>
-    <button type="button" id="sott-attacca-btn" class="events-btn events-btn-main" style="max-width:220px;" disabled>Scegli le tue 5 creature</button>`;
+    <div style="display:flex; gap:16px; width:100%; height:100%; align-items:center; justify-content:center; flex-wrap:wrap;">
+      <div style="flex:0 0 180px; text-align:center;">
+        <p style="color:#ffcc66; font-weight:bold; margin:0;">Livello ${sotterraneiLivelloAttuale}</p>
+        <p style="color:#a89a7a; font-size:0.75rem; margin:4px 0;">Terreno: ${terrenoEmoji(sotterraneiTerreno)}</p>
+        <p style="color:#a89a7a; font-size:0.72rem; margin:0 0 10px;">Statistiche: <b style="color:#e0d5c1;">${sotterraneiStatistiche.map(s => s.toUpperCase()).join(" + ")}</b></p>
+        <button type="button" id="sott-attacca-btn" class="events-btn events-btn-main" style="max-width:180px;" disabled>Scegli le tue 5 creature</button>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:5px; width:100%; max-width:340px;">${slotsHTML}</div>
+    </div>`;
 
   popolaSelectSchieramentoSotterraneo();
   potenziaMenuATendina();

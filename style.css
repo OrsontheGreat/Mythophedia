@@ -568,6 +568,8 @@ html.forza-landscape .close-btn { font-size: 1.6rem; }
 
 }
 
+.sott-select-row .fake-select-trigger { padding: 5px 26px 5px 8px; min-height: 30px; font-size: 0.82rem; }
+
 .fake-select-trigger::after {
 
   content: "▾";
