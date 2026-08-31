@@ -8931,24 +8931,56 @@ function apriSotterranei() {
   renderizzaHubSotterranei();
 }
 
+function costruisciMappaSotterranei() {
+  // Mostro una finestra scorrevole delle ultime tappe percorse più quella attuale, disposte
+  // in un percorso asimmetrico (a zig-zag) che si "traccia" mano a mano che si avanza — dato
+  // che i livelli sono infiniti, non ha senso provare a mostrarli tutti: la finestra si sposta
+  // sempre in avanti insieme al giocatore.
+  const NODI = 5;
+  const primoLivello = Math.max(1, sotterraneiLivelloAttuale - (NODI - 1));
+  const livelli = [];
+  for (let l = primoLivello; l <= sotterraneiLivelloAttuale; l++) livelli.push(l);
+
+  const larghezza = 600, altezza = 140;
+  const yZigzag = [95, 35, 105, 30, 90];
+  const passoX = livelli.length > 1 ? (larghezza - 80) / (livelli.length - 1) : 0;
+  const punti = livelli.map((liv, i) => ({
+    x: 40 + passoX * i,
+    y: yZigzag[i % yZigzag.length],
+    livello: liv,
+    corrente: liv === sotterraneiLivelloAttuale
+  }));
+
+  const lineaHTML = punti.slice(1).map((p, i) => {
+    const prec = punti[i];
+    return `<line x1="${prec.x}" y1="${prec.y}" x2="${p.x}" y2="${p.y}" stroke="#c9a054" stroke-width="3" stroke-dasharray="${p.corrente ? '6,5' : '0'}" />`;
+  }).join("");
+
+  const nodiHTML = punti.map(p => `
+    <g>
+      <circle cx="${p.x}" cy="${p.y}" r="${p.corrente ? 22 : 17}" fill="${p.corrente ? '#ffcc66' : '#3a3222'}" stroke="${p.corrente ? '#fff6d5' : '#c9a054'}" stroke-width="${p.corrente ? 3 : 2}" ${p.corrente ? 'class="sott-nodo-corrente"' : ''} />
+      <text x="${p.x}" y="${p.y + 5}" text-anchor="middle" font-size="${p.corrente ? 15 : 12}" font-weight="bold" fill="${p.corrente ? '#1a1410' : '#e0d5c1'}">${p.livello}</text>
+      ${!p.corrente ? `<text x="${p.x}" y="${p.y + 32}" text-anchor="middle" font-size="13">✅</text>` : ""}
+    </g>`).join("");
+
+  return `<svg viewBox="0 0 ${larghezza} ${altezza}" style="width:100%; max-width:520px; height:auto;">${lineaHTML}${nodiHTML}</svg>`;
+}
+
 function renderizzaHubSotterranei() {
   assicuraGiornoSotterranei();
   const contenitore = document.getElementById("addestramento-content");
   const vittorieRimaste = SOTTERRANEI_VITTORIE_MAX_GIORNO - sotterraneiVittorieOggi;
   const bloccato = vittorieRimaste <= 0;
-  const p = calcolaParametriSotterraneo(sotterraneiLivelloAttuale);
-  const testoRarita = p.tipo === "pura" ? ETICHETTE_LIVELLI[p.rarita] : `${ETICHETTE_LIVELLI[p.raritaA]} / ${ETICHETTE_LIVELLI[p.raritaB]}`;
 
   contenitore.innerHTML = `
-    <div class="tutorial-chirone-box" style="max-width:560px;">
+    <div class="tutorial-chirone-box" style="max-width:400px;">
       <img src="img/carte/chirone.jpg" class="tutorial-chirone-ritratto" onerror="this.style.display='none';">
       <div class="tutorial-chirone-testo">
         <p style="font-weight:bold; color:#ffcc66;">🕳️ Livello ${sotterraneiLivelloAttuale}</p>
-        <p style="margin-top:6px;">Nemici di rarità <b>${testoRarita}</b>, evoluzione a ${p.stelle} ⭐${p.moltiplicatoreExtra > 1 ? ` (potenziamento extra: +${Math.round((p.moltiplicatoreExtra - 1) * 100)}%)` : ""}.</p>
-        <p style="margin-top:6px; font-size:0.78rem; color:#a89a7a;">5 vittorie su 5 = 3 stelle (300 Dracme) · 4 = 2 stelle (200) · 3 = 1 stella (100) · meno di 3 = nessun premio, si ripete il livello.</p>
-        <p style="margin-top:6px; font-size:0.78rem; color:${bloccato ? '#f56565' : '#7ee787'};">Vittorie oggi: ${sotterraneiVittorieOggi} / ${SOTTERRANEI_VITTORIE_MAX_GIORNO}</p>
+        ${bloccato ? `<p style="margin-top:4px; color:#f56565; font-size:0.78rem;">Hai raggiunto il limite di vittorie di oggi. Torna domani.</p>` : ""}
       </div>
     </div>
+    ${costruisciMappaSotterranei()}
     <button type="button" id="sotterranei-inizia-btn" class="events-btn events-btn-main" style="max-width:240px;" ${bloccato ? "disabled" : ""}>
       ${bloccato ? "Torna domani per continuare" : "Scendi in battaglia"}
     </button>`;

@@ -305,6 +305,17 @@ body, html {
   border-radius: 12px;
 }
 
+.sott-nodo-corrente {
+  animation: sottNodoPulse 1s infinite alternate;
+  transform-origin: center;
+  transform-box: fill-box;
+}
+
+@keyframes sottNodoPulse {
+  0% { filter: drop-shadow(0 0 3px #ffcc66); }
+  100% { filter: drop-shadow(0 0 10px #ffcc66) drop-shadow(0 0 4px #fff); }
+}
+
 @keyframes mapTileEvidenziataPulse {
   0% { filter: drop-shadow(0 0 4px #ffcc66); }
   100% { filter: drop-shadow(0 0 18px #ffcc66) drop-shadow(0 0 8px #fff6d5); }
