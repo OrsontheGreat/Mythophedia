@@ -9221,6 +9221,514 @@ function risolviFineSotterraneo(mazzoSotterraneo, roundVinti) {
   });
 }
 
+// ===== Eventi: torneo a classifica a cicli di 2 giorni, sfide contro bot e giocatori reali =====
+
+const EVENTI_DURATA_CICLO_MS = 2 * 24 * 60 * 60 * 1000;
+const EVENTI_SFIDE_MAX = 5;
+const EVENTI_TERRENI = ["Aria", "Terra", "Foresta", "Acqua"];
+const EVENTI_NOMI_BOT = ["Discepolo di Bronzo", "Novizio dell'Arena", "Custode Silenzioso", "Ombra del Colosseo", "Apprendista Evocatore", "Vagabondo Mistico", "Sfidante Anonimo", "Guardiano Minore", "Iniziato del Rito", "Eco della Battaglia"];
+
+let eventiSquadraDifensiva = null;
+let eventiSfideRimaste = EVENTI_SFIDE_MAX;
+let eventiTimestampUltimaSfida = null;
+let eventiUltimoCicloPremiato = 0;
+let eventiPartiteGiocateQuestoCiclo = 0;
+
+// Generatore pseudo-casuale deterministico (mulberry32): a parità di seme produce sempre
+// la stessa sequenza di numeri, così ogni giocatore calcola da solo la stessa restrizione
+// per lo stesso ciclo, senza bisogno di coordinarsi su Firebase.
+function pseudoRandomSeminato(seme) {
+  return function() {
+    seme |= 0; seme = (seme + 0x6D2B79F5) | 0;
+    let t = Math.imul(seme ^ (seme >>> 15), 1 | seme);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function calcolaNumeroCicloEventiCorrente() {
+  return Math.floor(Date.now() / EVENTI_DURATA_CICLO_MS);
+}
+
+// Genera la restrizione di ammissibilità del ciclo: rarità sempre a partire da Comune (mai
+// "solo carte forti"), a volte con un vincolo aggiuntivo su una statistica. Verifica sempre,
+// contro il vero mazzo di carte del gioco, che almeno una quindicina di carte diverse la
+// soddisfino — altrimenti ne genera un'altra, così i principianti non restano mai esclusi.
+function generaRestrizioneEventi(numeroCiclo) {
+  const rand = pseudoRandomSeminato(numeroCiclo * 7919 + 13);
+  let tentativi = 0;
+  while (tentativi < 50) {
+    tentativi++;
+    const raritaMax = 1 + Math.floor(rand() * 6);
+    const usaVincoloStat = rand() < 0.6;
+    let vincoloStat = null;
+    if (usaVincoloStat) {
+      const stats = ["ferocia", "balzo", "corazza", "istinto"];
+      const stat = stats[Math.floor(rand() * stats.length)];
+      const operatore = rand() < 0.5 ? ">=" : "<=";
+      const soglia = operatore === ">=" ? (1 + Math.floor(rand() * 3)) : (4 + Math.floor(rand() * 4));
+      vincoloStat = { stat, operatore, soglia };
+    }
+
+    const pool = CARTE_FISSE.filter(c => {
+      if (c.livello > raritaMax) return false;
+      if (vincoloStat) {
+        const v = c.statisticheFisse[vincoloStat.stat];
+        if (vincoloStat.operatore === ">=" && v < vincoloStat.soglia) return false;
+        if (vincoloStat.operatore === "<=" && v > vincoloStat.soglia) return false;
+      }
+      return true;
+    });
+
+    if (pool.length >= 15) return { raritaMax, vincoloStat };
+  }
+  return { raritaMax: 6, vincoloStat: null };
+}
+
+function cartaAmmissibileEventi(carta, restrizione) {
+  if (carta.livello > restrizione.raritaMax) return false;
+  if (restrizione.vincoloStat) {
+    const v = carta.statistiche[restrizione.vincoloStat.stat];
+    if (restrizione.vincoloStat.operatore === ">=" && v < restrizione.vincoloStat.soglia) return false;
+    if (restrizione.vincoloStat.operatore === "<=" && v > restrizione.vincoloStat.soglia) return false;
+  }
+  return true;
+}
+
+function testoRestrizioneEventi(restrizione) {
+  let testo = `Rarità ammesse: fino a ${ETICHETTE_LIVELLI[restrizione.raritaMax]}`;
+  if (restrizione.vincoloStat) {
+    const simbolo = restrizione.vincoloStat.operatore === ">=" ? "almeno" : "al massimo";
+    testo += ` · ${restrizione.vincoloStat.stat.toUpperCase()} ${simbolo} ${restrizione.vincoloStat.soglia}`;
+  }
+  return testo;
+}
+
+function assicuraRicaricaSfideEventi() {
+  if (eventiSfideRimaste >= EVENTI_SFIDE_MAX) {
+    eventiTimestampUltimaSfida = null;
+    return;
+  }
+  if (!eventiTimestampUltimaSfida) {
+    eventiTimestampUltimaSfida = Date.now();
+    return;
+  }
+  const oreTrascorse = Math.floor((Date.now() - eventiTimestampUltimaSfida) / (60 * 60 * 1000));
+  if (oreTrascorse <= 0) return;
+  eventiSfideRimaste = Math.min(EVENTI_SFIDE_MAX, eventiSfideRimaste + oreTrascorse);
+  eventiTimestampUltimaSfida += oreTrascorse * 60 * 60 * 1000;
+  if (eventiSfideRimaste >= EVENTI_SFIDE_MAX) eventiTimestampUltimaSfida = null;
+}
+
+function generaSquadraBotEventi(restrizione, rand) {
+  const pool = CARTE_FISSE.filter(c => {
+    if (c.livello > restrizione.raritaMax) return false;
+    if (restrizione.vincoloStat) {
+      const v = c.statisticheFisse[restrizione.vincoloStat.stat];
+      if (restrizione.vincoloStat.operatore === ">=" && v < restrizione.vincoloStat.soglia) return false;
+      if (restrizione.vincoloStat.operatore === "<=" && v > restrizione.vincoloStat.soglia) return false;
+    }
+    return true;
+  });
+  const squadra = [];
+  for (let i = 0; i < 5; i++) {
+    const base = pool[Math.floor(rand() * pool.length)];
+    squadra.push({ nome: base.nome, immagine: base.immagine, tratti: base.tratti || [], statistiche: { ...base.statisticheFisse } });
+  }
+  return squadra;
+}
+
+function seminaLottiBotEventi(numeroCiclo, restrizione, callback) {
+  const rand = pseudoRandomSeminato(numeroCiclo * 104729 + 7);
+  const NUM_BOT = 40;
+  let scritture = 0;
+  for (let i = 0; i < NUM_BOT; i++) {
+    const nome = EVENTI_NOMI_BOT[Math.floor(rand() * EVENTI_NOMI_BOT.length)] + " " + (i + 1);
+    const punteggio = Math.floor(rand() * 26);
+    const squadra = generaSquadraBotEventi(restrizione, rand);
+    dbFirebase.ref(`eventi_classifica/${numeroCiclo}/bot_${i}`).set({ nome, punteggio, squadra, eBot: true })
+      .catch(() => {})
+      .finally(() => { scritture++; if (scritture >= NUM_BOT && callback) callback(); });
+  }
+}
+
+function assicuraClassificaEventiSeminata(numeroCiclo, restrizione, callback) {
+  dbFirebase.ref(`eventi_classifica/${numeroCiclo}`).once("value").then(snapshot => {
+    if (snapshot.exists() && snapshot.numChildren() > 0) {
+      callback();
+    } else {
+      seminaLottiBotEventi(numeroCiclo, restrizione, callback);
+    }
+  }).catch(() => callback());
+}
+
+let eventiNumeroCicloCorrente = null;
+let eventiRestrizioneCorrente = null;
+
+function apriEventi() {
+  eventiNumeroCicloCorrente = calcolaNumeroCicloEventiCorrente();
+  eventiRestrizioneCorrente = generaRestrizioneEventi(eventiNumeroCicloCorrente);
+  assicuraRicaricaSfideEventi();
+
+  document.getElementById("eventi-content").innerHTML = `<p style="text-align:center; color:#a89a7a;">Preparazione dell'arena in corso...</p>`;
+  document.getElementById("eventi-modal").classList.remove("hidden");
+
+  if (!utenteFirebaseAttuale) return;
+
+  controllaFineCicloEventi(() => {
+    dbFirebase.ref(`eventi_classifica/${eventiNumeroCicloCorrente}/${utenteFirebaseAttuale.uid}`).once("value").then(snapshot => {
+      if (snapshot.exists() && snapshot.val().squadra) {
+        eventiSquadraDifensiva = snapshot.val().squadra;
+        assicuraClassificaEventiSeminata(eventiNumeroCicloCorrente, eventiRestrizioneCorrente, renderizzaHubEventi);
+      } else {
+        eventiPartiteGiocateQuestoCiclo = 0;
+        renderizzaSelezioneSquadraEventi();
+      }
+    }).catch(() => renderizzaSelezioneSquadraEventi());
+  });
+}
+
+function renderizzaSelezioneSquadraEventi() {
+  const contenitore = document.getElementById("eventi-content");
+  const slotsHTML = Array.from({ length: 5 }, (_, i) => `
+    <div class="select-row sott-select-row">
+      <span>${i + 1}°:</span>
+      <select id="ev-deploy-slot-${i}" class="deploy-select"></select>
+    </div>`).join("");
+
+  contenitore.innerHTML = `
+    <div style="text-align:center; width:100%;">
+      <p style="color:#ffcc66; font-weight:bold;">🏆 Nuovo Evento in corso</p>
+      <p style="color:#a89a7a; font-size:0.8rem;">${testoRestrizioneEventi(eventiRestrizioneCorrente)}</p>
+      <p style="color:#a89a7a; font-size:0.75rem; margin-top:4px;">Scegli le 5 carte con cui parteciperai — verranno usate sia quando sfidi altri, sia come tua difesa quando qualcuno sfida te.</p>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:5px; width:100%; max-width:360px;">${slotsHTML}</div>
+    <button type="button" id="ev-conferma-squadra-btn" class="events-btn events-btn-main" style="max-width:240px;" disabled>Scegli le tue 5 creature</button>`;
+
+  popolaSelectSchieramentoEventi();
+  potenziaMenuATendina();
+}
+
+function popolaSelectSchieramentoEventi() {
+  let valoriSelezionati = [];
+  for (let i = 0; i < 5; i++) {
+    const s = document.getElementById(`ev-deploy-slot-${i}`);
+    if (s && s.value) valoriSelezionati.push(s.value);
+  }
+
+  for (let i = 0; i < 5; i++) {
+    const select = document.getElementById(`ev-deploy-slot-${i}`);
+    if (!select) continue;
+    const currentVal = select.value;
+    select.innerHTML = '<option value="">-- Seleziona --</option>';
+
+    deckGiocatore.forEach(carta => {
+      if (carta.isJolly || !cartaAmmissibileEventi(carta, eventiRestrizioneCorrente)) return;
+      if (valoriSelezionati.includes(carta.id) && carta.id !== currentVal) return;
+
+      const option = document.createElement("option");
+      option.value = carta.id;
+      let stringaTratti = carta.tratti && carta.tratti.length > 0 ? ` [${carta.tratti.join(",")}]` : " [Nessuno]";
+      option.innerText = `${iconaCartaTesto(carta)} ${carta.nome} F:${carta.statistiche.ferocia} B:${carta.statistiche.balzo} C:${carta.statistiche.corazza} I:${carta.statistiche.istinto}${stringaTratti}`;
+      if (carta.id === currentVal) option.selected = true;
+      select.appendChild(option);
+    });
+
+    select.removeEventListener("change", gestisciCambioSelectEventi);
+    select.addEventListener("change", gestisciCambioSelectEventi);
+  }
+}
+
+function gestisciCambioSelectEventi() {
+  popolaSelectSchieramentoEventi();
+  const btn = document.getElementById("ev-conferma-squadra-btn");
+  let scelti = [];
+  let valido = true;
+  for (let i = 0; i < 5; i++) {
+    const val = document.getElementById(`ev-deploy-slot-${i}`).value;
+    if (!val || scelti.includes(val)) valido = false;
+    else scelti.push(val);
+  }
+  if (btn) {
+    btn.disabled = !valido;
+    btn.innerText = valido ? "Conferma squadra" : "Scegli le tue 5 creature";
+  }
+}
+
+document.getElementById("eventi-modal")?.addEventListener("click", (e) => {
+  if (e.target && e.target.id === "ev-conferma-squadra-btn" && !e.target.disabled) {
+    confermaSquadraEventi();
+  }
+});
+
+function confermaSquadraEventi() {
+  const squadra = [];
+  for (let i = 0; i < 5; i++) {
+    const cardId = document.getElementById(`ev-deploy-slot-${i}`).value;
+    const carta = deckGiocatore.find(c => c.id === cardId);
+    squadra.push({ nome: carta.nome, immagine: carta.immagine, tratti: carta.tratti || [], statistiche: { ...carta.statistiche } });
+  }
+  eventiSquadraDifensiva = squadra;
+  eventiUltimoCicloPartecipato = eventiNumeroCicloCorrente;
+  eventiPartiteGiocateQuestoCiclo = 0;
+
+  dbFirebase.ref(`eventi_classifica/${eventiNumeroCicloCorrente}/${utenteFirebaseAttuale.uid}`).set({
+    nome: nicknameUtente, punteggio: 0, squadra, eBot: false
+  }).then(() => {
+    salvaProgressoCloud();
+    assicuraClassificaEventiSeminata(eventiNumeroCicloCorrente, eventiRestrizioneCorrente, renderizzaHubEventi);
+  });
+}
+
+function renderizzaHubEventi() {
+  assicuraRicaricaSfideEventi();
+  const contenitore = document.getElementById("eventi-content");
+  const tempoAlProssimoCiclo = EVENTI_DURATA_CICLO_MS - (Date.now() % EVENTI_DURATA_CICLO_MS);
+  const oreRimaste = Math.floor(tempoAlProssimoCiclo / (60 * 60 * 1000));
+
+  dbFirebase.ref(`eventi_classifica/${eventiNumeroCicloCorrente}`).once("value").then(snapshot => {
+    const dati = snapshot.val() || {};
+    const elenco = Object.entries(dati).map(([id, v]) => ({ id, ...v })).sort((a, b) => b.punteggio - a.punteggio);
+    const mioIndice = elenco.findIndex(e => e.id === utenteFirebaseAttuale.uid);
+    const mioPunteggio = mioIndice >= 0 ? elenco[mioIndice].punteggio : 0;
+    const miaPosizione = mioIndice >= 0 ? mioIndice + 1 : "-";
+
+    let avversari;
+    if (eventiPartiteGiocateQuestoCiclo === 0) {
+      const candidati = elenco.filter(e => e.id !== utenteFirebaseAttuale.uid);
+      avversari = [];
+      for (let i = 0; i < Math.min(5, candidati.length); i++) {
+        avversari.push(candidati[Math.floor(Math.random() * candidati.length)]);
+      }
+    } else if (mioIndice >= 0) {
+      const inizio = Math.max(0, mioIndice - 5);
+      const fine = Math.min(elenco.length, mioIndice + 6);
+      avversari = elenco.slice(inizio, fine).filter(e => e.id !== utenteFirebaseAttuale.uid);
+    } else {
+      avversari = elenco.slice(0, 5);
+    }
+
+    const avversariHTML = avversari.map(a => `
+      <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.35); border:1px solid #5c4d31; border-radius:8px; padding:8px 12px; width:100%; max-width:420px;">
+        <span style="color:#e0d5c1; font-size:0.85rem;">${a.eBot ? "🤖" : "👤"} ${a.nome} <span style="color:#ffcc66;">(${a.punteggio} pt)</span></span>
+        <button type="button" class="events-btn ev-sfida-btn" data-id="${a.id}" style="max-width:100px; font-size:0.75rem; padding:6px 10px;" ${eventiSfideRimaste <= 0 ? "disabled" : ""}>Sfida</button>
+      </div>`).join("");
+
+    contenitore.innerHTML = `
+      <div style="text-align:center; width:100%;">
+        <p style="color:#ffcc66; font-weight:bold;">🏆 Evento in corso — termina tra ${oreRimaste}h</p>
+        <p style="color:#a89a7a; font-size:0.78rem;">${testoRestrizioneEventi(eventiRestrizioneCorrente)}</p>
+        <p style="color:#e0d5c1; font-size:0.85rem; margin-top:4px;">La tua posizione: <b style="color:#ffcc66;">${miaPosizione}</b> — Punti: <b style="color:#ffcc66;">${mioPunteggio}</b></p>
+        <p style="color:${eventiSfideRimaste > 0 ? '#7ee787' : '#f56565'}; font-size:0.78rem;">Sfide disponibili: ${eventiSfideRimaste} / ${EVENTI_SFIDE_MAX}</p>
+      </div>
+      <button type="button" id="ev-cambia-squadra-btn" class="events-btn" style="max-width:200px; font-size:0.75rem;">Cambia squadra</button>
+      <div style="display:flex; flex-direction:column; gap:8px; width:100%; align-items:center;">${avversariHTML || '<p style="color:#a89a7a;">Nessun avversario disponibile al momento.</p>'}</div>`;
+
+    document.getElementById("ev-cambia-squadra-btn").addEventListener("click", renderizzaSelezioneSquadraEventi);
+    document.querySelectorAll(".ev-sfida-btn").forEach(btn => {
+      btn.addEventListener("click", () => avviaSfidaEventi(btn.dataset.id, elenco.find(e => e.id === btn.dataset.id)));
+    });
+  });
+}
+
+const EVENTI_MODALITA = [
+  { nome: "Normale", numStat: 1 },
+  { nome: "Bifase", numStat: 2 },
+  { nome: "Trifase", numStat: 3 }
+];
+
+function avviaSfidaEventi(avversarioId, avversarioDati) {
+  if (eventiSfideRimaste <= 0 || !avversarioDati) return;
+
+  assicuraRicaricaSfideEventi();
+  eventiSfideRimaste--;
+  if (!eventiTimestampUltimaSfida) eventiTimestampUltimaSfida = Date.now();
+
+  const tutteStat = ["ferocia", "balzo", "corazza", "istinto"];
+  const modalitaScelta = EVENTI_MODALITA[Math.floor(Math.random() * EVENTI_MODALITA.length)];
+  const statisticheMescolate = tutteStat.slice().sort(() => Math.random() - 0.5);
+  const eventiStatistiche = statisticheMescolate.slice(0, modalitaScelta.numStat);
+  const eventiTerreno = EVENTI_TERRENI[Math.floor(Math.random() * EVENTI_TERRENI.length)];
+
+  document.getElementById("eventi-modal").classList.add("hidden");
+
+  let roundVintiEventi = 0;
+  nuovoRegistroBattaglia();
+  document.getElementById("battle-title-outcome").innerText = `SFIDA CONTRO ${avversarioDati.nome.toUpperCase()}...`;
+  document.getElementById("battle-result-modal").classList.remove("hidden");
+  let evRoundIdx = 0;
+
+  function eseguiProssimoRoundEventi() {
+    if (evRoundIdx >= 5) {
+      risolviFineSfidaEventi(avversarioId, avversarioDati, roundVintiEventi);
+      return;
+    }
+
+    const miaCarta = eventiSquadraDifensiva[evRoundIdx];
+    const cartaAvversaria = avversarioDati.squadra[evRoundIdx];
+
+    let sommaMioVal = 0, sommaAvvVal = 0;
+    eventiStatistiche.forEach(stat => {
+      sommaMioVal += miaCarta.statistiche[stat];
+      sommaAvvVal += cartaAvversaria.statistiche[stat];
+    });
+
+    let mioValBase = parseFloat((sommaMioVal / eventiStatistiche.length).toFixed(1));
+    let avvValBase = parseFloat((sommaAvvVal / eventiStatistiche.length).toFixed(1));
+    let mioMod = calcolaModificatoreTerreno(miaCarta.tratti || [], eventiTerreno);
+    let avvMod = calcolaModificatoreTerreno(cartaAvversaria.tratti || [], eventiTerreno);
+    let mioValFinale = parseFloat((mioValBase + mioMod).toFixed(1));
+    let avvValFinale = parseFloat((avvValBase + avvMod).toFixed(1));
+
+    const esitoRound = (mioValFinale > avvValFinale);
+    if (esitoRound) roundVintiEventi++;
+
+    const spiegaMio = spiegaModificatoreTerreno(miaCarta.tratti || [], eventiTerreno);
+    const spiegaAvv = spiegaModificatoreTerreno(cartaAvversaria.tratti || [], eventiTerreno);
+    registraRoundBattaglia({
+      numeroRound: evRoundIdx + 1,
+      mioNome: miaCarta.nome,
+      nemicoNome: cartaAvversaria.nome,
+      statistiche: eventiStatistiche,
+      mioBase: mioValBase, mioModificatore: mioMod, mioSpiegazioneModificatore: spiegaMio.spiegazione, mioFinale: mioValFinale,
+      nemicoBase: avvValBase, nemicoModificatore: avvMod, nemicoSpiegazioneModificatore: spiegaAvv.spiegazione, nemicoFinale: avvValFinale,
+      vinto: esitoRound
+    });
+
+    let roundCardId = `clash-ev-row-${evRoundIdx}`;
+    let rLineHTML = `
+      <div class="battle-arena-row" id="${roundCardId}">
+        <div class="mini-card-anim" id="my-ev-card-${evRoundIdx}">
+          <div style="font-size:0.8rem; font-weight:bold; color:#ffcc66;">${miaCarta.nome}</div>
+          <div style="font-size:1.5rem; margin:5px 0;">${miniImmagineCarta(miaCarta, 40)}</div>
+          <div style="font-size:0.75rem; font-weight:bold; color:#fff;">PUNTI: ${mioValFinale}</div>
+        </div>
+        <div class="vs-clash-text" id="vs-text-ev-${evRoundIdx}">ROUND ${evRoundIdx + 1}</div>
+        <div class="mini-card-anim" id="nem-ev-card-${evRoundIdx}">
+          <div style="font-size:0.8rem; font-weight:bold; color:#f56565;">${cartaAvversaria.nome}</div>
+          <div style="font-size:1.5rem; margin:5px 0;">${miniImmagineCarta(cartaAvversaria, 40)}</div>
+          <div style="font-size:0.75rem; font-weight:bold; color:#fff;">PUNTI: ${avvValFinale}</div>
+        </div>
+      </div>`;
+
+    if (evRoundIdx === 0) {
+      document.getElementById("battle-report-content").innerHTML = `<p style="text-align:center; color:#a89a7a; font-size:0.8rem;">Modalità: ${modalitaScelta.nome} (${eventiStatistiche.map(s => s.toUpperCase()).join(" + ")}) — Terreno: ${terrenoEmoji(eventiTerreno)}</p>` + rLineHTML;
+    } else {
+      document.getElementById("battle-report-content").insertAdjacentHTML("beforeend", rLineHTML);
+    }
+
+    let targetRow = document.getElementById(roundCardId);
+    if (targetRow) targetRow.scrollIntoView({ behavior: 'smooth', block: 'end' });
+
+    setTimeout(() => {
+      document.getElementById(`my-ev-card-${evRoundIdx}`).classList.add("mia-card-scatto");
+      document.getElementById(`nem-ev-card-${evRoundIdx}`).classList.add("nemica-card-scatto");
+      document.getElementById(`vs-text-ev-${evRoundIdx}`).classList.add("shake");
+
+      setTimeout(() => {
+        if (esitoRound) {
+          document.getElementById(`nem-ev-card-${evRoundIdx}`).classList.add("card-sconfitta");
+          document.getElementById(`vs-text-ev-${evRoundIdx}`).innerHTML = "VINCI";
+          document.getElementById(`vs-text-ev-${evRoundIdx}`).style.color = "#48bb78";
+        } else {
+          document.getElementById(`my-ev-card-${evRoundIdx}`).classList.add("card-sconfitta");
+          document.getElementById(`vs-text-ev-${evRoundIdx}`).innerHTML = "PERDI";
+          document.getElementById(`vs-text-ev-${evRoundIdx}`).style.color = "#f56565";
+        }
+        evRoundIdx++;
+        setTimeout(eseguiProssimoRoundEventi, 1000);
+      }, 400);
+    }, 600);
+  }
+
+  setTimeout(eseguiProssimoRoundEventi, 500);
+}
+
+function risolviFineSfidaEventi(avversarioId, avversarioDati, roundVinti) {
+  eventiPartiteGiocateQuestoCiclo++;
+
+  let epilogoHTML = `<div class="info-divider"></div>`;
+  document.getElementById("battle-title-outcome").innerText = `Sfida conclusa: ${roundVinti} punti guadagnati`;
+
+  epilogoHTML += `<p style="text-align:center; font-size:1.2rem; color:#ffcc66; font-weight:bold;">+${roundVinti} punti</p>`;
+  epilogoHTML += `<p style="text-align:center; color:#e0d5c1;">Round vinti contro ${avversarioDati.nome}: ${roundVinti} su 5</p>`;
+
+  if (utenteFirebaseAttuale) {
+    const rifMio = dbFirebase.ref(`eventi_classifica/${eventiNumeroCicloCorrente}/${utenteFirebaseAttuale.uid}/punteggio`);
+    rifMio.transaction(punteggioAttuale => (punteggioAttuale || 0) + roundVinti);
+  }
+
+  epilogoHTML += `<div style="text-align:center; margin-top:12px; display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+    <button type="button" class="events-btn btn-vedi-statistiche" style="max-width:220px;">📊 Vedi Statistiche di Battaglia</button>
+    <button type="button" class="events-btn events-btn-main" id="ev-torna-hub-btn" style="max-width:220px;">Torna agli Eventi</button>
+  </div>`;
+
+  document.getElementById("battle-report-content").insertAdjacentHTML("beforeend", epilogoHTML);
+
+  document.getElementById("ev-torna-hub-btn").addEventListener("click", () => {
+    document.getElementById("battle-result-modal").classList.add("hidden");
+    document.getElementById("eventi-modal").classList.remove("hidden");
+    renderizzaHubEventi();
+  });
+}
+
+let eventiUltimoCicloPartecipato = 0;
+
+function calcolaPremioPiazzamentoEventi(posizione, puntiOttenuti) {
+  if (posizione === 1) return { dracme: 500, ambra: 3, livelloCartaPacco: 4, testo: "🥇 1° posto!" };
+  if (posizione >= 2 && posizione <= 3) return { dracme: 350, ambra: 2, livelloCartaPacco: 3, testo: `🥈 ${posizione}° posto!` };
+  if (posizione >= 4 && posizione <= 10) return { dracme: 200, ambra: 1, livelloCartaPacco: 2, testo: `${posizione}° posto` };
+  if (posizione >= 11 && posizione <= 25) return { dracme: 100, ambra: 1, livelloCartaPacco: 0, testo: `${posizione}° posto` };
+  if (puntiOttenuti > 0) return { dracme: 50, ambra: 0, livelloCartaPacco: 0, testo: "Premio di partecipazione" };
+  return null;
+}
+
+function controllaFineCicloEventi(callback) {
+  const cicloAttuale = calcolaNumeroCicloEventiCorrente();
+
+  if (!eventiUltimoCicloPartecipato || eventiUltimoCicloPartecipato >= cicloAttuale || eventiUltimoCicloPremiato >= eventiUltimoCicloPartecipato || !utenteFirebaseAttuale) {
+    callback();
+    return;
+  }
+
+  dbFirebase.ref(`eventi_classifica/${eventiUltimoCicloPartecipato}`).once("value").then(snapshot => {
+    const dati = snapshot.val() || {};
+    const elenco = Object.entries(dati).map(([id, v]) => ({ id, ...v })).sort((a, b) => b.punteggio - a.punteggio);
+    const mioIndice = elenco.findIndex(e => e.id === utenteFirebaseAttuale.uid);
+    eventiUltimoCicloPremiato = eventiUltimoCicloPartecipato;
+
+    if (mioIndice < 0) { salvaProgressoCloud(); callback(); return; }
+
+    const posizione = mioIndice + 1;
+    const puntiOttenuti = elenco[mioIndice].punteggio;
+    const premio = calcolaPremioPiazzamentoEventi(posizione, puntiOttenuti);
+
+    if (!premio) { salvaProgressoCloud(); callback(); return; }
+
+    dracmeAttuali += premio.dracme;
+    ambraAttuale += premio.ambra;
+    let cartaVinta = null;
+    if (premio.livelloCartaPacco > 0) cartaVinta = estraiCartaPerLivello(premio.livelloCartaPacco);
+    if (cartaVinta) deckGiocatore.push(cartaVinta);
+
+    document.getElementById("dracme-count").innerText = dracmeAttuali;
+    document.getElementById("ambra-count").innerText = ambraAttuale;
+    salvaProgressoCloud();
+
+    document.getElementById("eventi-content").innerHTML = `
+      <div class="tutorial-chirone-box" style="max-width:480px;">
+        <div class="tutorial-chirone-testo">
+          <p style="font-weight:bold; color:#ffcc66; font-size:1.1rem;">${premio.testo}</p>
+          <p style="margin-top:6px;">L'evento precedente si è concluso: hai totalizzato <b>${puntiOttenuti} punti</b>.</p>
+          <p style="margin-top:6px; color:#ecc94b; font-weight:bold;">Premio: ${premio.dracme} Dracme${premio.ambra > 0 ? `, ${premio.ambra} Frammenti d'Ambra` : ""}${cartaVinta ? `, e la carta ${cartaVinta.nome}!` : ""}</p>
+        </div>
+      </div>
+      <button type="button" id="ev-continua-dopo-premio-btn" class="events-btn events-btn-main" style="max-width:220px;">Continua</button>`;
+
+    document.getElementById("ev-continua-dopo-premio-btn").addEventListener("click", callback);
+  }).catch(() => { salvaProgressoCloud(); callback(); });
+}
+
 // ===== Tracciamento completamento delle 11 Fatiche, per sbloccare Cerbero =====
 
 let faticheCompletateStato = {
@@ -9651,6 +10159,12 @@ function mostraAnimazioneScontroFatiche(carta, nemico, vittoria, mioVal, nemicoV
 }
 
 document.getElementById("btn-eventi-fatiche")?.addEventListener("click", apriPannelloFatiche);
+
+document.getElementById("btn-eventi-torneo")?.addEventListener("click", apriEventi);
+
+document.getElementById("close-eventi-modal")?.addEventListener("click", () => {
+  document.getElementById("eventi-modal").classList.add("hidden");
+});
 
 // Icona di richiamo per ogni mitologia (segnaposto in attesa di illustrazioni dedicate)
 const ICONE_MITOLOGIA = {
@@ -11708,6 +12222,11 @@ function raccogliDatiSalvataggio() {
     sotterraneiLivelloMassimoConPremio: sotterraneiLivelloMassimoConPremio,
     sotterraneiVittorieOggi: sotterraneiVittorieOggi,
     sotterraneiDataVittorie: sotterraneiDataVittorie,
+    eventiSfideRimaste: eventiSfideRimaste,
+    eventiTimestampUltimaSfida: eventiTimestampUltimaSfida,
+    eventiUltimoCicloPremiato: eventiUltimoCicloPremiato,
+    eventiUltimoCicloPartecipato: eventiUltimoCicloPartecipato,
+    eventiPartiteGiocateQuestoCiclo: eventiPartiteGiocateQuestoCiclo,
     ultimoSalvataggio: Date.now()
   };
 }
@@ -11964,6 +12483,21 @@ function applicaDatiCaricati(dati) {
   }
   if (typeof dati.sotterraneiDataVittorie === "string") {
     sotterraneiDataVittorie = dati.sotterraneiDataVittorie;
+  }
+  if (typeof dati.eventiSfideRimaste === "number") {
+    eventiSfideRimaste = dati.eventiSfideRimaste;
+  }
+  if (typeof dati.eventiTimestampUltimaSfida === "number" || dati.eventiTimestampUltimaSfida === null) {
+    eventiTimestampUltimaSfida = dati.eventiTimestampUltimaSfida;
+  }
+  if (typeof dati.eventiUltimoCicloPremiato === "number") {
+    eventiUltimoCicloPremiato = dati.eventiUltimoCicloPremiato;
+  }
+  if (typeof dati.eventiUltimoCicloPartecipato === "number") {
+    eventiUltimoCicloPartecipato = dati.eventiUltimoCicloPartecipato;
+  }
+  if (typeof dati.eventiPartiteGiocateQuestoCiclo === "number") {
+    eventiPartiteGiocateQuestoCiclo = dati.eventiPartiteGiocateQuestoCiclo;
   }
   if (dati.tributoRaStato && typeof dati.tributoRaStato === "object") {
     tributoRaStato = Object.assign({ scambiOggi: 0, dataUltimoScambio: "" }, dati.tributoRaStato);

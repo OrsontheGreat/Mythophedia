@@ -187,13 +187,19 @@ object-fit: cover;">
 
 <section class="events-row">
 
-<button type="button" class="events-btn events-btn-main" id="btn-eventi-fatiche">
+<button type="button" class="events-btn events-btn-uguale" id="btn-eventi-fatiche">
 
 <span class="events-btn-title">Le Dodici Fatiche e tanto altro...</span>
 
 </button>
 
-<button type="button" class="events-btn events-btn-small" id="btn-dentro-mito">
+<button type="button" class="events-btn events-btn-uguale" id="btn-eventi-torneo">
+
+<span class="events-btn-title">🏆 Eventi</span>
+
+</button>
+
+<button type="button" class="events-btn events-btn-uguale" id="btn-dentro-mito">
 
 <span class="events-btn-title">Mythophedia</span>
 
@@ -381,6 +387,16 @@ Esagono</button>
 <button type="button" id="close-addestramento-modal" class="close-btn">&times;</button>
 </header>
 <div id="addestramento-content" style="flex:1; overflow-y:auto; padding:14px; display:flex; flex-direction:column; align-items:center; gap:14px;"></div>
+</div>
+</div>
+
+<div id="eventi-modal" class="modal-overlay hidden">
+<div class="modal-card" style="max-width: 1300px; height: calc(var(--app-height) * 92 / 100);">
+<header class="modal-header">
+<h2>🏆 Eventi</h2>
+<button type="button" id="close-eventi-modal" class="close-btn">&times;</button>
+</header>
+<div id="eventi-content" style="flex:1; overflow-y:auto; padding:14px; display:flex; flex-direction:column; align-items:center; gap:14px;"></div>
 </div>
 </div>
 

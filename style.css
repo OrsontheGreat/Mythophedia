@@ -1918,6 +1918,8 @@ html.narrow-700 .mythic-map {
 
 .events-btn-main { flex: 3; font-size: 1.05rem; }
 
+.events-btn-uguale { flex: 1; font-size: 0.92rem; }
+
 .events-btn-small { flex: 1; font-size: 0.8rem; }
 
 #btn-eventi-fatiche {
