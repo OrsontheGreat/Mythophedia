@@ -1934,6 +1934,12 @@ html.narrow-700 .mythic-map {
   background-position: center;
 }
 
+#btn-eventi-torneo {
+  background-image: linear-gradient(rgba(15,12,8,0.55), rgba(15,12,8,0.78)), url('img/sfondi/tasto-eventi.jpg');
+  background-size: cover;
+  background-position: center;
+}
+
 html.narrow-700 .events-row { flex-direction: column; }
 
 .mito-hub-grid {
@@ -2016,6 +2022,13 @@ html.narrow-700 .events-row { flex-direction: column; }
 
 .modal-card.fatiche-bg-attivo {
   background-image: linear-gradient(rgba(20, 12, 4, 0.72), rgba(20, 12, 4, 0.72)), url('img/sfondi/12fatiche.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.modal-card.eventi-bg-attivo {
+  background-image: linear-gradient(rgba(20, 12, 4, 0.72), rgba(20, 12, 4, 0.72)), url('img/sfondi/tasto-eventi.jpg');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;

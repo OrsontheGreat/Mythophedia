@@ -9376,6 +9376,7 @@ function apriEventi() {
 
   document.getElementById("eventi-content").innerHTML = `<p style="text-align:center; color:#a89a7a;">Preparazione dell'arena in corso...</p>`;
   document.getElementById("eventi-modal").classList.remove("hidden");
+  document.querySelector("#eventi-modal .modal-card").classList.add("eventi-bg-attivo");
 
   if (!utenteFirebaseAttuale) return;
 
@@ -9505,24 +9506,29 @@ function renderizzaHubEventi() {
 
     let avversari;
     if (eventiPartiteGiocateQuestoCiclo === 0) {
-      const candidati = elenco.filter(e => e.id !== utenteFirebaseAttuale.uid);
-      avversari = [];
-      for (let i = 0; i < Math.min(5, candidati.length); i++) {
-        avversari.push(candidati[Math.floor(Math.random() * candidati.length)]);
+      const candidatiSfidabili = elenco.filter(e => e.id !== utenteFirebaseAttuale.uid);
+      const scelti = new Set();
+      while (scelti.size < Math.min(5, candidatiSfidabili.length)) {
+        scelti.add(candidatiSfidabili[Math.floor(Math.random() * candidatiSfidabili.length)].id);
       }
+      const idScelti = elenco.filter(e => scelti.has(e.id) || e.id === utenteFirebaseAttuale.uid).map(e => e.id);
+      avversari = elenco.filter(e => idScelti.includes(e.id));
     } else if (mioIndice >= 0) {
       const inizio = Math.max(0, mioIndice - 5);
       const fine = Math.min(elenco.length, mioIndice + 6);
-      avversari = elenco.slice(inizio, fine).filter(e => e.id !== utenteFirebaseAttuale.uid);
+      avversari = elenco.slice(inizio, fine);
     } else {
       avversari = elenco.slice(0, 5);
     }
 
-    const avversariHTML = avversari.map(a => `
-      <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.35); border:1px solid #5c4d31; border-radius:8px; padding:8px 12px; width:100%; max-width:420px;">
-        <span style="color:#e0d5c1; font-size:0.85rem;">${a.eBot ? "🤖" : "👤"} ${a.nome} <span style="color:#ffcc66;">(${a.punteggio} pt)</span></span>
-        <button type="button" class="events-btn ev-sfida-btn" data-id="${a.id}" style="max-width:100px; font-size:0.75rem; padding:6px 10px;" ${eventiSfideRimaste <= 0 ? "disabled" : ""}>Sfida</button>
-      </div>`).join("");
+    const avversariHTML = avversari.map(a => {
+      const sonoIo = a.id === utenteFirebaseAttuale.uid;
+      return `
+      <div style="display:flex; justify-content:space-between; align-items:center; background:${sonoIo ? 'rgba(255,204,102,0.15)' : 'rgba(0,0,0,0.35)'}; border:1px solid ${sonoIo ? '#ffcc66' : '#5c4d31'}; border-radius:8px; padding:8px 12px; width:100%; max-width:420px;">
+        <span style="color:#e0d5c1; font-size:0.85rem;">${sonoIo ? "⭐" : (a.eBot ? "🤖" : "👤")} ${a.nome}${sonoIo ? " (Tu)" : ""} <span style="color:#ffcc66;">(${a.punteggio} pt)</span></span>
+        ${sonoIo ? "" : `<button type="button" class="events-btn ev-sfida-btn" data-id="${a.id}" style="max-width:100px; font-size:0.75rem; padding:6px 10px;" ${eventiSfideRimaste <= 0 ? "disabled" : ""}>Sfida</button>`}
+      </div>`;
+    }).join("");
 
     contenitore.innerHTML = `
       <div style="text-align:center; width:100%;">
@@ -9553,18 +9559,91 @@ const EVENTI_MODALITA = [
   { nome: "Trifase", numStat: 3 }
 ];
 
+let eventiSquadraLocaleOrdinata = null;
+let eventiIndiceSelezionatoPerScambio = null;
+
 function avviaSfidaEventi(avversarioId, avversarioDati) {
   if (eventiSfideRimaste <= 0 || !avversarioDati) return;
-
-  assicuraRicaricaSfideEventi();
-  eventiSfideRimaste--;
-  if (!eventiTimestampUltimaSfida) eventiTimestampUltimaSfida = Date.now();
 
   const tutteStat = ["ferocia", "balzo", "corazza", "istinto"];
   const modalitaScelta = EVENTI_MODALITA[Math.floor(Math.random() * EVENTI_MODALITA.length)];
   const statisticheMescolate = tutteStat.slice().sort(() => Math.random() - 0.5);
   const eventiStatistiche = statisticheMescolate.slice(0, modalitaScelta.numStat);
   const eventiTerreno = EVENTI_TERRENI[Math.floor(Math.random() * EVENTI_TERRENI.length)];
+
+  eventiSquadraLocaleOrdinata = eventiSquadraDifensiva.map(c => ({ ...c }));
+  eventiIndiceSelezionatoPerScambio = null;
+
+  renderizzaAnteprimaSfidaEventi(avversarioId, avversarioDati, eventiTerreno, modalitaScelta, eventiStatistiche);
+}
+
+function renderizzaAnteprimaSfidaEventi(avversarioId, avversarioDati, terreno, modalitaScelta, statistiche) {
+  const contenitore = document.getElementById("eventi-content");
+
+  const cartaOpponenteHTML = (c) => `
+    <div style="background:rgba(0,0,0,0.35); border:1px solid #5c4d31; border-radius:8px; padding:6px; text-align:center; width:90px;">
+      <div style="font-size:1.4rem;">${miniImmagineCarta(c, 30)}</div>
+      <div style="font-size:0.68rem; font-weight:bold; color:#e0d5c1; margin-top:2px;">${c.nome}</div>
+      <div style="font-size:0.62rem; color:#a89a7a;">F:${c.statistiche.ferocia} B:${c.statistiche.balzo}<br>C:${c.statistiche.corazza} I:${c.statistiche.istinto}</div>
+    </div>`;
+
+  const cartaMiaHTML = (c, idx) => `
+    <div class="ev-carta-riordino" data-idx="${idx}" style="background:${idx === eventiIndiceSelezionatoPerScambio ? 'rgba(255,204,102,0.3)' : 'rgba(0,0,0,0.35)'}; border:1px solid ${idx === eventiIndiceSelezionatoPerScambio ? '#ffcc66' : '#5c4d31'}; border-radius:8px; padding:6px; text-align:center; width:90px; cursor:pointer;">
+      <div style="font-size:0.62rem; color:#ffcc66;">Round ${idx + 1}</div>
+      <div style="font-size:1.4rem;">${miniImmagineCarta(c, 30)}</div>
+      <div style="font-size:0.68rem; font-weight:bold; color:#e0d5c1; margin-top:2px;">${c.nome}</div>
+      <div style="font-size:0.62rem; color:#a89a7a;">F:${c.statistiche.ferocia} B:${c.statistiche.balzo}<br>C:${c.statistiche.corazza} I:${c.statistiche.istinto}</div>
+    </div>`;
+
+  contenitore.innerHTML = `
+    <div style="text-align:center; width:100%;">
+      <p style="color:#ffcc66; font-weight:bold;">Sfida contro ${avversarioDati.nome}</p>
+      <p style="color:#a89a7a; font-size:0.8rem;">Terreno: ${terrenoEmoji(terreno)} — Modalità: ${modalitaScelta.nome} (${statistiche.map(s => s.toUpperCase()).join(" + ")})</p>
+    </div>
+    <div style="display:flex; gap:20px; width:100%; justify-content:center; flex-wrap:wrap;">
+      <div>
+        <p style="text-align:center; color:#f56565; font-size:0.78rem; font-weight:bold;">Squadra avversaria</p>
+        <div style="display:flex; flex-direction:column; gap:6px;">${avversarioDati.squadra.map(cartaOpponenteHTML).join("")}</div>
+      </div>
+      <div>
+        <p style="text-align:center; color:#7ee787; font-size:0.78rem; font-weight:bold;">La tua squadra — tocca due carte per scambiarle di posto</p>
+        <div id="ev-mia-squadra-riordino" style="display:flex; flex-direction:column; gap:6px;">${eventiSquadraLocaleOrdinata.map(cartaMiaHTML).join("")}</div>
+      </div>
+    </div>
+    <div style="display:flex; gap:10px;">
+      <button type="button" id="ev-annulla-anteprima-btn" class="events-btn" style="max-width:160px; font-size:0.8rem;">Annulla</button>
+      <button type="button" id="ev-combatti-btn" class="events-btn events-btn-main" style="max-width:200px;">⚔️ Combatti</button>
+    </div>`;
+
+  document.querySelectorAll(".ev-carta-riordino").forEach(el => {
+    el.addEventListener("click", () => {
+      const idx = parseInt(el.dataset.idx);
+      if (eventiIndiceSelezionatoPerScambio === null) {
+        eventiIndiceSelezionatoPerScambio = idx;
+      } else if (eventiIndiceSelezionatoPerScambio === idx) {
+        eventiIndiceSelezionatoPerScambio = null;
+      } else {
+        const tmp = eventiSquadraLocaleOrdinata[idx];
+        eventiSquadraLocaleOrdinata[idx] = eventiSquadraLocaleOrdinata[eventiIndiceSelezionatoPerScambio];
+        eventiSquadraLocaleOrdinata[eventiIndiceSelezionatoPerScambio] = tmp;
+        eventiIndiceSelezionatoPerScambio = null;
+      }
+      renderizzaAnteprimaSfidaEventi(avversarioId, avversarioDati, terreno, modalitaScelta, statistiche);
+    });
+  });
+
+  document.getElementById("ev-annulla-anteprima-btn").addEventListener("click", renderizzaHubEventi);
+  document.getElementById("ev-combatti-btn").addEventListener("click", () => {
+    confermaBattagliaEventi(avversarioId, avversarioDati, terreno, modalitaScelta, statistiche);
+  });
+}
+
+function confermaBattagliaEventi(avversarioId, avversarioDati, eventiTerreno, modalitaScelta, eventiStatistiche) {
+  assicuraRicaricaSfideEventi();
+  eventiSfideRimaste--;
+  if (!eventiTimestampUltimaSfida) eventiTimestampUltimaSfida = Date.now();
+
+  const squadraDaUsare = eventiSquadraLocaleOrdinata;
 
   document.getElementById("eventi-modal").classList.add("hidden");
 
@@ -9580,7 +9659,7 @@ function avviaSfidaEventi(avversarioId, avversarioDati) {
       return;
     }
 
-    const miaCarta = eventiSquadraDifensiva[evRoundIdx];
+    const miaCarta = squadraDaUsare[evRoundIdx];
     const cartaAvversaria = avversarioDati.squadra[evRoundIdx];
 
     let sommaMioVal = 0, sommaAvvVal = 0;
