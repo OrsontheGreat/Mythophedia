@@ -9477,6 +9477,12 @@ function confermaSquadraEventi() {
   }).then(() => {
     salvaProgressoCloud();
     assicuraClassificaEventiSeminata(eventiNumeroCicloCorrente, eventiRestrizioneCorrente, renderizzaHubEventi);
+  }).catch((err) => {
+    console.error("Errore salvataggio squadra Eventi:", err);
+    document.getElementById("eventi-content").innerHTML = `
+      <p style="text-align:center; color:#f56565;">Non è stato possibile salvare la squadra. Controlla la connessione e riprova.</p>
+      <button type="button" id="ev-riprova-squadra-btn" class="events-btn events-btn-main" style="max-width:220px;">Riprova</button>`;
+    document.getElementById("ev-riprova-squadra-btn").addEventListener("click", renderizzaSelezioneSquadraEventi);
   });
 }
 
@@ -9528,6 +9534,12 @@ function renderizzaHubEventi() {
     document.querySelectorAll(".ev-sfida-btn").forEach(btn => {
       btn.addEventListener("click", () => avviaSfidaEventi(btn.dataset.id, elenco.find(e => e.id === btn.dataset.id)));
     });
+  }).catch((err) => {
+    console.error("Errore lettura classifica Eventi:", err);
+    contenitore.innerHTML = `
+      <p style="text-align:center; color:#f56565;">Non è stato possibile caricare la classifica. Controlla la connessione e riprova.</p>
+      <button type="button" id="ev-riprova-hub-btn" class="events-btn events-btn-main" style="max-width:220px;">Riprova</button>`;
+    document.getElementById("ev-riprova-hub-btn").addEventListener("click", renderizzaHubEventi);
   });
 }
 
@@ -9655,7 +9667,9 @@ function risolviFineSfidaEventi(avversarioId, avversarioDati, roundVinti) {
 
   if (utenteFirebaseAttuale) {
     const rifMio = dbFirebase.ref(`eventi_classifica/${eventiNumeroCicloCorrente}/${utenteFirebaseAttuale.uid}/punteggio`);
-    rifMio.transaction(punteggioAttuale => (punteggioAttuale || 0) + roundVinti);
+    rifMio.transaction(punteggioAttuale => (punteggioAttuale || 0) + roundVinti).catch((err) => {
+      console.error("Errore aggiornamento punteggio Eventi:", err);
+    });
   }
 
   epilogoHTML += `<div style="text-align:center; margin-top:12px; display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
