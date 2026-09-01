@@ -9353,8 +9353,12 @@ function seminaLottiBotEventi(numeroCiclo, restrizione, callback) {
 }
 
 function assicuraClassificaEventiSeminata(numeroCiclo, restrizione, callback) {
-  dbFirebase.ref(`eventi_classifica/${numeroCiclo}`).once("value").then(snapshot => {
-    if (snapshot.exists() && snapshot.numChildren() > 0) {
+  // Controllo specificamente la presenza di un bot (chiave deterministica "bot_0"), non
+  // semplicemente "esiste qualche dato" — perché a questo punto la squadra del giocatore
+  // potrebbe essere già stata scritta un attimo prima, facendo credere erroneamente che
+  // la classifica sia già popolata quando in realtà i bot non sono mai stati creati.
+  dbFirebase.ref(`eventi_classifica/${numeroCiclo}/bot_0`).once("value").then(snapshot => {
+    if (snapshot.exists()) {
       callback();
     } else {
       seminaLottiBotEventi(numeroCiclo, restrizione, callback);
