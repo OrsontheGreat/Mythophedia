@@ -162,7 +162,31 @@ function potenziaMenuATendina() {
       intestazione.appendChild(btnChiudi);
       overlay.appendChild(intestazione);
 
+      const contieneCarte = Array.from(sel.options).some(opt => opt.dataset.carta);
+      const contenitoreOpzioni = contieneCarte ? document.createElement("div") : overlay;
+      if (contieneCarte) {
+        contenitoreOpzioni.className = "fake-select-griglia-carte";
+        overlay.appendChild(contenitoreOpzioni);
+      }
+
       Array.from(sel.options).forEach((opt, idx) => {
+        if (opt.dataset.carta) {
+          const carta = JSON.parse(opt.dataset.carta);
+          const voce = document.createElement("div");
+          voce.className = "fake-select-opzione-carta" + (opt.disabled ? " disabled" : "") + (idx === sel.selectedIndex ? " selected" : "");
+          voce.innerHTML = costruisciCartaVisualeOpzione(carta);
+          if (!opt.disabled) {
+            voce.addEventListener("click", (e) => {
+              e.stopPropagation();
+              sel.value = opt.value;
+              sel.dispatchEvent(new Event("change", { bubbles: true }));
+              chiudiOverlay();
+            });
+          }
+          contenitoreOpzioni.appendChild(voce);
+          return;
+        }
+
         const voce = document.createElement("div");
         voce.className = "fake-select-option" + (opt.disabled ? " disabled" : "") + (idx === sel.selectedIndex ? " selected" : "");
         voce.textContent = opt.textContent;
@@ -174,7 +198,7 @@ function potenziaMenuATendina() {
             chiudiOverlay();
           });
         }
-        overlay.appendChild(voce);
+        contenitoreOpzioni.appendChild(voce);
       });
 
       overlay.addEventListener("click", (e) => { e.stopPropagation(); });
@@ -3567,6 +3591,8 @@ function popolaSelectSchieramento() {
       let stringaTratti = carta.tratti && carta.tratti.length > 0 ? ` [${carta.tratti.join(",")}]` : " [Nessuno]";
 
       option.innerText = `${iconaCartaTesto(carta)} ${carta.nome} [ ${vigore}%] F:${carta.statistiche.ferocia} B:${carta.statistiche.balzo} C:${carta.statistiche.corazza} I:${carta.statistiche.istinto}${stringaTratti}`;
+
+      option.dataset.carta = JSON.stringify({ nome: carta.nome, immagine: carta.immagine, tratti: carta.tratti || [], stelle: carta.stelle, vigore, statistiche: carta.statistiche });
 
       if (carta.id === currentVal) option.selected = true;
 
@@ -7348,7 +7374,10 @@ function htmlSchermataIdra() {
       const carteLivello = eleggibili.filter(c => c.livello === lvl).sort((a, b) => b.statistiche[statOggi] - a.statistiche[statOggi]);
       if (carteLivello.length === 0) continue;
       livelliDisponibili++;
-      const opzioni = carteLivello.map(c => `<option value="${c.id}">${c.nome} — ${nomeStatOggi}: ${c.statistiche[statOggi].toFixed(1)}</option>`).join("");
+      const opzioni = carteLivello.map(c => {
+        const datiCarta = JSON.stringify({ nome: c.nome, immagine: c.immagine, tratti: c.tratti || [], stelle: c.stelle, statistiche: c.statistiche }).replace(/"/g, "&quot;");
+        return `<option value="${c.id}" data-carta="${datiCarta}">${c.nome} — ${nomeStatOggi}: ${c.statistiche[statOggi].toFixed(1)}</option>`;
+      }).join("");
       selettoriHTML += `
         <div style="display:flex; flex-direction:column; gap:2px; width:100%; max-width:380px;">
           <label style="font-size:0.68rem; color:#a89a7a;">Livello ${lvl} — ${IDRA_NOMI_RARITA[lvl]}</label>
@@ -8409,6 +8438,31 @@ function costruisciCartaEsempioTutorial(nomeCarta) {
     </div>`;
 }
 
+// Gemella della funzione sopra, ma a partire da un vero oggetto carta (non solo dal nome):
+// usata nei menu di scelta creature per mostrare vigore e statistiche reali del giocatore,
+// non i valori base di riferimento.
+function costruisciCartaVisualeOpzione(carta) {
+  const s = carta.statistiche;
+  const trattiTesto = carta.tratti && carta.tratti.length > 0
+    ? carta.tratti.map(t => t.charAt(0).toUpperCase() + t.slice(1)).join(", ")
+    : "Nessun tratto";
+
+  return `
+    <div class="tutorial-carta-esempio">
+      <img src="${carta.immagine}" class="tutorial-carta-esempio-img" onerror="this.style.display='none';">
+      <div class="tutorial-carta-esempio-nome">${carta.nome}${carta.stelle !== undefined && carta.stelle !== null ? ` (${carta.stelle}★)` : ""}</div>
+      ${carta.vigore !== undefined && carta.vigore !== null ? `<div style="font-size:0.68rem; font-weight:bold; color:${carta.vigore > 30 ? '#7ee787' : '#f56565'}; margin-top:2px;">Vigore: ${carta.vigore}%</div>` : ""}
+      ${s ? `
+      <div class="tutorial-carta-esempio-stats">
+        <span>Ferocia: <b>${s.ferocia}</b></span>
+        <span>Balzo: <b>${s.balzo}</b></span>
+        <span>Corazza: <b>${s.corazza}</b></span>
+        <span>Istinto: <b>${s.istinto}</b></span>
+      </div>` : ""}
+      <div class="tutorial-carta-esempio-tratto">${trattiTesto}</div>
+    </div>`;
+}
+
 function apriTutorialChirone() {
   tutorialPassoAttuale = 0;
   renderizzaPassoTutorial();
@@ -9041,6 +9095,7 @@ function popolaSelectSchieramentoSotterraneo() {
       option.value = carta.id;
       let stringaTratti = carta.tratti && carta.tratti.length > 0 ? ` [${carta.tratti.join(",")}]` : " [Nessuno]";
       option.innerText = `${iconaCartaTesto(carta)} ${carta.nome} [ ${vigore}%] F:${carta.statistiche.ferocia} B:${carta.statistiche.balzo} C:${carta.statistiche.corazza} I:${carta.statistiche.istinto}${stringaTratti}`;
+      option.dataset.carta = JSON.stringify({ nome: carta.nome, immagine: carta.immagine, tratti: carta.tratti || [], stelle: carta.stelle, vigore, statistiche: carta.statistiche });
       if (carta.id === currentVal) option.selected = true;
       select.appendChild(option);
     });
@@ -9435,6 +9490,7 @@ function popolaSelectSchieramentoEventi() {
       option.value = carta.id;
       let stringaTratti = carta.tratti && carta.tratti.length > 0 ? ` [${carta.tratti.join(",")}]` : " [Nessuno]";
       option.innerText = `${iconaCartaTesto(carta)} ${carta.nome} F:${carta.statistiche.ferocia} B:${carta.statistiche.balzo} C:${carta.statistiche.corazza} I:${carta.statistiche.istinto}${stringaTratti}`;
+      option.dataset.carta = JSON.stringify({ nome: carta.nome, immagine: carta.immagine, tratti: carta.tratti || [], stelle: carta.stelle, statistiche: carta.statistiche });
       if (carta.id === currentVal) option.selected = true;
       select.appendChild(option);
     });
@@ -10003,7 +10059,10 @@ function htmlSchermataCerbero() {
     const disponibile = tentativiRimasti > 0;
 
     const eleggibili = carteEleggibiliIdra().sort((a, b) => b.livello - a.livello);
-    const opzioniHTML = eleggibili.map(c => `<option value="${c.id}">${c.nome} (Lvl ${c.livello})</option>`).join("");
+    const opzioniHTML = eleggibili.map(c => {
+      const datiCarta = JSON.stringify({ nome: c.nome, immagine: c.immagine, tratti: c.tratti || [], stelle: c.stelle, statistiche: c.statistiche }).replace(/"/g, "&quot;");
+      return `<option value="${c.id}" data-carta="${datiCarta}">${c.nome} (Lvl ${c.livello})</option>`;
+    }).join("");
 
     return `
       <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; gap:12px; padding:14px;">
@@ -11659,6 +11718,8 @@ function popolaSelectSchieramentoGuerra() {
       let stringaTratti = carta.tratti && carta.tratti.length > 0 ? ` [${carta.tratti.join(",")}]` : " [Nessuno]";
 
       option.innerText = `${iconaCartaTesto(carta)} ${carta.nome} [${vigore}%] F:${carta.statistiche.ferocia} B:${carta.statistiche.balzo} C:${carta.statistiche.corazza} I:${carta.statistiche.istinto}${stringaTratti}`;
+
+      option.dataset.carta = JSON.stringify({ nome: carta.nome, immagine: carta.immagine, tratti: carta.tratti || [], stelle: carta.stelle, vigore, statistiche: carta.statistiche });
 
       if (carta.id === currentVal) option.selected = true;
 
