@@ -222,6 +222,31 @@ function potenziaMenuATendina() {
 
 }
 
+// Costruisce una carta visiva a partire da un vero oggetto carta (immagine, statistiche, vigore,
+// stelle) — usata da apriLista() qui sopra per mostrare le creature nei menu di scelta ovunque
+// nel gioco. Vive qui, fuori dalla closure principale, perché è proprio da qui che viene chiamata.
+function costruisciCartaVisualeOpzione(carta) {
+  const s = carta.statistiche;
+  const trattiTesto = carta.tratti && carta.tratti.length > 0
+    ? carta.tratti.map(t => t.charAt(0).toUpperCase() + t.slice(1)).join(", ")
+    : "Nessun tratto";
+
+  return `
+    <div class="tutorial-carta-esempio">
+      <img src="${carta.immagine}" class="tutorial-carta-esempio-img" onerror="this.style.display='none';">
+      <div class="tutorial-carta-esempio-nome">${carta.nome}${carta.stelle !== undefined && carta.stelle !== null ? ` (${carta.stelle}★)` : ""}</div>
+      ${carta.vigore !== undefined && carta.vigore !== null ? `<div style="font-size:0.68rem; font-weight:bold; color:${carta.vigore > 30 ? '#7ee787' : '#f56565'}; margin-top:2px;">Vigore: ${carta.vigore}%</div>` : ""}
+      ${s ? `
+      <div class="tutorial-carta-esempio-stats">
+        <span>Ferocia: <b>${s.ferocia}</b></span>
+        <span>Balzo: <b>${s.balzo}</b></span>
+        <span>Corazza: <b>${s.corazza}</b></span>
+        <span>Istinto: <b>${s.istinto}</b></span>
+      </div>` : ""}
+      <div class="tutorial-carta-esempio-tratto">${trattiTesto}</div>
+    </div>`;
+}
+
 document.addEventListener("click", () => {
   const overlayAttivo = document.querySelector("#fake-select-overlay-attivo");
   if (overlayAttivo) {
@@ -8434,31 +8459,6 @@ function costruisciCartaEsempioTutorial(nomeCarta) {
         <span>Corazza: <b>${s.corazza.toFixed(1)}</b></span>
         <span>Istinto: <b>${s.istinto.toFixed(1)}</b></span>
       </div>
-      <div class="tutorial-carta-esempio-tratto">${trattiTesto}</div>
-    </div>`;
-}
-
-// Gemella della funzione sopra, ma a partire da un vero oggetto carta (non solo dal nome):
-// usata nei menu di scelta creature per mostrare vigore e statistiche reali del giocatore,
-// non i valori base di riferimento.
-function costruisciCartaVisualeOpzione(carta) {
-  const s = carta.statistiche;
-  const trattiTesto = carta.tratti && carta.tratti.length > 0
-    ? carta.tratti.map(t => t.charAt(0).toUpperCase() + t.slice(1)).join(", ")
-    : "Nessun tratto";
-
-  return `
-    <div class="tutorial-carta-esempio">
-      <img src="${carta.immagine}" class="tutorial-carta-esempio-img" onerror="this.style.display='none';">
-      <div class="tutorial-carta-esempio-nome">${carta.nome}${carta.stelle !== undefined && carta.stelle !== null ? ` (${carta.stelle}★)` : ""}</div>
-      ${carta.vigore !== undefined && carta.vigore !== null ? `<div style="font-size:0.68rem; font-weight:bold; color:${carta.vigore > 30 ? '#7ee787' : '#f56565'}; margin-top:2px;">Vigore: ${carta.vigore}%</div>` : ""}
-      ${s ? `
-      <div class="tutorial-carta-esempio-stats">
-        <span>Ferocia: <b>${s.ferocia}</b></span>
-        <span>Balzo: <b>${s.balzo}</b></span>
-        <span>Corazza: <b>${s.corazza}</b></span>
-        <span>Istinto: <b>${s.istinto}</b></span>
-      </div>` : ""}
       <div class="tutorial-carta-esempio-tratto">${trattiTesto}</div>
     </div>`;
 }
