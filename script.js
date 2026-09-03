@@ -8793,7 +8793,8 @@ function avviaTappaAddestramento() {
 }
 
 function terrenoEmoji(terreno) {
-  return { aria: "🌬️ Aria", acqua: "🌊 Acqua", foresta: "🌲 Foresta", terra: "⛰️ Terra" }[terreno] || null;
+  if (!terreno) return null;
+  return { aria: "🌬️ Aria", acqua: "🌊 Acqua", foresta: "🌲 Foresta", terra: "⛰️ Terra" }[terreno.toLowerCase()] || null;
 }
 
 function renderizzaAddestramento() {
