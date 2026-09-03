@@ -636,6 +636,19 @@ html.forza-landscape .close-btn { font-size: 1.6rem; }
 
 }
 
+.fake-select-riga-ordinamento {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+  padding: 10px 14px;
+  background: #14141c;
+  border-bottom: 1px solid #5c4d31;
+}
+
 .fake-select-griglia-carte {
   display: flex;
   flex-wrap: wrap;

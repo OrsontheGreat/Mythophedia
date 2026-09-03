@@ -164,16 +164,69 @@ function potenziaMenuATendina() {
 
       const contieneCarte = Array.from(sel.options).some(opt => opt.dataset.carta);
       const contenitoreOpzioni = contieneCarte ? document.createElement("div") : overlay;
+
       if (contieneCarte) {
+        const rigaOrdinamento = document.createElement("div");
+        rigaOrdinamento.className = "fake-select-riga-ordinamento";
+
+        const selRarita = document.createElement("select");
+        selRarita.className = "sort-select";
+        selRarita.innerHTML = `
+          <option value="">Tutte le rarità</option>
+          <option value="1">Solo Comuni</option>
+          <option value="2">Solo Non Comuni</option>
+          <option value="3">Solo Rare</option>
+          <option value="4">Solo Epiche</option>
+          <option value="5">Solo Mitiche</option>
+          <option value="6">Solo Leggendarie</option>`;
+
+        const selOrdina = document.createElement("select");
+        selOrdina.className = "sort-select";
+        selOrdina.innerHTML = `
+          <option value="">Ordine originale</option>
+          <option value="nome">Nome (A-Z)</option>
+          <option value="rarita_desc">Rarità (dalla più alta)</option>
+          <option value="rarita">Rarità (dalla più bassa)</option>
+          <option value="ferocia">Ferocia</option>
+          <option value="balzo">Balzo</option>
+          <option value="corazza">Corazza</option>
+          <option value="istinto">Istinto</option>
+          <option value="stelle">Stelle (dalla più evoluta)</option>
+          <option value="vigore">Vigore (dal più alto)</option>`;
+
+        rigaOrdinamento.appendChild(selRarita);
+        rigaOrdinamento.appendChild(selOrdina);
+        overlay.appendChild(rigaOrdinamento);
+
+        selRarita.addEventListener("click", (e) => e.stopPropagation());
+        selOrdina.addEventListener("click", (e) => e.stopPropagation());
+        selRarita.addEventListener("change", renderizzaGrigliaCarte);
+        selOrdina.addEventListener("change", renderizzaGrigliaCarte);
+
         contenitoreOpzioni.className = "fake-select-griglia-carte";
         overlay.appendChild(contenitoreOpzioni);
       }
 
-      Array.from(sel.options).forEach((opt, idx) => {
-        if (opt.dataset.carta) {
-          const carta = JSON.parse(opt.dataset.carta);
+      const CRITERI_ORDINAMENTO = {
+        nome: (a, b) => a.carta.nome.localeCompare(b.carta.nome),
+        rarita: (a, b) => (a.carta.livello || 0) - (b.carta.livello || 0),
+        rarita_desc: (a, b) => (b.carta.livello || 0) - (a.carta.livello || 0),
+        ferocia: (a, b) => (b.carta.statistiche?.ferocia || 0) - (a.carta.statistiche?.ferocia || 0),
+        balzo: (a, b) => (b.carta.statistiche?.balzo || 0) - (a.carta.statistiche?.balzo || 0),
+        corazza: (a, b) => (b.carta.statistiche?.corazza || 0) - (a.carta.statistiche?.corazza || 0),
+        istinto: (a, b) => (b.carta.statistiche?.istinto || 0) - (a.carta.statistiche?.istinto || 0),
+        stelle: (a, b) => (b.carta.stelle || 0) - (a.carta.stelle || 0),
+        vigore: (a, b) => (b.carta.vigore || 0) - (a.carta.vigore || 0)
+      };
+
+      const tutteLeOpzioni = Array.from(sel.options).map((opt, idx) => ({
+        opt, idx, carta: opt.dataset.carta ? JSON.parse(opt.dataset.carta) : null
+      }));
+
+      function costruisciVoceOpzione({ opt, idx, carta }) {
+        if (carta) {
           const voce = document.createElement("div");
-          voce.className = "fake-select-opzione-carta" + (opt.disabled ? " disabled" : "") + (idx === sel.selectedIndex ? " selected" : "");
+          voce.className = "fake-select-opzione-carta" + (opt.disabled ? " disabled" : "") + (opt.value === sel.value ? " selected" : "");
           voce.innerHTML = costruisciCartaVisualeOpzione(carta);
           if (!opt.disabled) {
             voce.addEventListener("click", (e) => {
@@ -183,10 +236,8 @@ function potenziaMenuATendina() {
               chiudiOverlay();
             });
           }
-          contenitoreOpzioni.appendChild(voce);
-          return;
+          return voce;
         }
-
         const voce = document.createElement("div");
         voce.className = "fake-select-option" + (opt.disabled ? " disabled" : "") + (idx === sel.selectedIndex ? " selected" : "");
         voce.textContent = opt.textContent;
@@ -198,8 +249,23 @@ function potenziaMenuATendina() {
             chiudiOverlay();
           });
         }
-        contenitoreOpzioni.appendChild(voce);
-      });
+        return voce;
+      }
+
+      function renderizzaGrigliaCarte() {
+        const rigaOrdinamento = overlay.querySelector(".fake-select-riga-ordinamento");
+        const filtroRarita = rigaOrdinamento ? rigaOrdinamento.children[0].value : "";
+        const criterio = rigaOrdinamento ? rigaOrdinamento.children[1].value : "";
+
+        let elenco = tutteLeOpzioni.slice();
+        if (filtroRarita) elenco = elenco.filter(o => o.carta && o.carta.livello === parseInt(filtroRarita));
+        if (criterio && CRITERI_ORDINAMENTO[criterio]) elenco.sort(CRITERI_ORDINAMENTO[criterio]);
+
+        contenitoreOpzioni.innerHTML = "";
+        elenco.forEach(o => contenitoreOpzioni.appendChild(costruisciVoceOpzione(o)));
+      }
+
+      renderizzaGrigliaCarte();
 
       overlay.addEventListener("click", (e) => { e.stopPropagation(); });
 
@@ -222,6 +288,10 @@ function potenziaMenuATendina() {
 
 }
 
+// Copia locale — ETICHETTE_LIVELLI "vera" vive dentro la closure principale e non è
+// raggiungibile da qui, ma è solo un piccolo dizionario statico: costa poco duplicarla.
+const ETICHETTE_LIVELLI_LOCALE = { 1: "Comune", 2: "Non Comune", 3: "Rara", 4: "Epica", 5: "Mitica", 6: "Leggendaria" };
+
 // Costruisce una carta visiva a partire da un vero oggetto carta (immagine, statistiche, vigore,
 // stelle) — usata da apriLista() qui sopra per mostrare le creature nei menu di scelta ovunque
 // nel gioco. Vive qui, fuori dalla closure principale, perché è proprio da qui che viene chiamata.
@@ -230,10 +300,12 @@ function costruisciCartaVisualeOpzione(carta) {
   const trattiTesto = carta.tratti && carta.tratti.length > 0
     ? carta.tratti.map(t => t.charAt(0).toUpperCase() + t.slice(1)).join(", ")
     : "Nessun tratto";
+  const raritaTesto = carta.livello ? ETICHETTE_LIVELLI_LOCALE[carta.livello] || "" : "";
 
   return `
     <div class="tutorial-carta-esempio">
       <img src="${carta.immagine}" class="tutorial-carta-esempio-img" onerror="this.style.display='none';">
+      ${raritaTesto ? `<div style="font-size:0.6rem; color:#c9a054; font-weight:bold; margin-top:2px;">${raritaTesto}</div>` : ""}
       <div class="tutorial-carta-esempio-nome">${carta.nome}${carta.stelle !== undefined && carta.stelle !== null ? ` (${carta.stelle}★)` : ""}</div>
       ${carta.vigore !== undefined && carta.vigore !== null ? `<div style="font-size:0.68rem; font-weight:bold; color:${carta.vigore > 30 ? '#7ee787' : '#f56565'}; margin-top:2px;">Vigore: ${carta.vigore}%</div>` : ""}
       ${s ? `
@@ -3617,7 +3689,7 @@ function popolaSelectSchieramento() {
 
       option.innerText = `${iconaCartaTesto(carta)} ${carta.nome} [ ${vigore}%] F:${carta.statistiche.ferocia} B:${carta.statistiche.balzo} C:${carta.statistiche.corazza} I:${carta.statistiche.istinto}${stringaTratti}`;
 
-      option.dataset.carta = JSON.stringify({ nome: carta.nome, immagine: carta.immagine, tratti: carta.tratti || [], stelle: carta.stelle, vigore, statistiche: carta.statistiche });
+      option.dataset.carta = JSON.stringify({ nome: carta.nome, immagine: carta.immagine, tratti: carta.tratti || [], stelle: carta.stelle, livello: carta.livello, vigore, statistiche: carta.statistiche });
 
       if (carta.id === currentVal) option.selected = true;
 
@@ -7400,7 +7472,7 @@ function htmlSchermataIdra() {
       if (carteLivello.length === 0) continue;
       livelliDisponibili++;
       const opzioni = carteLivello.map(c => {
-        const datiCarta = JSON.stringify({ nome: c.nome, immagine: c.immagine, tratti: c.tratti || [], stelle: c.stelle, statistiche: c.statistiche }).replace(/"/g, "&quot;");
+        const datiCarta = JSON.stringify({ nome: c.nome, immagine: c.immagine, tratti: c.tratti || [], stelle: c.stelle, livello: c.livello, statistiche: c.statistiche }).replace(/"/g, "&quot;");
         return `<option value="${c.id}" data-carta="${datiCarta}">${c.nome} — ${nomeStatOggi}: ${c.statistiche[statOggi].toFixed(1)}</option>`;
       }).join("");
       selettoriHTML += `
@@ -9095,7 +9167,7 @@ function popolaSelectSchieramentoSotterraneo() {
       option.value = carta.id;
       let stringaTratti = carta.tratti && carta.tratti.length > 0 ? ` [${carta.tratti.join(",")}]` : " [Nessuno]";
       option.innerText = `${iconaCartaTesto(carta)} ${carta.nome} [ ${vigore}%] F:${carta.statistiche.ferocia} B:${carta.statistiche.balzo} C:${carta.statistiche.corazza} I:${carta.statistiche.istinto}${stringaTratti}`;
-      option.dataset.carta = JSON.stringify({ nome: carta.nome, immagine: carta.immagine, tratti: carta.tratti || [], stelle: carta.stelle, vigore, statistiche: carta.statistiche });
+      option.dataset.carta = JSON.stringify({ nome: carta.nome, immagine: carta.immagine, tratti: carta.tratti || [], stelle: carta.stelle, livello: carta.livello, vigore, statistiche: carta.statistiche });
       if (carta.id === currentVal) option.selected = true;
       select.appendChild(option);
     });
@@ -9490,7 +9562,7 @@ function popolaSelectSchieramentoEventi() {
       option.value = carta.id;
       let stringaTratti = carta.tratti && carta.tratti.length > 0 ? ` [${carta.tratti.join(",")}]` : " [Nessuno]";
       option.innerText = `${iconaCartaTesto(carta)} ${carta.nome} F:${carta.statistiche.ferocia} B:${carta.statistiche.balzo} C:${carta.statistiche.corazza} I:${carta.statistiche.istinto}${stringaTratti}`;
-      option.dataset.carta = JSON.stringify({ nome: carta.nome, immagine: carta.immagine, tratti: carta.tratti || [], stelle: carta.stelle, statistiche: carta.statistiche });
+      option.dataset.carta = JSON.stringify({ nome: carta.nome, immagine: carta.immagine, tratti: carta.tratti || [], stelle: carta.stelle, livello: carta.livello, statistiche: carta.statistiche });
       if (carta.id === currentVal) option.selected = true;
       select.appendChild(option);
     });
@@ -10060,7 +10132,7 @@ function htmlSchermataCerbero() {
 
     const eleggibili = carteEleggibiliIdra().sort((a, b) => b.livello - a.livello);
     const opzioniHTML = eleggibili.map(c => {
-      const datiCarta = JSON.stringify({ nome: c.nome, immagine: c.immagine, tratti: c.tratti || [], stelle: c.stelle, statistiche: c.statistiche }).replace(/"/g, "&quot;");
+      const datiCarta = JSON.stringify({ nome: c.nome, immagine: c.immagine, tratti: c.tratti || [], stelle: c.stelle, livello: c.livello, statistiche: c.statistiche }).replace(/"/g, "&quot;");
       return `<option value="${c.id}" data-carta="${datiCarta}">${c.nome} (Lvl ${c.livello})</option>`;
     }).join("");
 
@@ -11719,7 +11791,7 @@ function popolaSelectSchieramentoGuerra() {
 
       option.innerText = `${iconaCartaTesto(carta)} ${carta.nome} [${vigore}%] F:${carta.statistiche.ferocia} B:${carta.statistiche.balzo} C:${carta.statistiche.corazza} I:${carta.statistiche.istinto}${stringaTratti}`;
 
-      option.dataset.carta = JSON.stringify({ nome: carta.nome, immagine: carta.immagine, tratti: carta.tratti || [], stelle: carta.stelle, vigore, statistiche: carta.statistiche });
+      option.dataset.carta = JSON.stringify({ nome: carta.nome, immagine: carta.immagine, tratti: carta.tratti || [], stelle: carta.stelle, livello: carta.livello, vigore, statistiche: carta.statistiche });
 
       if (carta.id === currentVal) option.selected = true;
 
