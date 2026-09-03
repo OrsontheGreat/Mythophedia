@@ -1211,6 +1211,29 @@ html.forza-landscape .close-btn { font-size: 1.6rem; }
 
 .battle-arena-row { display: flex; justify-content: space-around; align-items: center; background: rgba(0, 0, 0, 0.4); padding: 20px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #5c4d31; overflow: hidden; position: relative; }
 .battle-arena-row::after { content: ""; position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; border-radius: 8px; }
+
+.effetto-impatto {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 130px;
+  height: 130px;
+  transform: translate(-50%, -50%) scale(0.2);
+  pointer-events: none;
+  z-index: 5;
+  opacity: 0;
+}
+
+.effetto-impatto.attivo {
+  animation: esplosioneImpatto 0.65s ease-out forwards;
+}
+
+@keyframes esplosioneImpatto {
+  0% { transform: translate(-50%, -50%) scale(0.15) rotate(0deg); opacity: 0; }
+  18% { opacity: 1; }
+  55% { transform: translate(-50%, -50%) scale(1.35) rotate(12deg); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(1.7) rotate(18deg); opacity: 0; }
+}
 .battle-arena-row.impatto-flash::after { animation: flashImpatto 0.35s ease-out; }
 
 .mini-card-anim { width: 140px; background: linear-gradient(180deg, #1e1e2f, #12121a); border: 1px solid #4a5568; border-radius: 6px; padding: 10px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }.mini-card-anim.mia-card-scatto { animation: scattoMio 0.55s cubic-bezier(0.2, 0.6, 0.3, 1) forwards; }.mini-card-anim.nemica-card-scatto { animation: scattoNemico 0.55s cubic-bezier(0.2, 0.6, 0.3, 1) forwards; }.mini-card-anim.card-sconfitta { opacity: 0.3; transform: scale(0.9) rotate(5deg); filter: grayscale(0.8); transition: all 0.5s ease 0.4s; }.vs-clash-text { font-size: 1.6rem; font-weight: bold; color: #ffcc66; text-shadow: 0 0 10px rgba(255, 204, 102, 0.6); }.vs-clash-text.shake { animation: scossaTesto 0.2s ease-in-out 3; }@keyframes scattoMio { 0% { transform: translateX(0) scale(1); filter: blur(0); } 30% { transform: translateX(26px) scale(1.02); filter: blur(2px); } 48% { transform: translateX(42px) scale(1.22); filter: blur(0); border-color: #48bb78; } 60% { transform: translateX(42px) scale(1.22); filter: blur(0); border-color: #48bb78; } 100% { transform: translateX(0) scale(1); filter: blur(0); } }@keyframes scattoNemico { 0% { transform: translateX(0) scale(1); filter: blur(0); } 30% { transform: translateX(-26px) scale(1.02); filter: blur(2px); } 48% { transform: translateX(-42px) scale(1.22); filter: blur(0); border-color: #f56565; } 60% { transform: translateX(-42px) scale(1.22); filter: blur(0); border-color: #f56565; } 100% { transform: translateX(0) scale(1); filter: blur(0); } }@keyframes scossaTesto { 0% { transform: scale(1) rotate(0deg); } 50% { transform: scale(1.2) rotate(5deg); color: #fff; } 100% { transform: scale(1) rotate(0deg); } }@keyframes flashImpatto { 0% { opacity: 0; } 48% { opacity: 0; } 55% { opacity: 0.8; } 100% { opacity: 0; } }.clan-card-bacheca { background: rgba(255,255,255,0.03); border: 1px solid #4a3f29; border-radius: 6px; padding: 14px; display: flex; justify-content: space-between; align-items: center; gap: 15px; border-left: 4px solid #c9a054; transition: all 0.2s ease; }.clan-card-bacheca:hover { background: rgba(255,255,255,0.06); border-color: #ffcc66; }.clan-card-details { display: flex; flex-direction: column; gap: 4px; flex: 1; }.clan-card-title { font-size: 1.15rem; font-weight: bold; color: #ffcc66; display: flex; align-items: center; gap: 6px; }.clan-card-motto { font-size: 0.85rem; color: #aaa; font-style: italic; }.clan-card-meta { font-size: 0.8rem; color: #cbd5e0; font-family: sans-serif; margin-top: 2px; }.clan-member-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: rgba(255, 255, 255, 0.04); border-radius: 4px; border-left: 3px solid #cbd5e0; font-size: 0.9rem; }.clan-member-row.leader { border-left-color: #ffcc66; background: rgba(201, 160, 84, 0.1); }.clan-member-name { color: #fff; font-weight: bold; }.clan-member-rank { font-size: 0.8rem; text-transform: uppercase; font-weight: bold; color: #ffcc66; letter-spacing: 0.5px; }.clan-member-rank.soldato { color: #a0aec0; }.clan-member-rank.sergente { color: #4299e1; }.clan-member-rank.capitano { color: #ed8936; }.clan-member-rank.comandante { color: #e53e3e; }

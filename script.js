@@ -1365,6 +1365,43 @@ function haImmagineFile(carta) {
   return typeof carta.immagine === "string" && carta.immagine.indexOf("img/carte/") === 0;
 }
 
+// Genera un'esplosione astratta in SVG per il momento dell'impatto negli scontri — non ritrae
+// nessuna creatura, quindi vale per qualsiasi coppia di carte si affrontino. Piccola casualità
+// nei raggi e nelle scintille per non farla sembrare sempre identica.
+function svgEsplosioneImpatto() {
+  const numRaggi = 9 + Math.floor(Math.random() * 3);
+  const raggi = Array.from({ length: numRaggi }, (_, i) => {
+    const angoloBase = (360 / numRaggi) * i;
+    const angolo = (angoloBase + (Math.random() * 14 - 7)) * Math.PI / 180;
+    const lunghezza = 38 + Math.random() * 12;
+    const x2 = (50 + Math.cos(angolo) * lunghezza).toFixed(1);
+    const y2 = (50 + Math.sin(angolo) * lunghezza).toFixed(1);
+    return `<line x1="50" y1="50" x2="${x2}" y2="${y2}" stroke="#ffcc66" stroke-width="${(2 + Math.random() * 2).toFixed(1)}" stroke-linecap="round" opacity="0.85"/>`;
+  }).join("");
+
+  const scintille = Array.from({ length: 7 }, () => {
+    const angolo = Math.random() * 360 * Math.PI / 180;
+    const dist = 18 + Math.random() * 26;
+    const x = (50 + Math.cos(angolo) * dist).toFixed(1);
+    const y = (50 + Math.sin(angolo) * dist).toFixed(1);
+    return `<circle cx="${x}" cy="${y}" r="${(1.2 + Math.random() * 1.8).toFixed(1)}" fill="#fff6d5"/>`;
+  }).join("");
+
+  return `
+    <svg viewBox="0 0 100 100" style="width:100%; height:100%; overflow:visible;">
+      <defs>
+        <radialGradient id="nucleoEsplosione" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#ffffff"/>
+          <stop offset="55%" stop-color="#ffcc66"/>
+          <stop offset="100%" stop-color="#ffcc66" stop-opacity="0"/>
+        </radialGradient>
+      </defs>
+      ${raggi}
+      <circle cx="50" cy="50" r="17" fill="url(#nucleoEsplosione)"/>
+      ${scintille}
+    </svg>`;
+}
+
 const ETICHETTE_TRATTI = { volo: "Volo", nuoto: "Nuoto", arrampicata: "Arrampicata", equilibrio: "Equilibrio" };
 
 // Mostra la carta a schermo intero: immagine grande in alto, nome, le 4 statistiche, tratti extra
@@ -3169,6 +3206,7 @@ document.getElementById("btn-conferma-avvia-duello").addEventListener("click", (
     let rLineHTML = `
 
       <div class="battle-arena-row" id="${roundCardId}">
+        <div class="effetto-impatto">${svgEsplosioneImpatto()}</div>
 
         <div class="mini-card-anim" id="my-clash-card-${roundIndex}">
 
@@ -3227,6 +3265,7 @@ document.getElementById("btn-conferma-avvia-duello").addEventListener("click", (
       document.getElementById(`vs-text-clash-${roundIndex}`).classList.add("shake");
 
       document.getElementById(roundCardId)?.classList.add("impatto-flash");
+      document.getElementById(roundCardId)?.querySelector(".effetto-impatto")?.classList.add("attivo");
 
  
 
@@ -4036,6 +4075,7 @@ document.getElementById("btn-attacca-esagono").addEventListener("click", () => {
     let rLineHTML = `
 
       <div class="battle-arena-row" id="${roundCardId}">
+        <div class="effetto-impatto">${svgEsplosioneImpatto()}</div>
 
         <div class="mini-card-anim" id="my-map-card-${mapRoundIdx}">
 
@@ -4094,6 +4134,7 @@ document.getElementById("btn-attacca-esagono").addEventListener("click", () => {
       document.getElementById(`vs-text-map-${mapRoundIdx}`).classList.add("shake");
 
       document.getElementById(roundCardId)?.classList.add("impatto-flash");
+      document.getElementById(roundCardId)?.querySelector(".effetto-impatto")?.classList.add("attivo");
 
  
 
@@ -9281,6 +9322,7 @@ function avviaBattagliaSotterraneo() {
     let roundCardId = `clash-sott-row-${sottRoundIdx}`;
     let rLineHTML = `
       <div class="battle-arena-row" id="${roundCardId}">
+        <div class="effetto-impatto">${svgEsplosioneImpatto()}</div>
         <div class="mini-card-anim" id="my-sott-card-${sottRoundIdx}">
           <div style="font-size:0.8rem; font-weight:bold; color:#ffcc66;">${miaCarta.nome}</div>
           <div style="font-size:1.5rem; margin:5px 0;">${miniImmagineCarta(miaCarta, 40)}</div>
@@ -9309,6 +9351,7 @@ function avviaBattagliaSotterraneo() {
       document.getElementById(`vs-text-sott-${sottRoundIdx}`).classList.add("shake");
 
       document.getElementById(roundCardId)?.classList.add("impatto-flash");
+      document.getElementById(roundCardId)?.querySelector(".effetto-impatto")?.classList.add("attivo");
 
       setTimeout(() => {
         if (esitoRound) {
@@ -9883,6 +9926,7 @@ function confermaBattagliaEventi(avversarioId, avversarioDati, eventiTerreno, mo
     let roundCardId = `clash-ev-row-${evRoundIdx}`;
     let rLineHTML = `
       <div class="battle-arena-row" id="${roundCardId}">
+        <div class="effetto-impatto">${svgEsplosioneImpatto()}</div>
         <div class="mini-card-anim" id="my-ev-card-${evRoundIdx}">
           <div style="font-size:0.8rem; font-weight:bold; color:#ffcc66;">${miaCarta.nome}</div>
           <div style="font-size:1.5rem; margin:5px 0;">${miniImmagineCarta(miaCarta, 40)}</div>
@@ -9911,6 +9955,7 @@ function confermaBattagliaEventi(avversarioId, avversarioDati, eventiTerreno, mo
       document.getElementById(`vs-text-ev-${evRoundIdx}`).classList.add("shake");
 
       document.getElementById(roundCardId)?.classList.add("impatto-flash");
+      document.getElementById(roundCardId)?.querySelector(".effetto-impatto")?.classList.add("attivo");
 
       setTimeout(() => {
         if (esitoRound) {
@@ -12280,6 +12325,7 @@ document.getElementById("btn-attacca-esagono-guerra")?.addEventListener("click",
     let rLineHTML = `
 
       <div class="battle-arena-row" id="${roundCardId}">
+        <div class="effetto-impatto">${svgEsplosioneImpatto()}</div>
 
         <div class="mini-card-anim" id="my-war-card-${warRoundIdx}">
 
@@ -12328,6 +12374,7 @@ document.getElementById("btn-attacca-esagono-guerra")?.addEventListener("click",
       document.getElementById(`vs-text-war-${warRoundIdx}`).classList.add("shake");
 
       document.getElementById(roundCardId)?.classList.add("impatto-flash");
+      document.getElementById(roundCardId)?.querySelector(".effetto-impatto")?.classList.add("attivo");
 
       setTimeout(() => {
 
