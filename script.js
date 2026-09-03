@@ -11387,6 +11387,10 @@ function raccogliDatiSalvataggio() {
 
 function salvaProgressoCloud() {
   if (!utenteFirebaseAttuale) return;
+  if (!salvataggioCloudCaricato) {
+    console.warn("Salvataggio bloccato: i dati reali non sono ancora stati caricati dal cloud. Evitato un possibile sovrascrivimento.");
+    return;
+  }
   dbFirebase.ref("giocatori/" + utenteFirebaseAttuale.uid).set(raccogliDatiSalvataggio())
     .catch((err) => console.error("Errore salvataggio cloud:", err));
   aggiornaClassificaCloud();
@@ -11727,10 +11731,11 @@ authFirebase.onAuthStateChanged((user) => {
     if (snapshot.exists()) {
       applicaDatiCaricati(snapshot.val());
       aggiornaClassificaCloud();
+      salvataggioCloudCaricato = true;
     } else {
+      salvataggioCloudCaricato = true;
       salvaProgressoCloud();
     }
-    salvataggioCloudCaricato = true;
     controllaRegaliInSospeso();
     nascondiLoadingOverlay();
   }).catch((err) => {
