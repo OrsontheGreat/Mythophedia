@@ -2891,17 +2891,6 @@ html.narrow-420 .mythic-map {
   grid-template-columns: repeat(2, 1fr);
 }
 
-/* ===== Duelli: bacheca delle sfide a sinistra, creazione sfida a destra, affiancate ===== */
-#duels-modal .map-screen-layout {
-  grid-template-columns: 1fr 1.3fr;
-  gap: 16px;
-}
-
-#duels-modal .hex-info-panel {
-  height: 100%;
-  max-height: none;
-}
-
 /* ===== Immagini reali delle carte (in sostituzione delle emoji) ===== */
 .card-icon-img {
   width: 100%;
