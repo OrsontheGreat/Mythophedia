@@ -4550,19 +4550,6 @@ function ottieniContestoAudioEffetti() {
   return contestoAudioEffetti;
 }
 
-function aggiornaIconaAudio() {
-  const btn = document.getElementById("btn-toggle-audio");
-  if (btn) btn.innerText = audioEffettiAttivi ? "🔊" : "🔇";
-}
-
-document.getElementById("btn-toggle-audio")?.addEventListener("click", () => {
-  audioEffettiAttivi = !audioEffettiAttivi;
-  localStorage.setItem("mythophedia_audio_attivo", audioEffettiAttivi ? "true" : "false");
-  aggiornaIconaAudio();
-});
-
-aggiornaIconaAudio();
-
 function suonaTono(freq, durataSec, tipo, volume, ritardoSec, freqFine) {
   const ctx = ottieniContestoAudioEffetti();
   if (!ctx) return;
@@ -7626,7 +7613,7 @@ function apriAddestramento() {
 function mostraHubAddestramento() {
   const contenitore = document.getElementById("addestramento-content");
   contenitore.innerHTML = `
-    <div class="tutorial-chirone-box" style="max-width:520px;">
+    <div class="tutorial-chirone-box" style="max-width:900px;">
       <img src="img/carte/chirone.jpg" class="tutorial-chirone-ritratto" onerror="this.style.display='none';">
       <div class="tutorial-chirone-testo">
         <p style="font-weight:bold; color:#ffcc66;">Bentornato, Evocatore.</p>
@@ -7671,7 +7658,7 @@ function renderizzaAddestramento() {
 
   if (inizioRound && addestramentoRoundAttuale === 0) {
     contenitore.innerHTML = intestazioneHTML + `
-      <div class="tutorial-chirone-box" style="max-width:520px;">
+      <div class="tutorial-chirone-box" style="max-width:900px;">
         <img src="img/carte/chirone.jpg" class="tutorial-chirone-ritratto" onerror="this.style.display='none';">
         <div class="tutorial-chirone-testo">${tappa.narrazione}</div>
       </div>
@@ -7795,7 +7782,7 @@ function mostraRisultatoTappaAddestramento() {
 
   const contenitore = document.getElementById("addestramento-content");
   contenitore.innerHTML = `
-    <div class="tutorial-chirone-box" style="max-width:560px;">
+    <div class="tutorial-chirone-box" style="max-width:900px;">
       <img src="img/carte/chirone.jpg" class="tutorial-chirone-ritratto" onerror="this.style.display='none';">
       <div class="tutorial-chirone-testo">
         <p style="font-weight:bold; color:${vinta ? '#7ee787' : '#f56565'};">${vinta ? `Battaglia vinta! (${addestramentoRoundVinti} round su ${totale})` : `Battaglia persa (${addestramentoRoundVinti} round su ${totale})`}</p>
@@ -7834,7 +7821,7 @@ function completaAddestramento() {
   }
 
   contenitore.innerHTML = `
-    <div class="tutorial-chirone-box" style="max-width:520px;">
+    <div class="tutorial-chirone-box" style="max-width:900px;">
       <img src="img/carte/chirone.jpg" class="tutorial-chirone-ritratto" onerror="this.style.display='none';">
       <div class="tutorial-chirone-testo">
         <p style="font-weight:bold; color:#7ee787;">Sei pronto, Evocatore.</p>
@@ -7979,7 +7966,7 @@ function renderizzaHubSotterranei() {
   const bloccato = vittorieRimaste <= 0;
 
   contenitore.innerHTML = `
-    <div class="tutorial-chirone-box" style="max-width:400px;">
+    <div class="tutorial-chirone-box" style="max-width:900px;">
       <img src="img/carte/chirone.jpg" class="tutorial-chirone-ritratto" onerror="this.style.display='none';">
       <div class="tutorial-chirone-testo">
         <p style="font-weight:bold; color:#ffcc66;">🕳️ Livello ${sotterraneiLivelloAttuale}</p>
@@ -8863,7 +8850,7 @@ function controllaFineCicloEventi(callback) {
     salvaProgressoCloud();
 
     document.getElementById("eventi-content").innerHTML = `
-      <div class="tutorial-chirone-box" style="max-width:480px;">
+      <div class="tutorial-chirone-box" style="max-width:900px;">
         <div class="tutorial-chirone-testo">
           <p style="font-weight:bold; color:#ffcc66; font-size:1.1rem;">${premio.testo}</p>
           <p style="margin-top:6px;">L'evento precedente si è concluso: hai totalizzato <b>${puntiOttenuti} punti</b>.</p>

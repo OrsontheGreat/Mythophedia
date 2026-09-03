@@ -82,29 +82,6 @@ body, html {
 
 }
 
-#btn-toggle-audio {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  z-index: 60;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: rgba(20, 20, 25, 0.85);
-  border: 2px solid #c9a054;
-  color: #fff;
-  font-size: 1rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-}
-
-#btn-toggle-audio:hover {
-  border-color: #ffe9a8;
-}
-
 .top-bar {
 
   display: flex;
