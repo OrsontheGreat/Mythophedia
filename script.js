@@ -2709,7 +2709,7 @@ function mostraResocontoBattaglia() {
   if (registroBattaglia.length === 0) return;
 
   const righeHTML = registroBattaglia.map(r => {
-    const coloreEsito = r.vinto ? "#48bb78" : "#f56565";
+    const coloreEsito = r.vinto ? "#7ee787" : "#f56565";
     const testoEsito = r.vinto ? "VINTO" : "PERSO";
     const nomiStatistiche = r.statistiche.map(s => String(s).toUpperCase()).join(" + ");
 
@@ -2970,7 +2970,7 @@ document.getElementById("btn-attacca-esagono").addEventListener("click", () => {
 
           document.getElementById(`vs-text-map-${mapRoundIdx}`).innerHTML = "VINCI";
 
-          document.getElementById(`vs-text-map-${mapRoundIdx}`).style.color = "#48bb78";
+          document.getElementById(`vs-text-map-${mapRoundIdx}`).style.color = "#7ee787";
 
         } else {
 
@@ -3060,7 +3060,7 @@ function risolviFineInvasioneMappa(mazzoAttaccoSelezionato, roundVintiGiocatore)
 
     mostraDettagliEsagono(esagonoSelezionatoDati);
 
-    epilogoHTML += `<h3 style="text-align:center; color:#48bb78; text-transform:uppercase;">Territorio Conquistato! (${roundVintiGiocatore}/5)</h3>`;
+    epilogoHTML += `<h3 style="text-align:center; color:#7ee787; text-transform:uppercase;">Territorio Conquistato! (${roundVintiGiocatore}/5)</h3>`;
 
     aggiungiXP(5);
 
@@ -3449,7 +3449,7 @@ function generaHTMLCartaRaccoglitore(carta) {
       <div class="card-name" style="margin-top:${carta.occupataInDifesa || carta.bloccataInDuello || pctVigore <= 0 ? '45px' : (carta.isJolly ? '0' : '20px')};">${carta.nome} ${carta.isJolly ? '' : `(${carta.stelle} ★)`}</div>
       <div class="card-icon" id="card-icon-${carta.id}" style="cursor:pointer;">${haImmagineFile(carta) ? `<img src="${carta.immagine}" alt="${carta.nome}" class="card-icon-img"${carta.stelle > 0 ? ` style="border:2px solid ${STELLA_COLORI_EVO[Math.min(carta.stelle, 8)]}; box-shadow:0 0 6px ${STELLA_COLORI_EVO[Math.min(carta.stelle, 8)]};"` : ""}>` : carta.immagine}</div>
       <div class="card-stats">
-        <div class="stat-line"><span class="stat-label">Vigore</span><span class="stat-val" style="color:${pctVigore > 30 ? '#48bb78' : '#f56565'};">${pctVigore}%</span></div>
+        <div class="stat-line"><span class="stat-label">Vigore</span><span class="stat-val" style="color:${pctVigore > 30 ? '#7ee787' : '#f56565'};">${pctVigore}%</span></div>
         <div class="stat-line"><span class="stat-label">Ferocia</span><span class="stat-val">${carta.statistiche.ferocia}</span></div>
         <div class="stat-line"><span class="stat-label">Balzo</span><span class="stat-val">${carta.statistiche.balzo}</span></div>
         <div class="stat-line"><span class="stat-label">Corazza</span><span class="stat-val">${carta.statistiche.corazza}</span></div>
@@ -8162,7 +8162,7 @@ function avviaBattagliaSotterraneo() {
         if (esitoRound) {
           document.getElementById(`nem-sott-card-${sottRoundIdx}`).classList.add("card-sconfitta");
           document.getElementById(`vs-text-sott-${sottRoundIdx}`).innerHTML = "VINCI";
-          document.getElementById(`vs-text-sott-${sottRoundIdx}`).style.color = "#48bb78";
+          document.getElementById(`vs-text-sott-${sottRoundIdx}`).style.color = "#7ee787";
         } else {
           document.getElementById(`my-sott-card-${sottRoundIdx}`).classList.add("card-sconfitta");
           document.getElementById(`vs-text-sott-${sottRoundIdx}`).innerHTML = "PERDI";
@@ -8766,7 +8766,7 @@ function confermaBattagliaEventi(avversarioId, avversarioDati, eventiTerreno, mo
         if (esitoRound) {
           document.getElementById(`nem-ev-card-${evRoundIdx}`).classList.add("card-sconfitta");
           document.getElementById(`vs-text-ev-${evRoundIdx}`).innerHTML = "VINCI";
-          document.getElementById(`vs-text-ev-${evRoundIdx}`).style.color = "#48bb78";
+          document.getElementById(`vs-text-ev-${evRoundIdx}`).style.color = "#7ee787";
         } else {
           document.getElementById(`my-ev-card-${evRoundIdx}`).classList.add("card-sconfitta");
           document.getElementById(`vs-text-ev-${evRoundIdx}`).innerHTML = "PERDI";
@@ -10597,7 +10597,7 @@ function mostraDettagliEsagonoGuerra(esagono) {
 
   if (esagono.guarnigioni.length === 0) {
 
-    listaDifensoriHTML = "<p style='color:#48bb78;'>Settore indifeso! Pronto per essere conquistato.</p>";
+    listaDifensoriHTML = "<p style='color:#7ee787;'>Settore indifeso! Pronto per essere conquistato.</p>";
 
   } else if (nascondiDifese) {
 
@@ -11193,7 +11193,7 @@ document.getElementById("btn-attacca-esagono-guerra")?.addEventListener("click",
 
           document.getElementById(`vs-text-war-${warRoundIdx}`).innerHTML = "VINCI";
 
-          document.getElementById(`vs-text-war-${warRoundIdx}`).style.color = "#48bb78";
+          document.getElementById(`vs-text-war-${warRoundIdx}`).style.color = "#7ee787";
 
         } else {
 
@@ -11247,13 +11247,13 @@ function risolviFineAssaltoGuerra(mazzoAttaccoGuerra, roundVintiGuerra) {
 
       })];
 
-      epilogoHTML += `<p style="text-align:center; color:#48bb78; font-weight:bold;">Hai eliminato l'ultimo mazzo difensivo e conquistato il settore!</p>`;
+      epilogoHTML += `<p style="text-align:center; color:#7ee787; font-weight:bold;">Hai eliminato l'ultimo mazzo difensivo e conquistato il settore!</p>`;
 
     } else {
 
       document.getElementById("battle-title-outcome").innerText = "Mazzo Difensivo Sconfitto!";
 
-      epilogoHTML += `<p style="text-align:center; color:#48bb78; font-weight:bold;">Hai sconfitto un mazzo difensivo (${roundVintiGuerra}/5 round vinti)! Restano ancora <strong>${mazziRimasti}</strong> mazzi a difesa del settore — attacca di nuovo per proseguire l'assedio.</p>`;
+      epilogoHTML += `<p style="text-align:center; color:#7ee787; font-weight:bold;">Hai sconfitto un mazzo difensivo (${roundVintiGuerra}/5 round vinti)! Restano ancora <strong>${mazziRimasti}</strong> mazzi a difesa del settore — attacca di nuovo per proseguire l'assedio.</p>`;
 
     }
 
