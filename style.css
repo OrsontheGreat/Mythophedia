@@ -1988,11 +1988,11 @@ html.narrow-700 .mythic-map {
 .events-btn:disabled { background: #2a2a30; border-color: #4a4a52; color: #6b6b72; cursor: not-allowed; text-shadow: none; transform: none; }
 .events-btn:disabled:hover { border-color: #4a4a52; background: #2a2a30; transform: none; }
 
-.events-btn-main { flex: 3; font-size: 1.05rem; }
+.events-btn-main { flex: 3; font-size: 1.05rem; margin-top: 0; }
 
-.events-btn-uguale { flex: 1; font-size: 0.92rem; }
+.events-btn-uguale { flex: 1; font-size: 0.92rem; margin-top: 0; }
 
-.events-btn-small { flex: 1; font-size: 0.8rem; }
+.events-btn-small { flex: 1; font-size: 0.8rem; margin-top: 0; }
 
 #btn-eventi-fatiche {
   background-image: linear-gradient(rgba(15,12,8,0.55), rgba(15,12,8,0.78)), url('img/sfondi/tasto-dodici-fatiche.jpg');
