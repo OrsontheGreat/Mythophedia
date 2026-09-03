@@ -3226,6 +3226,8 @@ document.getElementById("btn-conferma-avvia-duello").addEventListener("click", (
 
       document.getElementById(`vs-text-clash-${roundIndex}`).classList.add("shake");
 
+      document.getElementById(roundCardId)?.classList.add("impatto-flash");
+
  
 
       setTimeout(() => {
@@ -3952,6 +3954,8 @@ document.getElementById("btn-attacca-esagono").addEventListener("click", () => {
 
   document.getElementById("battle-title-outcome").innerText = "INVASIONE TERRITORIALE...";
 
+  document.getElementById("battle-report-content").innerHTML = "";
+
   document.getElementById("battle-result-modal").classList.remove("hidden");
 
   let mapRoundIdx = 0;
@@ -4088,6 +4092,8 @@ document.getElementById("btn-attacca-esagono").addEventListener("click", () => {
       document.getElementById(`nem-map-card-${mapRoundIdx}`).classList.add("nemica-card-scatto");
 
       document.getElementById(`vs-text-map-${mapRoundIdx}`).classList.add("shake");
+
+      document.getElementById(roundCardId)?.classList.add("impatto-flash");
 
  
 
@@ -9231,6 +9237,7 @@ function avviaBattagliaSotterraneo() {
   let roundVintiSotterraneo = 0;
   nuovoRegistroBattaglia();
   document.getElementById("battle-title-outcome").innerText = "DISCESA NEI SOTTERRANEI...";
+  document.getElementById("battle-report-content").innerHTML = "";
   document.getElementById("battle-result-modal").classList.remove("hidden");
   let sottRoundIdx = 0;
 
@@ -9300,6 +9307,8 @@ function avviaBattagliaSotterraneo() {
       document.getElementById(`my-sott-card-${sottRoundIdx}`).classList.add("mia-card-scatto");
       document.getElementById(`nem-sott-card-${sottRoundIdx}`).classList.add("nemica-card-scatto");
       document.getElementById(`vs-text-sott-${sottRoundIdx}`).classList.add("shake");
+
+      document.getElementById(roundCardId)?.classList.add("impatto-flash");
 
       setTimeout(() => {
         if (esitoRound) {
@@ -9798,6 +9807,7 @@ function confermaBattagliaEventi(avversarioId, avversarioDati, eventiTerreno, mo
   let roundVintiEventi = 0;
   nuovoRegistroBattaglia();
   document.getElementById("battle-title-outcome").innerText = `SFIDA CONTRO ${avversarioDati.nome.toUpperCase()}...`;
+  document.getElementById("battle-report-content").innerHTML = "";
   document.getElementById("battle-result-modal").classList.remove("hidden");
   let evRoundIdx = 0;
 
@@ -9867,6 +9877,8 @@ function confermaBattagliaEventi(avversarioId, avversarioDati, eventiTerreno, mo
       document.getElementById(`my-ev-card-${evRoundIdx}`).classList.add("mia-card-scatto");
       document.getElementById(`nem-ev-card-${evRoundIdx}`).classList.add("nemica-card-scatto");
       document.getElementById(`vs-text-ev-${evRoundIdx}`).classList.add("shake");
+
+      document.getElementById(roundCardId)?.classList.add("impatto-flash");
 
       setTimeout(() => {
         if (esitoRound) {
@@ -12168,6 +12180,8 @@ document.getElementById("btn-attacca-esagono-guerra")?.addEventListener("click",
 
   document.getElementById("battle-title-outcome").innerText = "ASSALTO AL SETTORE...";
 
+  document.getElementById("battle-report-content").innerHTML = "";
+
   document.getElementById("battle-result-modal").classList.remove("hidden");
 
   let warRoundIdx = 0;
@@ -12280,6 +12294,8 @@ document.getElementById("btn-attacca-esagono-guerra")?.addEventListener("click",
       document.getElementById(`nem-war-card-${warRoundIdx}`).classList.add("nemica-card-scatto");
 
       document.getElementById(`vs-text-war-${warRoundIdx}`).classList.add("shake");
+
+      document.getElementById(roundCardId)?.classList.add("impatto-flash");
 
       setTimeout(() => {
 
