@@ -3217,7 +3217,7 @@ function renderizzaSelezioneSottomondi() {
 
       sottomondiModal.classList.add("hidden"); 
 
-      document.getElementById("map-header-title").innerText = mondoSelezionatoCorrente.nome + " · " + sub.nome;
+      document.getElementById("map-header-title").innerText = "🗺️ " + mondoSelezionatoCorrente.nome + " · " + sub.nome;
 
       generaDatiMappaSicura(() => {
 
@@ -3650,7 +3650,7 @@ function apriFinestraEvoluzione(carta) {
 
  
 
-  document.getElementById("evo-modal-title").innerText = `Evoluzione: ${carta.nome} (${carta.stelle} ★ → ${carta.stelle + 1} ★)`;
+  document.getElementById("evo-modal-title").innerText = `✨ Evoluzione: ${carta.nome} (${carta.stelle} ★ → ${carta.stelle + 1} ★)`;
 
   let targetPreview = document.getElementById("evo-target-preview");
 
@@ -4691,7 +4691,7 @@ function apriPannelloProfiloEvocatore() {
 
       </div>
 
-      <div style="background:rgba(0,0,0,0.3); padding:10px; border-radius:6px; border:1px solid #5c4d31; width: 100%;">
+      <div style="background:rgba(0,0,0,0.35); padding:10px; border-radius:6px; border:1px solid #5c4d31; width: 100%;">
 
         <p style="color:#fff; margin-bottom:4px;"><strong>Livello Attuale:</strong> ${livelloGiocatore}</p>
 
@@ -7751,7 +7751,7 @@ function mostraEsitoRoundAddestramento(mia, nem, vinto, scartata) {
 
   const zonaAzione = document.getElementById("addestramento-azione-zona");
   zonaAzione.innerHTML = `
-    <div style="background:rgba(0,0,0,0.4); border-radius:8px; padding:10px 14px; text-align:center;">
+    <div style="background:rgba(0,0,0,0.35); border-radius:8px; padding:10px 14px; text-align:center;">
       <p style="font-size:1rem; font-weight:bold; margin:0 0 4px; color:${vinto ? '#7ee787' : '#f56565'};">${vinto ? "Round vinto!" : "Round perso"}</p>
       <p style="font-size:0.8rem; color:#e0d5c1; margin:2px 0;">${mia.carta.nome}: base ${mia.base.toFixed(1)}${rigaMod(mia)} → <b>${mia.finale.toFixed(1)}</b></p>
       <p style="font-size:0.8rem; color:#e0d5c1; margin:2px 0;">${nem.carta.nome}: base ${nem.base.toFixed(1)}${rigaMod(nem)} → <b>${nem.finale.toFixed(1)}</b></p>
@@ -10460,7 +10460,7 @@ function apriGuida(capitoloId) {
 
   const toc = document.getElementById("guide-toc");
 
-  toc.innerHTML = CAPITOLI_GUIDA.map(cap => `<button type="button" class="attack-btn guide-toc-btn" data-id="${cap.id}" style="width:100%; text-align:left; font-size:0.75rem; padding:8px; ${cap.id === capitoloId ? 'background:linear-gradient(to bottom, #d69e2e, #b7791f);' : ''}">${cap.titolo}</button>`).join("");
+  toc.innerHTML = CAPITOLI_GUIDA.map(cap => `<button type="button" class="events-btn guide-toc-btn" data-id="${cap.id}" style="width:100%; text-align:left; font-size:0.75rem; padding:8px; ${cap.id === capitoloId ? 'background:rgba(255,204,102,0.25);' : ''}">${cap.titolo}</button>`).join("");
 
   toc.querySelectorAll(".guide-toc-btn").forEach(btn => {
 
@@ -11440,7 +11440,7 @@ let cacheClassificaGiocatori = null;
 
 function renderizzaTocClassifica() {
   const tocHtml = CLASSIFICA_CATEGORIE.map(cat => `
-    <button type="button" class="attack-btn guide-toc-btn classifica-toc-btn" data-categoria="${cat.id}" style="width:100%; text-align:left; font-size:0.75rem; padding:8px; ${cat.id === categoriaClassificaCorrente ? 'background:linear-gradient(to bottom, #d69e2e, #b7791f);' : ''}">${cat.nome}</button>
+    <button type="button" class="events-btn guide-toc-btn classifica-toc-btn" data-categoria="${cat.id}" style="width:100%; text-align:left; font-size:0.75rem; padding:8px; ${cat.id === categoriaClassificaCorrente ? 'background:rgba(255,204,102,0.25);' : ''}">${cat.nome}</button>
   `).join("");
   document.getElementById("classifica-toc").innerHTML = tocHtml;
 
