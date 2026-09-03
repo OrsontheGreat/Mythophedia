@@ -9302,6 +9302,12 @@ function mostraAnimazioneScontroFatiche(carta, nemico, vittoria, mioVal, nemicoV
 
 document.getElementById("btn-eventi-fatiche")?.addEventListener("click", apriPannelloFatiche);
 
+document.getElementById("btn-duelli")?.addEventListener("click", apriAddestramento);
+
+document.getElementById("close-addestramento-modal")?.addEventListener("click", () => {
+  document.getElementById("addestramento-modal").classList.add("hidden");
+});
+
 document.getElementById("btn-eventi-torneo")?.addEventListener("click", apriEventi);
 
 document.getElementById("close-eventi-modal")?.addEventListener("click", () => {
