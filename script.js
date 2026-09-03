@@ -94,6 +94,11 @@ document.addEventListener("touchstart", () => {
 // ruotando fisicamente lo schermo. Li sostituiamo con un menu disegnato da noi (bottone + lista),
 // tenendo il <select> originale nel DOM ma invisibile: tutto il resto del codice, che legge/scrive
 // .value, .disabled o le <option> su questi elementi, continua a funzionare senza modifiche.
+// Ricordano l'ultimo filtro/ordinamento scelto nei menu di scelta creature, così passando da
+// una carta all'altra (es. i 5 slot di una squadra) non serve reimpostarli ogni volta.
+let fakeSelectUltimoFiltroRarita = "";
+let fakeSelectUltimoOrdinamento = "";
+
 function potenziaMenuATendina() {
 
   const selettori = document.querySelectorAll("select.deploy-select, #modal-sort-select, #modal-rarita-select");
@@ -179,6 +184,7 @@ function potenziaMenuATendina() {
           <option value="4">Solo Epiche</option>
           <option value="5">Solo Mitiche</option>
           <option value="6">Solo Leggendarie</option>`;
+        selRarita.value = fakeSelectUltimoFiltroRarita;
 
         const selOrdina = document.createElement("select");
         selOrdina.className = "sort-select";
@@ -193,6 +199,7 @@ function potenziaMenuATendina() {
           <option value="istinto">Istinto</option>
           <option value="stelle">Stelle (dalla più evoluta)</option>
           <option value="vigore">Vigore (dal più alto)</option>`;
+        selOrdina.value = fakeSelectUltimoOrdinamento;
 
         rigaOrdinamento.appendChild(selRarita);
         rigaOrdinamento.appendChild(selOrdina);
@@ -200,23 +207,35 @@ function potenziaMenuATendina() {
 
         selRarita.addEventListener("click", (e) => e.stopPropagation());
         selOrdina.addEventListener("click", (e) => e.stopPropagation());
-        selRarita.addEventListener("change", renderizzaGrigliaCarte);
-        selOrdina.addEventListener("change", renderizzaGrigliaCarte);
+        selRarita.addEventListener("change", () => { fakeSelectUltimoFiltroRarita = selRarita.value; renderizzaGrigliaCarte(); });
+        selOrdina.addEventListener("change", () => { fakeSelectUltimoOrdinamento = selOrdina.value; renderizzaGrigliaCarte(); });
 
         contenitoreOpzioni.className = "fake-select-griglia-carte";
         overlay.appendChild(contenitoreOpzioni);
       }
 
+      // Le voci senza dati carta (il segnaposto "-- Seleziona --") vanno gestite a parte: senza
+      // questo controllo, il confronto tenta di leggere proprietà da un valore nullo e l'intero
+      // ordinamento si interrompe in silenzio.
+      function comparatoreSicuro(fn) {
+        return (a, b) => {
+          if (!a.carta && !b.carta) return 0;
+          if (!a.carta) return 1;
+          if (!b.carta) return -1;
+          return fn(a, b);
+        };
+      }
+
       const CRITERI_ORDINAMENTO = {
-        nome: (a, b) => a.carta.nome.localeCompare(b.carta.nome),
-        rarita: (a, b) => (a.carta.livello || 0) - (b.carta.livello || 0),
-        rarita_desc: (a, b) => (b.carta.livello || 0) - (a.carta.livello || 0),
-        ferocia: (a, b) => (b.carta.statistiche?.ferocia || 0) - (a.carta.statistiche?.ferocia || 0),
-        balzo: (a, b) => (b.carta.statistiche?.balzo || 0) - (a.carta.statistiche?.balzo || 0),
-        corazza: (a, b) => (b.carta.statistiche?.corazza || 0) - (a.carta.statistiche?.corazza || 0),
-        istinto: (a, b) => (b.carta.statistiche?.istinto || 0) - (a.carta.statistiche?.istinto || 0),
-        stelle: (a, b) => (b.carta.stelle || 0) - (a.carta.stelle || 0),
-        vigore: (a, b) => (b.carta.vigore || 0) - (a.carta.vigore || 0)
+        nome: comparatoreSicuro((a, b) => a.carta.nome.localeCompare(b.carta.nome)),
+        rarita: comparatoreSicuro((a, b) => (a.carta.livello || 0) - (b.carta.livello || 0)),
+        rarita_desc: comparatoreSicuro((a, b) => (b.carta.livello || 0) - (a.carta.livello || 0)),
+        ferocia: comparatoreSicuro((a, b) => (b.carta.statistiche?.ferocia || 0) - (a.carta.statistiche?.ferocia || 0)),
+        balzo: comparatoreSicuro((a, b) => (b.carta.statistiche?.balzo || 0) - (a.carta.statistiche?.balzo || 0)),
+        corazza: comparatoreSicuro((a, b) => (b.carta.statistiche?.corazza || 0) - (a.carta.statistiche?.corazza || 0)),
+        istinto: comparatoreSicuro((a, b) => (b.carta.statistiche?.istinto || 0) - (a.carta.statistiche?.istinto || 0)),
+        stelle: comparatoreSicuro((a, b) => (b.carta.stelle || 0) - (a.carta.stelle || 0)),
+        vigore: comparatoreSicuro((a, b) => (b.carta.vigore || 0) - (a.carta.vigore || 0))
       };
 
       const tutteLeOpzioni = Array.from(sel.options).map((opt, idx) => ({
