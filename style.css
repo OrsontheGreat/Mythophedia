@@ -869,7 +869,7 @@ html.forza-landscape .close-btn { font-size: 1.6rem; }
 
 }
 
-.pagina-libro .attack-btn:not(.btn-vendi-compatto) {
+.pagina-libro .events-btn:not(.btn-vendi-compatto) {
 
   display: none;
 
@@ -1033,7 +1033,7 @@ html.forza-landscape .close-btn { font-size: 1.6rem; }
 
 }
 
-.mercato-grid .attack-btn {
+.mercato-grid .events-btn {
 
   padding: 4px !important;
 
@@ -1185,12 +1185,6 @@ html.forza-landscape .close-btn { font-size: 1.6rem; }
 .deploy-select { background: #1a1a24; border: 1px solid #8a7343; color: #e0d5c1; padding: 10px 8px; border-radius: 4px; font-size: 1rem; width: 100%; outline: none; cursor: pointer; min-height: 42px; }
 
 .deploy-select:focus { border-color: #ffcc66; }
-
-.attack-btn { background: linear-gradient(to bottom, #c53030, #9b2c2c); color: white; border: 1px solid #742a2a; padding: 14px; border-radius: 6px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; transition: filter 0.2s; flex-shrink: 0; width: 100%; margin-top: auto; font-size: 0.95rem; }
-
-.attack-btn:hover:not(:disabled) { filter: brightness(1.2); }
-
-.attack-btn:disabled { background: #4a5568; border-color: #2d3748; color: #718096; cursor: not-allowed; }
 
 .report-round-line { border-bottom: 1px solid rgba(255,255,255,0.1); padding: 6px 0; display: flex; flex-direction: column; gap: 3px; }
 
@@ -1539,7 +1533,7 @@ html.narrow-820 .clan-card-meta {
 
 }
 
-html.narrow-820 .attack-btn {
+html.narrow-820 .events-btn {
 
   font-size: 0.8rem;
 
@@ -1981,9 +1975,18 @@ html.narrow-700 .mythic-map {
 
   text-shadow: 0 0 6px rgba(0,0,0,0.9), 0 0 12px rgba(0,0,0,0.7), 1px 1px 2px rgba(0,0,0,1);
 
+  width: 100%;
+
+  flex-shrink: 0;
+
+  margin-top: auto;
+
 }
 
 .events-btn:hover { border-color: #ffe9a8; background: rgba(30, 30, 38, 0.72); transform: translateY(-3px); }
+
+.events-btn:disabled { background: #2a2a30; border-color: #4a4a52; color: #6b6b72; cursor: not-allowed; text-shadow: none; transform: none; }
+.events-btn:disabled:hover { border-color: #4a4a52; background: #2a2a30; transform: none; }
 
 .events-btn-main { flex: 3; font-size: 1.05rem; }
 

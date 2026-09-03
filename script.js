@@ -1450,34 +1450,34 @@ function mostraCartaFullscreen(carta, opzioniExtra) {
   const pctVigoreFs = calcolaVigorePercentuale(carta);
   let bottoneEvolviFsHTML;
   if (carta.isJolly) {
-    bottoneEvolviFsHTML = `<button type="button" class="attack-btn" style="background:#4a5568; cursor:not-allowed; width:100%;" disabled>Solo per Sacrifici</button>`;
+    bottoneEvolviFsHTML = `<button type="button" class="events-btn" style="background:#4a5568; cursor:not-allowed; width:100%;" disabled>Solo per Sacrifici</button>`;
   } else if (carta.stelle >= 8) {
-    bottoneEvolviFsHTML = `<button type="button" class="attack-btn" style="background:#4a5568; cursor:not-allowed; width:100%;" disabled>Evoluzione Max</button>`;
+    bottoneEvolviFsHTML = `<button type="button" class="events-btn" style="background:#4a5568; cursor:not-allowed; width:100%;" disabled>Evoluzione Max</button>`;
   } else if (carta.occupataInDifesa) {
-    bottoneEvolviFsHTML = `<button type="button" class="attack-btn" style="background:#4a5568; cursor:not-allowed; width:100%;" disabled>Impegnata in Difesa</button>`;
+    bottoneEvolviFsHTML = `<button type="button" class="events-btn" style="background:#4a5568; cursor:not-allowed; width:100%;" disabled>Impegnata in Difesa</button>`;
   } else if (carta.bloccataInDuello) {
-    bottoneEvolviFsHTML = `<button type="button" class="attack-btn" style="background:#4a5568; cursor:not-allowed; width:100%;" disabled>Impegnata in un Duello</button>`;
+    bottoneEvolviFsHTML = `<button type="button" class="events-btn" style="background:#4a5568; cursor:not-allowed; width:100%;" disabled>Impegnata in un Duello</button>`;
   } else if (pctVigoreFs <= 0) {
-    bottoneEvolviFsHTML = `<button type="button" class="attack-btn" style="background:#4a5568; cursor:not-allowed; width:100%;" disabled>Esausta</button>`;
+    bottoneEvolviFsHTML = `<button type="button" class="events-btn" style="background:#4a5568; cursor:not-allowed; width:100%;" disabled>Esausta</button>`;
   } else {
-    bottoneEvolviFsHTML = `<button type="button" class="attack-btn" id="fs-card-evolvi-btn" style="background:linear-gradient(to bottom, #2f855a, #22543d); border-color:#22543d; width:100%;">Evolvi (Migliora)</button>`;
+    bottoneEvolviFsHTML = `<button type="button" class="events-btn" id="fs-card-evolvi-btn" style="background:linear-gradient(to bottom, #2f855a, #22543d); border-color:#22543d; width:100%;">Evolvi (Migliora)</button>`;
   }
 
   let bottoneAzioneHTML;
   if (modalitaBattaglia) {
     bottoneAzioneHTML = `<div style="display:flex; gap:8px; margin-top:14px;">
       <div style="flex:1;">${bottoneEvolviFsHTML}</div>
-      <button type="button" class="attack-btn fs-card-vendi" id="fs-card-battaglia-btn" style="flex:1; margin-top:0; background:linear-gradient(to bottom, #b7791f, #8a5b12); border-color:#8a5b12;">⚔️ Vai in Battaglia</button>
+      <button type="button" class="events-btn fs-card-vendi" id="fs-card-battaglia-btn" style="flex:1; margin-top:0; background:linear-gradient(to bottom, #b7791f, #8a5b12); border-color:#8a5b12;">⚔️ Vai in Battaglia</button>
     </div>`;
   } else {
     bottoneAzioneHTML = `<div style="display:flex; gap:8px; margin-top:14px;">
       <div style="flex:1;">${bottoneEvolviFsHTML}</div>
-      <button type="button" class="attack-btn fs-card-vendi" id="fs-card-vendi-btn" style="flex:1; margin-top:0;">Vendi (${prezzoVendita} 🪙)</button>
+      <button type="button" class="events-btn fs-card-vendi" id="fs-card-vendi-btn" style="flex:1; margin-top:0;">Vendi (${prezzoVendita} 🪙)</button>
     </div>`;
   }
 
   const bottonePlastificaHTML = carta.isJolly ? "" : `
-    <button type="button" class="attack-btn" id="fs-card-plastifica-btn" style="width:100%; margin-top:8px; background:${carta.plastificata ? "linear-gradient(to bottom, #4a5568, #2d3748)" : "linear-gradient(to bottom, #3182ce, #2262a8)"}; border-color:${carta.plastificata ? "#2d3748" : "#2262a8"};">
+    <button type="button" class="events-btn" id="fs-card-plastifica-btn" style="width:100%; margin-top:8px; background:${carta.plastificata ? "linear-gradient(to bottom, #4a5568, #2d3748)" : "linear-gradient(to bottom, #3182ce, #2262a8)"}; border-color:${carta.plastificata ? "#2d3748" : "#2262a8"};">
       ${carta.plastificata ? "📦 Rimuovi Plastificazione" : "📦 Plastifica"}
     </button>`;
 
@@ -3415,27 +3415,27 @@ function generaHTMLCartaRaccoglitore(carta) {
 
   if (carta.isJolly) {
 
-    bottoneEvolviHTML = `<button type="button" class="attack-btn" style="background:#4a5568; cursor:not-allowed; padding:5px; font-size:0.75rem; margin-top:8px;" disabled>Solo per Sacrifici</button>`;
+    bottoneEvolviHTML = `<button type="button" class="events-btn" style="background:#4a5568; cursor:not-allowed; padding:5px; font-size:0.75rem; margin-top:8px;" disabled>Solo per Sacrifici</button>`;
 
   } else if (carta.stelle >= 8) {
 
-    bottoneEvolviHTML = `<button type="button" class="attack-btn" style="background:#4a5568; cursor:not-allowed; padding:5px; font-size:0.75rem; margin-top:8px;" disabled>Evoluzione Max</button>`;
+    bottoneEvolviHTML = `<button type="button" class="events-btn" style="background:#4a5568; cursor:not-allowed; padding:5px; font-size:0.75rem; margin-top:8px;" disabled>Evoluzione Max</button>`;
 
   } else if (carta.occupataInDifesa) {
 
-    bottoneEvolviHTML = `<button type="button" class="attack-btn" style="background:#4a5568; cursor:not-allowed; padding:5px; font-size:0.75rem; margin-top:8px;" disabled>Impegnata in Difesa</button>`;
+    bottoneEvolviHTML = `<button type="button" class="events-btn" style="background:#4a5568; cursor:not-allowed; padding:5px; font-size:0.75rem; margin-top:8px;" disabled>Impegnata in Difesa</button>`;
 
   } else if (carta.bloccataInDuello) {
 
-    bottoneEvolviHTML = `<button type="button" class="attack-btn" style="background:#4a5568; cursor:not-allowed; padding:5px; font-size:0.75rem; margin-top:8px;" disabled>Impegnata in un Duello</button>`;
+    bottoneEvolviHTML = `<button type="button" class="events-btn" style="background:#4a5568; cursor:not-allowed; padding:5px; font-size:0.75rem; margin-top:8px;" disabled>Impegnata in un Duello</button>`;
 
   } else if (pctVigore <= 0) {
 
-    bottoneEvolviHTML = `<button type="button" class="attack-btn" style="background:#4a5568; cursor:not-allowed; padding:5px; font-size:0.75rem; margin-top:8px;" disabled>Esausta</button>`;
+    bottoneEvolviHTML = `<button type="button" class="events-btn" style="background:#4a5568; cursor:not-allowed; padding:5px; font-size:0.75rem; margin-top:8px;" disabled>Esausta</button>`;
 
   } else {
 
-    bottoneEvolviHTML = `<button type="button" class="attack-btn" id="btn-evo-act-${carta.id}" style="padding:5px; font-size:0.75rem; margin-top:8px; background:linear-gradient(to bottom, #2f855a, #22543d); border-color:#22543d;">Evolvi (Migliora)</button>`;
+    bottoneEvolviHTML = `<button type="button" class="events-btn" id="btn-evo-act-${carta.id}" style="padding:5px; font-size:0.75rem; margin-top:8px; background:linear-gradient(to bottom, #2f855a, #22543d); border-color:#22543d;">Evolvi (Migliora)</button>`;
 
   }
 
@@ -3457,7 +3457,7 @@ function generaHTMLCartaRaccoglitore(carta) {
       </div>
       <div class="card-traits-container">${trattiHTML}</div>
       ${bottoneEvolviHTML}
-      <button type="button" class="attack-btn btn-vendi-compatto" id="btn-vendi-${carta.id}" style="padding:5px; font-size:0.75rem; margin-top:4px; background:linear-gradient(to bottom, #742a2a, #4a1d1d); border-color:#5c2323;">Vendi (${carta.isJolly ? 10 : carta.livello * 15} 🪙)</button>
+      <button type="button" class="events-btn btn-vendi-compatto" id="btn-vendi-${carta.id}" style="padding:5px; font-size:0.75rem; margin-top:4px; background:linear-gradient(to bottom, #742a2a, #4a1d1d); border-color:#5c2323;">Vendi (${carta.isJolly ? 10 : carta.livello * 15} 🪙)</button>
     </div>`;
 }
 
@@ -3780,9 +3780,9 @@ function aggiornaInterfacciaPuntiEvo() {
 
       <div style="display:flex; gap:5px;">
 
-        <button type="button" class="attack-btn" id="btn-evo-min-${stat}" style="padding:2px 8px; width:auto; margin:0; background:#742a2a;">-</button>
+        <button type="button" class="events-btn" id="btn-evo-min-${stat}" style="padding:2px 8px; width:auto; margin:0; background:#742a2a;">-</button>
 
-        <button type="button" class="attack-btn" id="btn-evo-pls-${stat}" style="padding:2px 8px; width:auto; margin:0; background:#22543d;">+</button>
+        <button type="button" class="events-btn" id="btn-evo-pls-${stat}" style="padding:2px 8px; width:auto; margin:0; background:#22543d;">+</button>
 
       </div>`;
 
@@ -4207,7 +4207,7 @@ function renderizzaMercato() {
 
       <p style="font-size: 0.75rem; color: #cbd5e0; margin-bottom: 10px; font-family: sans-serif; min-height: 40px;">Aggiunge immediatamente +10 slot massimi per conservare le tue carte.</p>
 
-      <button type="button" class="attack-btn" id="buy-slots-btn" style="padding: 8px; font-size: 0.75rem; margin-top: auto; background: linear-gradient(to bottom, #2b6cb0, #2b4c7e); border-color: #2b4c7e;">2000 🪙</button>
+      <button type="button" class="events-btn" id="buy-slots-btn" style="padding: 8px; font-size: 0.75rem; margin-top: auto; background: linear-gradient(to bottom, #2b6cb0, #2b4c7e); border-color: #2b4c7e;">2000 🪙</button>
 
     </div>`;
 
@@ -4229,7 +4229,7 @@ function renderizzaMercato() {
 
       <p style="font-size: 0.68rem; color: #a89a7a; margin-bottom: 8px;">Scambi rimasti oggi: ${scambiRimasti} / ${TRIBUTO_RA_MAX_GIORNO}</p>
 
-      <button type="button" class="attack-btn" id="tributo-ra-btn" style="padding: 8px; font-size: 0.75rem; margin-top: auto; background: linear-gradient(to bottom, #b7791f, #8a5a12); border-color: #8a5a12;" ${tributoDisabilitato ? "disabled" : ""}>${TRIBUTO_RA_COSTO} 🪙 → 1 💎</button>
+      <button type="button" class="events-btn" id="tributo-ra-btn" style="padding: 8px; font-size: 0.75rem; margin-top: auto; background: linear-gradient(to bottom, #b7791f, #8a5a12); border-color: #8a5a12;" ${tributoDisabilitato ? "disabled" : ""}>${TRIBUTO_RA_COSTO} 🪙 → 1 💎</button>
 
     </div>`;
 
@@ -4255,7 +4255,7 @@ function renderizzaMercato() {
 
         <p style="font-size: 0.75rem; color: #cbd5e0; margin-bottom: 10px; font-family: sans-serif; min-height: 40px;">${p.descrizione}</p>
 
-        <button type="button" class="attack-btn" id="buy-pack-${id}" style="padding: 8px; font-size: 0.75rem; margin-top: auto;">${p.costo} ${iconaValuta}</button>
+        <button type="button" class="events-btn" id="buy-pack-${id}" style="padding: 8px; font-size: 0.75rem; margin-top: auto;">${p.costo} ${iconaValuta}</button>
 
       </div>`;
 
@@ -4677,7 +4677,7 @@ function apriPannelloProfiloEvocatore() {
 
         </div>
 
-        <button id="btn-upload-avatar" type="button" class="attack-btn" style="padding: 5px 10px; font-size: 0.75rem; margin: 0; width: auto; background: #2d3748; border-color: #4a5568;">Carica Foto / JPEG</button>
+        <button id="btn-upload-avatar" type="button" class="events-btn" style="padding: 5px 10px; font-size: 0.75rem; margin: 0; width: auto; background: #2d3748; border-color: #4a5568;">Carica Foto / JPEG</button>
 
         <input type="file" id="input-avatar-file" accept="image/jpeg, image/png, image/jpg" style="display: none;">
 
@@ -4709,7 +4709,7 @@ function apriPannelloProfiloEvocatore() {
 
       </div>
 
-      <button id="btn-save-profile-data" class="attack-btn" style="padding:10px; font-size:0.85rem; margin-top:5px; background:linear-gradient(to bottom, #2f855a, #22543d); border-color:#22543d; width: 100%;">Salva Modifiche Profilo</button>
+      <button id="btn-save-profile-data" class="events-btn" style="padding:10px; font-size:0.85rem; margin-top:5px; background:linear-gradient(to bottom, #2f855a, #22543d); border-color:#22543d; width: 100%;">Salva Modifiche Profilo</button>
 
     </div>`;
 
@@ -9539,7 +9539,7 @@ function renderizzaListaClanReclutamento() {
 
         </div>
 
-        <button type="button" class="attack-btn" id="join-clan-btn-${clan.id}" style="padding: 6px 12px; font-size: 0.75rem; width: auto; margin: 0;">Unisciti</button>
+        <button type="button" class="events-btn" id="join-clan-btn-${clan.id}" style="padding: 6px 12px; font-size: 0.75rem; width: auto; margin: 0;">Unisciti</button>
 
       </div>`;
 
@@ -9767,7 +9767,7 @@ function aggiornaVisualizzazioneClan() {
 
       let eIlGiocatore = m.nome.includes("(Tu)");
 
-      let btnDonaHTML = eIlGiocatore ? "" : `<button type="button" class="attack-btn btn-dona-membro" data-nome="${m.nome}" data-uid="${m.uid || ''}" style="width:auto; padding:3px 10px; font-size:0.7rem;">Dona</button>`;
+      let btnDonaHTML = eIlGiocatore ? "" : `<button type="button" class="events-btn btn-dona-membro" data-nome="${m.nome}" data-uid="${m.uid || ''}" style="width:auto; padding:3px 10px; font-size:0.7rem;">Dona</button>`;
 
       let promozioneHTML = "";
 
@@ -9827,13 +9827,13 @@ function aggiornaVisualizzazioneClan() {
 
       let assedioAttivoOra = clanMioAttuale.assedioAttivo && Date.now() < (clanMioAttuale.assedioScadenza || 0);
 
-      poteriDashHTML += `<button type="button" class="attack-btn" id="btn-potere-assedio" style="font-size:0.75rem; padding:8px;">⚔️ Dichiarazione d'Assedio${assedioAttivoOra ? " (Attiva)" : ""}</button>`;
+      poteriDashHTML += `<button type="button" class="events-btn" id="btn-potere-assedio" style="font-size:0.75rem; padding:8px;">⚔️ Dichiarazione d'Assedio${assedioAttivoOra ? " (Attiva)" : ""}</button>`;
 
     }
 
     if (ruolo === "capitano") {
 
-      poteriDashHTML += `<button type="button" class="attack-btn" id="btn-potere-staffetta" style="font-size:0.75rem; padding:8px;">🐎 Staffetta Logistica (-1h fatica, 50 Dracme)</button>`;
+      poteriDashHTML += `<button type="button" class="events-btn" id="btn-potere-staffetta" style="font-size:0.75rem; padding:8px;">🐎 Staffetta Logistica (-1h fatica, 50 Dracme)</button>`;
 
     }
 
@@ -10633,19 +10633,19 @@ function mostraDettagliEsagonoGuerra(esagono) {
 
     if (ruoloGiocatore === "capitano" && !oracoloAttivo) {
 
-      poteriHTML += `<button type="button" class="attack-btn" id="btn-potere-oracolo" style="width:auto; font-size:0.75rem; padding:6px 10px; margin-right:6px;" ${capitanoOracoliUsatiOggi >= 1 ? "disabled" : ""}>👁️ Occhio dell'Oracolo</button>`;
+      poteriHTML += `<button type="button" class="events-btn" id="btn-potere-oracolo" style="width:auto; font-size:0.75rem; padding:6px 10px; margin-right:6px;" ${capitanoOracoliUsatiOggi >= 1 ? "disabled" : ""}>👁️ Occhio dell'Oracolo</button>`;
 
     }
 
     if (ruoloGiocatore === "sergente" && !predatoreAttivo) {
 
-      poteriHTML += `<button type="button" class="attack-btn" id="btn-potere-marchio" style="width:auto; font-size:0.75rem; padding:6px 10px;">🎯 Marchio del Predatore</button>`;
+      poteriHTML += `<button type="button" class="events-btn" id="btn-potere-marchio" style="width:auto; font-size:0.75rem; padding:6px 10px;">🎯 Marchio del Predatore</button>`;
 
     }
 
   } else if (ruoloGiocatore === "comandante") {
 
-    poteriHTML += `<button type="button" class="attack-btn" id="btn-potere-amnistia" style="width:auto; font-size:0.75rem; padding:6px 10px;" ${amnistiaUsataQuestaSettimana ? "disabled" : ""}>🕊️ Amnistia di Guerra</button>`;
+    poteriHTML += `<button type="button" class="events-btn" id="btn-potere-amnistia" style="width:auto; font-size:0.75rem; padding:6px 10px;" ${amnistiaUsataQuestaSettimana ? "disabled" : ""}>🕊️ Amnistia di Guerra</button>`;
 
   }
 
