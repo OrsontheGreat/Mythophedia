@@ -9524,10 +9524,20 @@ function assicuraClassificaEventiSeminata(numeroCiclo, restrizione, callback) {
 
 let eventiNumeroCicloCorrente = null;
 let eventiRestrizioneCorrente = null;
+let eventiTerrenoCorrente = null;
+
+// Il terreno, come la restrizione, è deciso una volta sola per l'intero ciclo di 2 giorni —
+// deterministico dal numero di ciclo, così ogni giocatore lo calcola da solo allo stesso modo,
+// e lo conosce fin da quando sceglie la squadra, non solo un attimo prima di ogni sfida.
+function calcolaTerrenoEventi(numeroCiclo) {
+  const rand = pseudoRandomSeminato(numeroCiclo * 31337 + 5);
+  return EVENTI_TERRENI[Math.floor(rand() * EVENTI_TERRENI.length)];
+}
 
 function apriEventi() {
   eventiNumeroCicloCorrente = calcolaNumeroCicloEventiCorrente();
   eventiRestrizioneCorrente = generaRestrizioneEventi(eventiNumeroCicloCorrente);
+  eventiTerrenoCorrente = calcolaTerrenoEventi(eventiNumeroCicloCorrente);
   assicuraRicaricaSfideEventi();
 
   document.getElementById("eventi-content").innerHTML = `<p style="text-align:center; color:#a89a7a;">Preparazione dell'arena in corso...</p>`;
@@ -9561,6 +9571,7 @@ function renderizzaSelezioneSquadraEventi() {
     <div style="text-align:center; width:100%;">
       <p style="color:#ffcc66; font-weight:bold;">🏆 Nuovo Evento in corso</p>
       <p style="color:#a89a7a; font-size:0.8rem;">${testoRestrizioneEventi(eventiRestrizioneCorrente)}</p>
+      <p style="color:#ffcc66; font-size:0.82rem; font-weight:bold; margin-top:4px;">Terreno di questo evento: ${terrenoEmoji(eventiTerrenoCorrente)}</p>
       <p style="color:#a89a7a; font-size:0.75rem; margin-top:4px;">Scegli le 5 carte con cui parteciperai — verranno usate sia quando sfidi altri, sia come tua difesa quando qualcuno sfida te.</p>
     </div>
     <div style="display:flex; flex-direction:column; gap:5px; width:100%; max-width:360px;">${slotsHTML}</div>
@@ -9691,6 +9702,7 @@ function renderizzaHubEventi() {
       <div style="text-align:center; width:100%;">
         <p style="color:#ffcc66; font-weight:bold;">🏆 Evento in corso — termina tra ${oreRimaste}h</p>
         <p style="color:#a89a7a; font-size:0.78rem;">${testoRestrizioneEventi(eventiRestrizioneCorrente)}</p>
+        <p style="color:#ffcc66; font-size:0.78rem; font-weight:bold;">Terreno: ${terrenoEmoji(eventiTerrenoCorrente)}</p>
         <p style="color:#e0d5c1; font-size:0.85rem; margin-top:4px;">La tua posizione: <b style="color:#ffcc66;">${miaPosizione}</b> — Punti: <b style="color:#ffcc66;">${mioPunteggio}</b></p>
         <p style="color:${eventiSfideRimaste > 0 ? '#7ee787' : '#f56565'}; font-size:0.78rem;">Sfide disponibili: ${eventiSfideRimaste} / ${EVENTI_SFIDE_MAX}</p>
       </div>
@@ -9726,7 +9738,7 @@ function avviaSfidaEventi(avversarioId, avversarioDati) {
   const modalitaScelta = EVENTI_MODALITA[Math.floor(Math.random() * EVENTI_MODALITA.length)];
   const statisticheMescolate = tutteStat.slice().sort(() => Math.random() - 0.5);
   const eventiStatistiche = statisticheMescolate.slice(0, modalitaScelta.numStat);
-  const eventiTerreno = EVENTI_TERRENI[Math.floor(Math.random() * EVENTI_TERRENI.length)];
+  const eventiTerreno = eventiTerrenoCorrente;
 
   eventiSquadraLocaleOrdinata = eventiSquadraDifensiva.map(c => ({ ...c }));
   eventiIndiceSelezionatoPerScambio = null;
@@ -9734,39 +9746,59 @@ function avviaSfidaEventi(avversarioId, avversarioDati) {
   renderizzaAnteprimaSfidaEventi(avversarioId, avversarioDati, eventiTerreno, modalitaScelta, eventiStatistiche);
 }
 
+function terrenoCongenialeCreatura(tratti) {
+  if (!tratti || tratti.length === 0) return null;
+  if (tratti.includes("volo")) return { emoji: "🌬️", nome: "Aria", chiavi: ["aria"] };
+  if (tratti.includes("nuoto")) return { emoji: "🌊", nome: "Acqua", chiavi: ["acqua"] };
+  if (tratti.includes("arrampicata") || tratti.includes("equilibrio")) return { emoji: "🌲⛰️", nome: "Foresta/Terra", chiavi: ["foresta", "terra"] };
+  return null;
+}
+
 function renderizzaAnteprimaSfidaEventi(avversarioId, avversarioDati, terreno, modalitaScelta, statistiche) {
   const contenitore = document.getElementById("eventi-content");
+  const terrenoAttualeMin = (terreno || "").toLowerCase();
+
+  const rigaCongeniale = (c) => {
+    const cong = terrenoCongenialeCreatura(c.tratti);
+    if (!cong) return `<div style="font-size:0.6rem; color:#6b5f45; margin-top:1px;">— nessun terreno preferito —</div>`;
+    const favorevole = cong.chiavi.includes(terrenoAttualeMin);
+    return `<div style="font-size:0.6rem; margin-top:1px; font-weight:${favorevole ? "bold" : "normal"}; color:${favorevole ? "#7ee787" : "#a89a7a"};">${cong.emoji} ${cong.nome}${favorevole ? " ✓" : ""}</div>`;
+  };
 
   const cartaOpponenteHTML = (c) => `
-    <div style="background:rgba(0,0,0,0.35); border:1px solid #5c4d31; border-radius:8px; padding:6px; text-align:center; width:90px;">
+    <div style="background:rgba(0,0,0,0.35); border:1px solid #5c4d31; border-radius:8px; padding:6px; text-align:center; width:90px; display:flex; flex-direction:column; align-items:center;">
       <div style="font-size:1.4rem;">${miniImmagineCarta(c, 30)}</div>
-      <div style="font-size:0.68rem; font-weight:bold; color:#e0d5c1; margin-top:2px;">${c.nome}</div>
+      <div style="font-size:0.68rem; font-weight:bold; color:#e0d5c1; margin-top:2px; min-height:2.2em; display:flex; align-items:center;">${c.nome}</div>
       <div style="font-size:0.62rem; color:#a89a7a;">F:${c.statistiche.ferocia} B:${c.statistiche.balzo}<br>C:${c.statistiche.corazza} I:${c.statistiche.istinto}</div>
+      ${rigaCongeniale(c)}
     </div>`;
 
   const cartaMiaHTML = (c, idx) => `
-    <div class="ev-carta-riordino" data-idx="${idx}" style="background:${idx === eventiIndiceSelezionatoPerScambio ? 'rgba(255,204,102,0.3)' : 'rgba(0,0,0,0.35)'}; border:1px solid ${idx === eventiIndiceSelezionatoPerScambio ? '#ffcc66' : '#5c4d31'}; border-radius:8px; padding:6px; text-align:center; width:90px; cursor:pointer;">
-      <div style="font-size:0.62rem; color:#ffcc66;">Round ${idx + 1}</div>
+    <div class="ev-carta-riordino" data-idx="${idx}" style="background:${idx === eventiIndiceSelezionatoPerScambio ? 'rgba(255,204,102,0.3)' : 'rgba(0,0,0,0.35)'}; border:1px solid ${idx === eventiIndiceSelezionatoPerScambio ? '#ffcc66' : '#5c4d31'}; border-radius:8px; padding:6px; text-align:center; width:90px; cursor:pointer; display:flex; flex-direction:column; align-items:center;">
       <div style="font-size:1.4rem;">${miniImmagineCarta(c, 30)}</div>
-      <div style="font-size:0.68rem; font-weight:bold; color:#e0d5c1; margin-top:2px;">${c.nome}</div>
+      <div style="font-size:0.68rem; font-weight:bold; color:#e0d5c1; margin-top:2px; min-height:2.2em; display:flex; align-items:center;">${c.nome}</div>
       <div style="font-size:0.62rem; color:#a89a7a;">F:${c.statistiche.ferocia} B:${c.statistiche.balzo}<br>C:${c.statistiche.corazza} I:${c.statistiche.istinto}</div>
+      ${rigaCongeniale(c)}
     </div>`;
+
+  const righeRound = Array.from({ length: 5 }, (_, idx) => `
+    <div style="display:flex; align-items:center; gap:10px;">
+      ${cartaOpponenteHTML(avversarioDati.squadra[idx])}
+      <span style="color:#ffcc66; font-size:0.7rem; font-weight:bold; width:20px; text-align:center;">R${idx + 1}</span>
+      ${cartaMiaHTML(eventiSquadraLocaleOrdinata[idx], idx)}
+    </div>`).join("");
 
   contenitore.innerHTML = `
     <div style="text-align:center; width:100%;">
       <p style="color:#ffcc66; font-weight:bold;">Sfida contro ${avversarioDati.nome}</p>
       <p style="color:#a89a7a; font-size:0.8rem;">Terreno: ${terrenoEmoji(terreno)} — Modalità: ${modalitaScelta.nome} (${statistiche.map(s => s.toUpperCase()).join(" + ")})</p>
     </div>
-    <div style="display:flex; gap:20px; width:100%; justify-content:center; flex-wrap:wrap;">
-      <div>
-        <p style="text-align:center; color:#f56565; font-size:0.78rem; font-weight:bold;">Squadra avversaria</p>
-        <div style="display:flex; flex-direction:column; gap:6px;">${avversarioDati.squadra.map(cartaOpponenteHTML).join("")}</div>
-      </div>
-      <div>
-        <p style="text-align:center; color:#7ee787; font-size:0.78rem; font-weight:bold;">La tua squadra — tocca due carte per scambiarle di posto</p>
-        <div id="ev-mia-squadra-riordino" style="display:flex; flex-direction:column; gap:6px;">${eventiSquadraLocaleOrdinata.map(cartaMiaHTML).join("")}</div>
-      </div>
+    <div style="display:flex; gap:10px; justify-content:center; font-size:0.75rem; font-weight:bold;">
+      <span style="color:#f56565; width:90px; text-align:center;">Avversario</span>
+      <span style="width:20px;"></span>
+      <span style="color:#7ee787; width:90px; text-align:center;">Tu — tocca 2 per scambiare</span>
     </div>
+    <div style="display:flex; flex-direction:column; gap:8px; align-items:center;">${righeRound}</div>
     <div style="display:flex; gap:10px;">
       <button type="button" id="ev-annulla-anteprima-btn" class="events-btn" style="max-width:160px; font-size:0.8rem;">Annulla</button>
       <button type="button" id="ev-combatti-btn" class="events-btn events-btn-main" style="max-width:200px;">⚔️ Combatti</button>
@@ -12776,8 +12808,18 @@ function applicaDatiCaricati(dati) {
   aggiornaTopbarProfilo();
 
   if (!tutorialCompletato) {
-    setTimeout(apriTutorialChirone, 600);
+    setTimeout(avviaTutorialDopoIntro, 600);
   }
+}
+
+// Aspetta che il video introduttivo sia finito prima di aprire il tutorial di Chirone — altrimenti
+// il tutorial si apre sopra il video e lo interrompe, impedendo di goderselo.
+function avviaTutorialDopoIntro() {
+  if (window.introVideoAttivo) {
+    setTimeout(avviaTutorialDopoIntro, 400);
+    return;
+  }
+  apriTutorialChirone();
 }
 
 function aggiornaUIAccount(user) {
@@ -12819,7 +12861,7 @@ authFirebase.onAuthStateChanged((user) => {
   if (!user) {
     salvataggioCloudCaricato = false;
     if (localStorage.getItem("mythophedia_tutorial_completato") !== "true") {
-      setTimeout(apriTutorialChirone, 600);
+      setTimeout(avviaTutorialDopoIntro, 600);
     }
     nascondiLoadingOverlay();
     return;
@@ -12889,9 +12931,11 @@ aggiornaTopbarProfilo();
   const introSkipBtn = document.getElementById("intro-skip-btn");
   if (!introSplash || !introVideo) return;
 
+  window.introVideoAttivo = true;
   document.body.classList.add("intro-playing");
 
   const chiudiIntro = () => {
+    window.introVideoAttivo = false;
     introSplash.classList.add("intro-hidden");
     document.body.classList.remove("intro-playing");
     setTimeout(() => introSplash.remove(), 700);
