@@ -1947,9 +1947,9 @@ let sottomondoSelezionatoCorrente = null;
 
 let esagonoSelezionatoDati = null;
 
-const RIGHE_MAPPA = 8; 
+const RIGHE_MAPPA = 7; 
 
-const COLONNE_MAPPA = 9;
+const COLONNE_MAPPA = 8;
 
 const TIPI_TERRENO = ["Aria", "Terra", "Foresta", "Acqua"];
 
@@ -2486,7 +2486,7 @@ function mostraDettagliEsagono(esagono) {
 
  
 
-  if (esagono.conquistato) {
+  if (eProprioEsagono) {
 
     setupTitle.innerText = "Modifica Presidio (Cambio Difesa):";
 
@@ -2632,14 +2632,23 @@ function aggiornaValidazioneAttacco() {
 
   if (!esagonoSelezionatoDati) valido = false;
 
-  if (esagonoSelezionatoDati && !esagonoSelezionatoDati.conquistato) {
+  const eGiaMioQuestoEsagono = esagonoSelezionatoDati && esagonoSelezionatoDati.proprietarioUid && utenteFirebaseAttuale && esagonoSelezionatoDati.proprietarioUid === utenteFirebaseAttuale.uid;
+  const avviso = document.getElementById("avviso-adiacenza-esagono");
+  let mancaAdiacenza = false;
+
+  if (esagonoSelezionatoDati && !eGiaMioQuestoEsagono) {
 
     if (utenteHaAlmenoUnEsagono()) {
 
-      if (!confinaConEsagonoUtente(esagonoSelezionatoDati.riga, esagonoSelezionatoDati.colonna)) valido = false;
+      if (!confinaConEsagonoUtente(esagonoSelezionatoDati.riga, esagonoSelezionatoDati.colonna)) { valido = false; mancaAdiacenza = true; }
 
     }
 
+  }
+
+  if (avviso) {
+    avviso.style.display = mancaAdiacenza ? "block" : "none";
+    avviso.innerText = mancaAdiacenza ? "⚠️ Puoi attaccare solo esagoni adiacenti a un tuo territorio." : "";
   }
 
   btnAttacca.disabled = !valido;
