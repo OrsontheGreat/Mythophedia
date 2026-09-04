@@ -7355,9 +7355,11 @@ function htmlSchermataGiardino() {
   }).join("");
 
   return `
-    <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; gap:12px; padding:14px;">
-      <div style="color:#e0d5c1; font-size:0.85rem;">Sequenza: <b style="color:#ffcc66;">${giardinoSequenza.length}</b></div>
-      <div style="color:#a89a7a; font-size:0.8rem;">${giardinoModalitaMostra ? "Osserva..." : "Tocca nell'ordine giusto"}</div>
+    <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; gap:10px; padding:10px;">
+      <div style="display:flex; gap:16px; align-items:center;">
+        <div style="color:#e0d5c1; font-size:0.85rem;">Sequenza: <b style="color:#ffcc66;">${giardinoSequenza.length}</b></div>
+        <div style="color:#a89a7a; font-size:0.8rem;">${giardinoModalitaMostra ? "Osserva..." : "Tocca nell'ordine giusto"}</div>
+      </div>
       <div class="giardino-griglia">${alberiHTML}</div>
     </div>`;
 }

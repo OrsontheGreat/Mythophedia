@@ -2522,10 +2522,10 @@ html.narrow-700 .events-row { flex-direction: column; }
 
 .giardino-griglia {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 14px;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 10px;
   width: 100%;
-  max-width: 320px;
+  max-width: min(600px, calc(var(--app-height) * 90 / 100));
 }
 
 .giardino-albero {
@@ -2533,7 +2533,7 @@ html.narrow-700 .events-row { flex-direction: column; }
   background: rgba(20, 30, 20, 0.55);
   border: 2px solid #5a7a3a;
   border-radius: 12px;
-  font-size: 2rem;
+  font-size: 1.4rem;
   display: flex;
   align-items: center;
   justify-content: center;
