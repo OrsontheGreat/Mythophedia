@@ -7613,16 +7613,18 @@ function apriAddestramento() {
 function mostraHubAddestramento() {
   const contenitore = document.getElementById("addestramento-content");
   contenitore.innerHTML = `
-    <div class="tutorial-chirone-box" style="max-width:900px;">
-      <img src="img/carte/chirone.jpg" class="tutorial-chirone-ritratto" onerror="this.style.display='none';">
-      <div class="tutorial-chirone-testo">
-        <p style="font-weight:bold; color:#ffcc66;">Bentornato, Evocatore.</p>
-        <p style="margin-top:8px;">Vuoi ripassare le 8 tappe guidate, o scendere ancora più a fondo nei Sotterranei?</p>
+    <div style="display:flex; align-items:center; gap:18px; width:100%; height:100%;">
+      <div class="tutorial-chirone-box" style="flex:1; max-width:none; margin:0;">
+        <img src="img/carte/chirone.jpg" class="tutorial-chirone-ritratto" onerror="this.style.display='none';">
+        <div class="tutorial-chirone-testo">
+          <p style="font-weight:bold; color:#ffcc66;">Bentornato, Evocatore.</p>
+          <p style="margin-top:8px;">Vuoi ripassare le 8 tappe guidate, o scendere ancora più a fondo nei Sotterranei?</p>
+        </div>
       </div>
-    </div>
-    <div style="display:flex; gap:10px;">
-      <button type="button" id="addestramento-hub-tappe-btn" class="events-btn" style="max-width:220px;">Rifai le 8 Tappe</button>
-      <button type="button" id="addestramento-hub-sotterranei-btn" class="events-btn events-btn-main" style="max-width:220px;">🕳️ I Sotterranei</button>
+      <div style="flex:0 0 auto; display:flex; flex-direction:column; gap:8px;">
+        <button type="button" id="addestramento-hub-sotterranei-btn" class="events-btn events-btn-main" style="width:auto; margin-top:0; padding:12px 20px; white-space:nowrap;">🕳️ I Sotterranei</button>
+        <button type="button" id="addestramento-hub-tappe-btn" class="events-btn" style="width:auto; margin-top:0; padding:12px 20px; white-space:nowrap;">Rifai le 8 Tappe</button>
+      </div>
     </div>`;
 
   document.getElementById("addestramento-hub-tappe-btn").addEventListener("click", () => {
@@ -7650,19 +7652,19 @@ function renderizzaAddestramento() {
   const numeroRound = tappa.round.length;
   const inizioRound = addestramentoRoundAttuale === 0 && !addestramentoAttesaScelta;
 
-  let intestazioneHTML = `
-    <div style="text-align:center; width:100%;">
-      <p style="color:#a89a7a; font-size:0.8rem;">Tappa ${addestramentoTappaAttuale + 1} di ${ADDESTRAMENTO_TAPPE.length}</p>
-      <h3 style="color:#ffcc66; margin:2px 0 8px;">${tappa.titolo}</h3>
-    </div>`;
-
   if (inizioRound && addestramentoRoundAttuale === 0) {
-    contenitore.innerHTML = intestazioneHTML + `
-      <div class="tutorial-chirone-box" style="max-width:900px;">
-        <img src="img/carte/chirone.jpg" class="tutorial-chirone-ritratto" onerror="this.style.display='none';">
-        <div class="tutorial-chirone-testo">${tappa.narrazione}</div>
-      </div>
-      <button type="button" id="addestramento-inizia-round-btn" class="events-btn events-btn-main" style="max-width:220px;">Inizia</button>`;
+    contenitore.innerHTML = `
+      <div style="display:flex; align-items:center; gap:18px; width:100%; height:100%;">
+        <div style="flex:0 0 130px; text-align:center;">
+          <p style="color:#a89a7a; font-size:0.75rem; margin:0;">Tappa ${addestramentoTappaAttuale + 1}/${ADDESTRAMENTO_TAPPE.length}</p>
+          <h3 style="color:#ffcc66; margin:4px 0 0; font-size:1rem;">${tappa.titolo}</h3>
+        </div>
+        <div class="tutorial-chirone-box" style="flex:1; max-width:none; margin:0;">
+          <img src="img/carte/chirone.jpg" class="tutorial-chirone-ritratto" onerror="this.style.display='none';">
+          <div class="tutorial-chirone-testo">${tappa.narrazione}</div>
+        </div>
+        <button type="button" id="addestramento-inizia-round-btn" class="events-btn events-btn-main" style="flex:0 0 auto; width:auto; margin-top:0; padding:14px 24px;">Inizia</button>
+      </div>`;
     document.getElementById("addestramento-inizia-round-btn").addEventListener("click", () => renderizzaRoundAddestramento());
     return;
   }
@@ -7716,12 +7718,12 @@ function renderizzaRoundAddestramento() {
 
   } else {
     zonaCarte.innerHTML = `
-      <div style="display:flex; gap:14px; flex-wrap:wrap; justify-content:center;">
+      <div style="display:flex; gap:14px; flex-wrap:wrap; justify-content:center; align-items:flex-start;">
         ${round.opzioni.map(nome => `<div class="addestramento-opzione-clic" data-nome="${nome}">${costruisciCartaEsempioTutorial(nome)}</div>`).join("")}
-      </div>
-      <div style="display:flex; flex-direction:column; align-items:center; gap:4px;">
-        <span style="color:#a89a7a; font-size:0.72rem;">Nemica:</span>
-        ${costruisciCartaEsempioTutorial(round.nemica)}
+        <div style="display:flex; flex-direction:column; align-items:center; gap:2px;">
+          <span style="color:#a89a7a; font-size:0.68rem;">Nemica</span>
+          ${costruisciCartaEsempioTutorial(round.nemica)}
+        </div>
       </div>`;
     zonaAzione.innerHTML = `<p style="color:#e0d5c1; font-size:0.8rem; margin:0;">Tocca la carta che vuoi schierare</p>`;
 
@@ -7782,16 +7784,18 @@ function mostraRisultatoTappaAddestramento() {
 
   const contenitore = document.getElementById("addestramento-content");
   contenitore.innerHTML = `
-    <div class="tutorial-chirone-box" style="max-width:900px;">
-      <img src="img/carte/chirone.jpg" class="tutorial-chirone-ritratto" onerror="this.style.display='none';">
-      <div class="tutorial-chirone-testo">
-        <p style="font-weight:bold; color:${vinta ? '#7ee787' : '#f56565'};">${vinta ? `Battaglia vinta! (${addestramentoRoundVinti} round su ${totale})` : `Battaglia persa (${addestramentoRoundVinti} round su ${totale})`}</p>
-        ${spiegazioneTesto ? `<p style="margin-top:8px;">${spiegazioneTesto}</p>` : ""}
+    <div style="display:flex; align-items:center; gap:18px; width:100%; height:100%;">
+      <div class="tutorial-chirone-box" style="flex:1; max-width:none; margin:0;">
+        <img src="img/carte/chirone.jpg" class="tutorial-chirone-ritratto" onerror="this.style.display='none';">
+        <div class="tutorial-chirone-testo">
+          <p style="font-weight:bold; color:${vinta ? '#7ee787' : '#f56565'};">${vinta ? `Battaglia vinta! (${addestramentoRoundVinti} round su ${totale})` : `Battaglia persa (${addestramentoRoundVinti} round su ${totale})`}</p>
+          ${spiegazioneTesto ? `<p style="margin-top:8px;">${spiegazioneTesto}</p>` : ""}
+        </div>
       </div>
-    </div>
-    <button type="button" id="addestramento-prossima-tappa-btn" class="events-btn events-btn-main" style="max-width:260px;">
-      ${daRipetere ? "Riprova la tappa" : (ultimaTappa ? "Completa l'Addestramento" : "Tappa successiva")}
-    </button>`;
+      <button type="button" id="addestramento-prossima-tappa-btn" class="events-btn events-btn-main" style="flex:0 0 auto; width:auto; margin-top:0; padding:14px 24px;">
+        ${daRipetere ? "Riprova la tappa" : (ultimaTappa ? "Completa l'Addestramento" : "Tappa successiva")}
+      </button>
+    </div>`;
 
   document.getElementById("addestramento-prossima-tappa-btn").addEventListener("click", () => {
     if (daRipetere) {
@@ -7821,18 +7825,20 @@ function completaAddestramento() {
   }
 
   contenitore.innerHTML = `
-    <div class="tutorial-chirone-box" style="max-width:900px;">
-      <img src="img/carte/chirone.jpg" class="tutorial-chirone-ritratto" onerror="this.style.display='none';">
-      <div class="tutorial-chirone-testo">
-        <p style="font-weight:bold; color:#7ee787;">Sei pronto, Evocatore.</p>
-        <p style="margin-top:8px;">Hai visto come si calcola un round, come si vince una battaglia, e soprattutto come il terreno può cambiare tutto. Ora tocca a te: vai a mettere alla prova quello che hai imparato nei Sottomondi e nelle Guerre di Clan.</p>
-        <p style="margin-top:8px;">Se invece preferisci allenarti da solo, senza dover affrontare altri giocatori, ti aspetto più a fondo: nei <b style="color:#ffcc66;">Sotterranei</b>.</p>
-        ${premioHTML}
+    <div style="display:flex; align-items:center; gap:18px; width:100%; height:100%;">
+      <div class="tutorial-chirone-box" style="flex:1; max-width:none; margin:0;">
+        <img src="img/carte/chirone.jpg" class="tutorial-chirone-ritratto" onerror="this.style.display='none';">
+        <div class="tutorial-chirone-testo">
+          <p style="font-weight:bold; color:#7ee787;">Sei pronto, Evocatore.</p>
+          <p style="margin-top:8px;">Hai visto come si calcola un round, come si vince una battaglia, e soprattutto come il terreno può cambiare tutto. Ora tocca a te: vai a mettere alla prova quello che hai imparato nei Sottomondi e nelle Guerre di Clan.</p>
+          <p style="margin-top:8px;">Se invece preferisci allenarti da solo, senza dover affrontare altri giocatori, ti aspetto più a fondo: nei <b style="color:#ffcc66;">Sotterranei</b>.</p>
+          ${premioHTML}
+        </div>
       </div>
-    </div>
-    <div style="display:flex; gap:10px;">
-      <button type="button" id="addestramento-chiudi-finale-btn" class="events-btn" style="max-width:180px;">Chiudi</button>
-      <button type="button" id="addestramento-vai-sotterranei-btn" class="events-btn events-btn-main" style="max-width:220px;">🕳️ I Sotterranei</button>
+      <div style="flex:0 0 auto; display:flex; flex-direction:column; gap:8px;">
+        <button type="button" id="addestramento-vai-sotterranei-btn" class="events-btn events-btn-main" style="width:auto; margin-top:0; padding:12px 20px; white-space:nowrap;">🕳️ I Sotterranei</button>
+        <button type="button" id="addestramento-chiudi-finale-btn" class="events-btn" style="width:auto; margin-top:0; padding:12px 20px;">Chiudi</button>
+      </div>
     </div>`;
 
   document.getElementById("addestramento-chiudi-finale-btn").addEventListener("click", () => {
@@ -7966,17 +7972,19 @@ function renderizzaHubSotterranei() {
   const bloccato = vittorieRimaste <= 0;
 
   contenitore.innerHTML = `
-    <div class="tutorial-chirone-box" style="max-width:900px;">
-      <img src="img/carte/chirone.jpg" class="tutorial-chirone-ritratto" onerror="this.style.display='none';">
-      <div class="tutorial-chirone-testo">
-        <p style="font-weight:bold; color:#ffcc66;">🕳️ Livello ${sotterraneiLivelloAttuale}</p>
-        ${bloccato ? `<p style="margin-top:4px; color:#f56565; font-size:0.78rem;">Hai raggiunto il limite di vittorie di oggi. Torna domani.</p>` : ""}
+    <div style="display:flex; align-items:center; gap:18px; width:100%;">
+      <div class="tutorial-chirone-box" style="flex:1; max-width:none; margin:0;">
+        <img src="img/carte/chirone.jpg" class="tutorial-chirone-ritratto" onerror="this.style.display='none';">
+        <div class="tutorial-chirone-testo">
+          <p style="font-weight:bold; color:#ffcc66;">🕳️ Livello ${sotterraneiLivelloAttuale}</p>
+          ${bloccato ? `<p style="margin-top:4px; color:#f56565; font-size:0.78rem;">Hai raggiunto il limite di vittorie di oggi. Torna domani.</p>` : ""}
+        </div>
       </div>
+      <button type="button" id="sotterranei-inizia-btn" class="events-btn events-btn-main" style="flex:0 0 auto; width:auto; margin-top:0; padding:14px 24px; white-space:nowrap;" ${bloccato ? "disabled" : ""}>
+        ${bloccato ? "Torna domani" : "Scendi in battaglia"}
+      </button>
     </div>
-    ${costruisciMappaSotterranei()}
-    <button type="button" id="sotterranei-inizia-btn" class="events-btn events-btn-main" style="max-width:240px;" ${bloccato ? "disabled" : ""}>
-      ${bloccato ? "Torna domani per continuare" : "Scendi in battaglia"}
-    </button>`;
+    ${costruisciMappaSotterranei()}`;
 
   document.getElementById("sotterranei-inizia-btn")?.addEventListener("click", allestisciSquadraSotterranei);
 }
@@ -8850,14 +8858,16 @@ function controllaFineCicloEventi(callback) {
     salvaProgressoCloud();
 
     document.getElementById("eventi-content").innerHTML = `
-      <div class="tutorial-chirone-box" style="max-width:900px;">
-        <div class="tutorial-chirone-testo">
-          <p style="font-weight:bold; color:#ffcc66; font-size:1.1rem;">${premio.testo}</p>
-          <p style="margin-top:6px;">L'evento precedente si è concluso: hai totalizzato <b>${puntiOttenuti} punti</b>.</p>
-          <p style="margin-top:6px; color:#ecc94b; font-weight:bold;">Premio: ${premio.dracme} Dracme${premio.ambra > 0 ? `, ${premio.ambra} Frammenti d'Ambra` : ""}${cartaVinta ? `, e la carta ${cartaVinta.nome}!` : ""}</p>
+      <div style="display:flex; align-items:center; gap:18px; width:100%; height:100%;">
+        <div class="tutorial-chirone-box" style="flex:1; max-width:none; margin:0;">
+          <div class="tutorial-chirone-testo">
+            <p style="font-weight:bold; color:#ffcc66; font-size:1.1rem;">${premio.testo}</p>
+            <p style="margin-top:6px;">L'evento precedente si è concluso: hai totalizzato <b>${puntiOttenuti} punti</b>.</p>
+            <p style="margin-top:6px; color:#ecc94b; font-weight:bold;">Premio: ${premio.dracme} Dracme${premio.ambra > 0 ? `, ${premio.ambra} Frammenti d'Ambra` : ""}${cartaVinta ? `, e la carta ${cartaVinta.nome}!` : ""}</p>
+          </div>
         </div>
-      </div>
-      <button type="button" id="ev-continua-dopo-premio-btn" class="events-btn events-btn-main" style="max-width:220px;">Continua</button>`;
+        <button type="button" id="ev-continua-dopo-premio-btn" class="events-btn events-btn-main" style="flex:0 0 auto; width:auto; margin-top:0; padding:14px 24px;">Continua</button>
+      </div>`;
 
     document.getElementById("ev-continua-dopo-premio-btn").addEventListener("click", callback);
   }).catch(() => { salvaProgressoCloud(); callback(); });
