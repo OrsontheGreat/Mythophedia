@@ -7697,7 +7697,7 @@ function renderizzaRoundAddestramento() {
         ${round.suggerimento ? `<div style="background:rgba(0,0,0,0.35); border:1px solid #5c4d31; border-radius:8px; padding:8px; font-size:0.75rem; color:#e0d5c1;"><b style="color:#ffcc66;">Chirone:</b> ${round.suggerimento}</div>` : ""}
       </div>
       <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; min-width:0;">
-        <div id="addestramento-carte-zona" style="display:flex; gap:14px; justify-content:center; flex-wrap:wrap; width:100%;"></div>
+        <div id="addestramento-carte-zona" style="display:flex; gap:10px; justify-content:center; flex-wrap:nowrap; width:100%;"></div>
         <div id="addestramento-azione-zona" style="display:flex; flex-direction:column; align-items:center; gap:8px;"></div>
       </div>
     </div>`;
@@ -7718,9 +7718,9 @@ function renderizzaRoundAddestramento() {
 
   } else {
     zonaCarte.innerHTML = `
-      <div style="display:flex; gap:14px; flex-wrap:wrap; justify-content:center; align-items:flex-start;">
-        ${round.opzioni.map(nome => `<div class="addestramento-opzione-clic" data-nome="${nome}">${costruisciCartaEsempioTutorial(nome)}</div>`).join("")}
-        <div style="display:flex; flex-direction:column; align-items:center; gap:2px;">
+      <div style="display:flex; gap:10px; flex-wrap:nowrap; justify-content:center; align-items:flex-start; width:100%;">
+        ${round.opzioni.map(nome => `<div class="addestramento-opzione-clic" data-nome="${nome}" style="flex:1 1 0; min-width:0;">${costruisciCartaEsempioTutorial(nome)}</div>`).join("")}
+        <div style="display:flex; flex-direction:column; align-items:center; gap:2px; flex:1 1 0; min-width:0;">
           <span style="color:#a89a7a; font-size:0.68rem;">Nemica</span>
           ${costruisciCartaEsempioTutorial(round.nemica)}
         </div>

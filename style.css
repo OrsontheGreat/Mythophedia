@@ -2674,8 +2674,8 @@ html.narrow-700 .events-row { flex-direction: column; }
   text-align: center;
 }
 
-#addestramento-content .tutorial-carta-esempio { width: min(190px, calc(var(--app-height) * 46 / 100)); }
-#addestramento-content .tutorial-carta-esempio-img { width: 100%; height: min(100px, calc(var(--app-height) * 24 / 100)); }
+#addestramento-content .tutorial-carta-esempio { flex: 1 1 0; min-width: 0; max-width: 190px; width: auto; }
+#addestramento-content .tutorial-carta-esempio-img { width: 100%; height: auto; aspect-ratio: 1 / 1; }
 
 .tutorial-carta-esempio-tratto {
   color: #7ee787;
