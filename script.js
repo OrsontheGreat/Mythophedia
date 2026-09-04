@@ -7621,9 +7621,9 @@ function mostraHubAddestramento() {
           <p style="margin-top:8px;">Vuoi ripassare le 8 tappe guidate, o scendere ancora più a fondo nei Sotterranei?</p>
         </div>
       </div>
-      <div style="flex:0 0 auto; display:flex; flex-direction:column; gap:8px;">
-        <button type="button" id="addestramento-hub-sotterranei-btn" class="events-btn events-btn-main" style="width:auto; margin-top:0; padding:12px 20px; white-space:nowrap;">🕳️ I Sotterranei</button>
-        <button type="button" id="addestramento-hub-tappe-btn" class="events-btn" style="width:auto; margin-top:0; padding:12px 20px; white-space:nowrap;">Rifai le 8 Tappe</button>
+      <div style="flex:0 0 auto; display:flex; flex-direction:row; gap:8px;">
+        <button type="button" id="addestramento-hub-tappe-btn" class="events-btn" style="width:auto; margin-top:0; padding:12px 16px; white-space:nowrap;">Rifai le 8 Tappe</button>
+        <button type="button" id="addestramento-hub-sotterranei-btn" class="events-btn events-btn-main" style="width:auto; margin-top:0; padding:12px 16px; white-space:nowrap;">🕳️ I Sotterranei</button>
       </div>
     </div>`;
 
@@ -7694,7 +7694,8 @@ function renderizzaRoundAddestramento() {
           <p style="margin:0 0 4px; color:${badgeTerreno ? '#ffcc66' : '#a89a7a'}; font-weight:bold;">${badgeTerreno || "Nessun terreno"}</p>
           <p style="margin:0; color:#e0d5c1;">Statistiche: <b>${statRound.map(s => s.toUpperCase()).join(" + ")}</b></p>
         </div>
-        ${round.suggerimento ? `<div style="background:rgba(0,0,0,0.35); border:1px solid #5c4d31; border-radius:8px; padding:8px; font-size:0.75rem; color:#e0d5c1;"><b style="color:#ffcc66;">Chirone:</b> ${round.suggerimento}</div>` : ""}
+        ${round.suggerimento ? `<div id="addestramento-suggerimento-box" style="background:rgba(0,0,0,0.35); border:1px solid #5c4d31; border-radius:8px; padding:8px; font-size:0.75rem; color:#e0d5c1;"><b style="color:#ffcc66;">Chirone:</b> ${round.suggerimento}</div>` : ""}
+        <div id="addestramento-esito-sidebar"></div>
       </div>
       <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; min-width:0;">
         <div id="addestramento-carte-zona" style="display:flex; gap:10px; justify-content:center; flex-wrap:nowrap; width:100%;"></div>
@@ -7744,16 +7745,21 @@ function renderizzaRoundAddestramento() {
 function mostraEsitoRoundAddestramento(mia, nem, vinto, scartata) {
   if (vinto) addestramentoRoundVinti++;
 
+  document.getElementById("addestramento-suggerimento-box")?.remove();
+
   const rigaMod = (v) => v.mod !== 0 ? ` <span style="color:${v.mod > 0 ? '#7ee787' : '#f56565'};">${v.mod > 0 ? "+" : ""}${v.mod.toFixed(1)} terreno</span>` : "";
+
+  const esitoSidebar = document.getElementById("addestramento-esito-sidebar");
+  esitoSidebar.innerHTML = `
+    <div style="background:rgba(0,0,0,0.35); border-radius:8px; padding:8px; text-align:center; font-size:0.72rem;">
+      <p style="font-weight:bold; margin:0 0 3px; color:${vinto ? '#7ee787' : '#f56565'};">${vinto ? "Round vinto!" : "Round perso"}</p>
+      <p style="color:#e0d5c1; margin:1px 0;">${mia.carta.nome}: ${mia.base.toFixed(1)}${rigaMod(mia)} → <b>${mia.finale.toFixed(1)}</b></p>
+      <p style="color:#e0d5c1; margin:1px 0;">${nem.carta.nome}: ${nem.base.toFixed(1)}${rigaMod(nem)} → <b>${nem.finale.toFixed(1)}</b></p>
+      ${scartata ? `<p style="color:#a89a7a; margin-top:3px;">Con ${scartata.carta.nome}: <b>${scartata.finale.toFixed(1)}</b> — ${scartata.finale > nem.finale ? "avrebbe vinto comunque" : "avrebbe perso"}.</p>` : ""}
+    </div>`;
 
   const zonaAzione = document.getElementById("addestramento-azione-zona");
   zonaAzione.innerHTML = `
-    <div style="background:rgba(0,0,0,0.35); border-radius:8px; padding:10px 14px; text-align:center;">
-      <p style="font-size:1rem; font-weight:bold; margin:0 0 4px; color:${vinto ? '#7ee787' : '#f56565'};">${vinto ? "Round vinto!" : "Round perso"}</p>
-      <p style="font-size:0.8rem; color:#e0d5c1; margin:2px 0;">${mia.carta.nome}: base ${mia.base.toFixed(1)}${rigaMod(mia)} → <b>${mia.finale.toFixed(1)}</b></p>
-      <p style="font-size:0.8rem; color:#e0d5c1; margin:2px 0;">${nem.carta.nome}: base ${nem.base.toFixed(1)}${rigaMod(nem)} → <b>${nem.finale.toFixed(1)}</b></p>
-      ${scartata ? `<p style="font-size:0.72rem; color:#a89a7a; margin-top:5px;">Con ${scartata.carta.nome}: <b>${scartata.finale.toFixed(1)}</b> — ${scartata.finale > nem.finale ? "avrebbe vinto comunque" : "avrebbe perso"}.</p>` : ""}
-    </div>
     <button type="button" id="addestramento-avanti-round-btn" class="events-btn events-btn-main" style="max-width:220px;">
       ${addestramentoRoundAttuale + 1 < ADDESTRAMENTO_TAPPE[addestramentoTappaAttuale].round.length ? "Round successivo" : "Vedi risultato tappa"}
     </button>`;
@@ -7830,14 +7836,13 @@ function completaAddestramento() {
         <img src="img/carte/chirone.jpg" class="tutorial-chirone-ritratto" onerror="this.style.display='none';">
         <div class="tutorial-chirone-testo">
           <p style="font-weight:bold; color:#7ee787;">Sei pronto, Evocatore.</p>
-          <p style="margin-top:8px;">Hai visto come si calcola un round, come si vince una battaglia, e soprattutto come il terreno può cambiare tutto. Ora tocca a te: vai a mettere alla prova quello che hai imparato nei Sottomondi e nelle Guerre di Clan.</p>
-          <p style="margin-top:8px;">Se invece preferisci allenarti da solo, senza dover affrontare altri giocatori, ti aspetto più a fondo: nei <b style="color:#ffcc66;">Sotterranei</b>.</p>
+          <p style="margin-top:6px;">Round, vittoria, terreno che ribalta tutto: le basi sono tue. Mettile alla prova nei Sottomondi, nelle Guerre di Clan, o allenati ancora da solo nei <b style="color:#ffcc66;">Sotterranei</b>.</p>
           ${premioHTML}
         </div>
       </div>
-      <div style="flex:0 0 auto; display:flex; flex-direction:column; gap:8px;">
-        <button type="button" id="addestramento-vai-sotterranei-btn" class="events-btn events-btn-main" style="width:auto; margin-top:0; padding:12px 20px; white-space:nowrap;">🕳️ I Sotterranei</button>
-        <button type="button" id="addestramento-chiudi-finale-btn" class="events-btn" style="width:auto; margin-top:0; padding:12px 20px;">Chiudi</button>
+      <div style="flex:0 0 auto; display:flex; flex-direction:row; gap:8px;">
+        <button type="button" id="addestramento-chiudi-finale-btn" class="events-btn" style="width:auto; margin-top:0; padding:12px 16px;">Chiudi</button>
+        <button type="button" id="addestramento-vai-sotterranei-btn" class="events-btn events-btn-main" style="width:auto; margin-top:0; padding:12px 16px; white-space:nowrap;">🕳️ I Sotterranei</button>
       </div>
     </div>`;
 
