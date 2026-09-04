@@ -98,10 +98,11 @@ document.addEventListener("touchstart", () => {
 // una carta all'altra (es. i 5 slot di una squadra) non serve reimpostarli ogni volta.
 let fakeSelectUltimoFiltroRarita = "";
 let fakeSelectUltimoOrdinamento = "";
+let fakeSelectUltimoFiltroTratto = "";
 
 function potenziaMenuATendina() {
 
-  const selettori = document.querySelectorAll("select.deploy-select, #modal-sort-select, #modal-rarita-select");
+  const selettori = document.querySelectorAll("select.deploy-select, #modal-sort-select, #modal-rarita-select, #modal-tratto-select");
 
   selettori.forEach(sel => {
 
@@ -201,14 +202,28 @@ function potenziaMenuATendina() {
           <option value="vigore">Vigore (dal più alto)</option>`;
         selOrdina.value = fakeSelectUltimoOrdinamento;
 
+        const selTratto = document.createElement("select");
+        selTratto.className = "sort-select";
+        selTratto.innerHTML = `
+          <option value="">Tutti i tratti</option>
+          <option value="arrampicata">Solo Arrampicata</option>
+          <option value="equilibrio">Solo Equilibrio</option>
+          <option value="volo">Solo Volo</option>
+          <option value="nuoto">Solo Nuoto</option>
+          <option value="nessuno">Solo senza tratto</option>`;
+        selTratto.value = fakeSelectUltimoFiltroTratto;
+
         rigaOrdinamento.appendChild(selRarita);
+        rigaOrdinamento.appendChild(selTratto);
         rigaOrdinamento.appendChild(selOrdina);
         overlay.appendChild(rigaOrdinamento);
 
         selRarita.addEventListener("click", (e) => e.stopPropagation());
         selOrdina.addEventListener("click", (e) => e.stopPropagation());
+        selTratto.addEventListener("click", (e) => e.stopPropagation());
         selRarita.addEventListener("change", () => { fakeSelectUltimoFiltroRarita = selRarita.value; renderizzaGrigliaCarte(); });
         selOrdina.addEventListener("change", () => { fakeSelectUltimoOrdinamento = selOrdina.value; renderizzaGrigliaCarte(); });
+        selTratto.addEventListener("change", () => { fakeSelectUltimoFiltroTratto = selTratto.value; renderizzaGrigliaCarte(); });
 
         contenitoreOpzioni.className = "fake-select-griglia-carte";
         overlay.appendChild(contenitoreOpzioni);
@@ -274,10 +289,16 @@ function potenziaMenuATendina() {
       function renderizzaGrigliaCarte() {
         const rigaOrdinamento = overlay.querySelector(".fake-select-riga-ordinamento");
         const filtroRarita = rigaOrdinamento ? rigaOrdinamento.children[0].value : "";
-        const criterio = rigaOrdinamento ? rigaOrdinamento.children[1].value : "";
+        const filtroTratto = rigaOrdinamento ? rigaOrdinamento.children[1].value : "";
+        const criterio = rigaOrdinamento ? rigaOrdinamento.children[2].value : "";
 
         let elenco = tutteLeOpzioni.slice();
         if (filtroRarita) elenco = elenco.filter(o => o.carta && o.carta.livello === parseInt(filtroRarita));
+        if (filtroTratto) elenco = elenco.filter(o => {
+          if (!o.carta) return false;
+          const tratti = o.carta.tratti || [];
+          return filtroTratto === "nessuno" ? tratti.length === 0 : tratti.includes(filtroTratto);
+        });
         if (criterio && CRITERI_ORDINAMENTO[criterio]) elenco.sort(CRITERI_ORDINAMENTO[criterio]);
 
         contenitoreOpzioni.innerHTML = "";
@@ -3334,6 +3355,7 @@ const CARTE_PER_META_PAGINA_RACCOGLITORE = 30;
 let paginaCorrenteRaccoglitore = 0;
 let carteOrdinateRaccoglitoreCorrente = [];
 let filtroRaritaRaccoglitoreCorrente = localStorage.getItem("mythophedia_filtro_rarita_raccoglitore") || "";
+let filtroTrattoRaccoglitoreCorrente = localStorage.getItem("mythophedia_filtro_tratto_raccoglitore") || "";
 
 // Punto d'ingresso: ricalcola l'ordinamento e riparte dalla prima pagina (usato dal pulsante
 // "Il Raccoglitore" e dal menu a tendina). mantieniPagina=true viene usato dai tasti Avanti/Indietro.
@@ -3355,11 +3377,21 @@ function renderizzaRaccoglitore(criterio, mantieniPagina) {
   const selettoreRarita = document.getElementById("modal-rarita-select");
   if (selettoreRarita && selettoreRarita.value !== filtroRaritaRaccoglitoreCorrente) selettoreRarita.value = filtroRaritaRaccoglitoreCorrente;
 
+  const selettoreTratto = document.getElementById("modal-tratto-select");
+  if (selettoreTratto && selettoreTratto.value !== filtroTrattoRaccoglitoreCorrente) selettoreTratto.value = filtroTrattoRaccoglitoreCorrente;
+
   const deckFiltratoPerRarita = filtroRaritaRaccoglitoreCorrente
     ? deckGiocatore.filter(c => c.livello === parseInt(filtroRaritaRaccoglitoreCorrente))
     : deckGiocatore;
 
-  carteOrdinateRaccoglitoreCorrente = ordinaCarteRaccoglitore(deckFiltratoPerRarita, criterio);
+  const deckFiltratoPerTratto = filtroTrattoRaccoglitoreCorrente
+    ? deckFiltratoPerRarita.filter(c => {
+        const tratti = c.tratti || [];
+        return filtroTrattoRaccoglitoreCorrente === "nessuno" ? tratti.length === 0 : tratti.includes(filtroTrattoRaccoglitoreCorrente);
+      })
+    : deckFiltratoPerRarita;
+
+  carteOrdinateRaccoglitoreCorrente = ordinaCarteRaccoglitore(deckFiltratoPerTratto, criterio);
   if (!mantieniPagina) paginaCorrenteRaccoglitore = 0;
 
   renderizzaPaginaRaccoglitore();
@@ -3371,6 +3403,13 @@ function gestisciCambioFiltroRaritaRaccoglitore() {
   renderizzaRaccoglitore();
 }
 document.getElementById("modal-rarita-select")?.addEventListener("change", gestisciCambioFiltroRaritaRaccoglitore);
+
+function gestisciCambioFiltroTrattoRaccoglitore() {
+  filtroTrattoRaccoglitoreCorrente = document.getElementById("modal-tratto-select").value;
+  localStorage.setItem("mythophedia_filtro_tratto_raccoglitore", filtroTrattoRaccoglitoreCorrente);
+  renderizzaRaccoglitore();
+}
+document.getElementById("modal-tratto-select")?.addEventListener("change", gestisciCambioFiltroTrattoRaccoglitore);
 
 // Genera l'HTML di una singola tasca/carta del raccoglitore
 function generaHTMLCartaRaccoglitore(carta) {
@@ -3477,7 +3516,7 @@ function renderizzaPaginaRaccoglitore() {
   const footer = document.querySelector(".raccoglitore-footer");
   if (footer) footer.classList.remove("hidden");
 
-  modalTitle.innerText = filtroRaritaRaccoglitoreCorrente
+  modalTitle.innerText = (filtroRaritaRaccoglitoreCorrente || filtroTrattoRaccoglitoreCorrente)
     ? `${carteOrdinateRaccoglitoreCorrente.length} carte (su ${deckGiocatore.length}/${slotMassimiDeck})`
     : `${deckGiocatore.length}/${slotMassimiDeck} carte`;
 
