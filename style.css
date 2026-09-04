@@ -445,6 +445,8 @@ body, html {
 
 .modal-card { position: relative; background: #141419; border: 3px solid #c9a054; border-radius: 12px; width: 98%; max-width: 1550px; height: calc(var(--app-height) * 95 / 100); display: flex; flex-direction: column; padding: 25px; box-shadow: 0 0 30px rgba(0,0,0,0.8); overflow: hidden; }
 
+#worlds-modal .modal-card, #clan-war-modal .modal-card { background: linear-gradient(160deg, #1c150c, #100c07); }
+
 .schermo-shake {
   animation: schermo-shake-kf 0.42s ease-in-out;
 }
@@ -1065,7 +1067,7 @@ html.forza-landscape .close-btn { font-size: 1.6rem; }
 
 .map-screen-layout { flex: 1; display: grid; grid-template-columns: 1.8fr 1.6fr; gap: 20px; overflow: hidden; height: 100%; min-height: 0; }
 
-.hex-grid-container { flex: 1; background: #09090c; border: 1px solid #3a3222; border-radius: 8px; overflow: auto; padding: 25px; position: relative; height: 100%; }
+.hex-grid-container { flex: 1; background: radial-gradient(ellipse at center, #241a0f 0%, #140f08 65%, #090705 100%); border: 1px solid #3a3222; border-radius: 8px; overflow: auto; padding: 25px; position: relative; height: 100%; display: flex; align-items: center; justify-content: center; }
 
 .hex-grid { width: max-content; display: flex; flex-direction: column; }
 
@@ -1130,7 +1132,7 @@ html.forza-landscape .close-btn { font-size: 1.6rem; }
 
 @keyframes pulseGlow { 0% { box-shadow: 0 0 5px #ffcc00, inset 0 0 8px rgba(255,255,255,0.4); } 100% { box-shadow: 0 0 18px #ffcc00, inset 0 0 14px rgba(255,255,255,0.7); } }
 
-.hex-info-panel { background: rgba(20, 20, 25, 0.95); border: 2px solid #5c4d31; border-radius: 8px; padding: 20px; display: flex; flex-direction: column; gap: 12px; height: 100%; min-height: 0; overflow-y: auto; }
+.hex-info-panel { background: linear-gradient(160deg, rgba(30, 23, 14, 0.95), rgba(16, 12, 7, 0.95)); border: 2px solid #5c4d31; border-radius: 8px; padding: 20px; display: flex; flex-direction: column; gap: 12px; height: 100%; min-height: 0; overflow-y: auto; }
 
 /* ===== Santuario del Clan: layout compatto per non dover scrollare ===== */
 
