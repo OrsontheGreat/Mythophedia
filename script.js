@@ -11796,7 +11796,7 @@ function aggiornaUIAccount(user) {
   const btn = document.getElementById("btn-account");
   if (!btn) return;
   if (user) {
-    btn.innerText = "☁️ " + (user.displayName ? user.displayName.split(" ")[0] : "Account");
+    btn.innerText = "☁️ Account";
   } else {
     btn.innerText = "☁️ Accedi";
   }
