@@ -7686,20 +7686,20 @@ function renderizzaRoundAddestramento() {
   // a destra le carte e l'azione. L'area azione viene sostituita sul posto, non aggiunta sotto,
   // per non far crescere l'altezza della pagina ed evitare lo scroll.
   contenitore.innerHTML = `
-    <div style="display:flex; gap:16px; width:100%; height:100%; align-items:stretch;">
-      <div style="flex:0 0 190px; display:flex; flex-direction:column; gap:8px;">
-        <img src="img/carte/chirone.jpg" style="width:56px; height:56px; border-radius:50%; object-fit:cover; border:2px solid #ffcc66; align-self:center;" onerror="this.style.display='none';">
-        <p style="text-align:center; color:#a89a7a; font-size:0.72rem; margin:0;">Tappa ${addestramentoTappaAttuale + 1}/${ADDESTRAMENTO_TAPPE.length} — Round ${addestramentoRoundAttuale + 1}/${tappa.round.length}</p>
-        <div style="background:rgba(0,0,0,0.35); border:1px solid #5c4d31; border-radius:8px; padding:8px; font-size:0.75rem;">
-          <p style="margin:0 0 4px; color:${badgeTerreno ? '#ffcc66' : '#a89a7a'}; font-weight:bold;">${badgeTerreno || "Nessun terreno"}</p>
+    <div style="display:flex; gap:10px; width:100%; height:100%; align-items:stretch;">
+      <div style="flex:0 0 170px; display:flex; flex-direction:column; gap:5px;">
+        <img src="img/carte/chirone.jpg" style="width:38px; height:38px; border-radius:50%; object-fit:cover; border:2px solid #ffcc66; align-self:center;" onerror="this.style.display='none';">
+        <p style="text-align:center; color:#a89a7a; font-size:0.68rem; margin:0;">Tappa ${addestramentoTappaAttuale + 1}/${ADDESTRAMENTO_TAPPE.length} — Round ${addestramentoRoundAttuale + 1}/${tappa.round.length}</p>
+        <div style="background:rgba(0,0,0,0.35); border:1px solid #5c4d31; border-radius:8px; padding:5px; font-size:0.7rem;">
+          <p style="margin:0 0 2px; color:${badgeTerreno ? '#ffcc66' : '#a89a7a'}; font-weight:bold;">${badgeTerreno || "Nessun terreno"}</p>
           <p style="margin:0; color:#e0d5c1;">Statistiche: <b>${statRound.map(s => s.toUpperCase()).join(" + ")}</b></p>
         </div>
-        ${round.suggerimento ? `<div id="addestramento-suggerimento-box" style="background:rgba(0,0,0,0.35); border:1px solid #5c4d31; border-radius:8px; padding:8px; font-size:0.75rem; color:#e0d5c1;"><b style="color:#ffcc66;">Chirone:</b> ${round.suggerimento}</div>` : ""}
+        ${round.suggerimento ? `<div id="addestramento-suggerimento-box" style="background:rgba(0,0,0,0.35); border:1px solid #5c4d31; border-radius:8px; padding:5px; font-size:0.7rem; color:#e0d5c1;"><b style="color:#ffcc66;">Chirone:</b> ${round.suggerimento}</div>` : ""}
         <div id="addestramento-esito-sidebar"></div>
       </div>
-      <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; min-width:0;">
-        <div id="addestramento-carte-zona" style="display:flex; gap:10px; justify-content:center; flex-wrap:nowrap; width:100%;"></div>
-        <div id="addestramento-azione-zona" style="display:flex; flex-direction:column; align-items:center; gap:8px;"></div>
+      <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; min-width:0;">
+        <div id="addestramento-carte-zona" style="display:flex; gap:8px; justify-content:center; flex-wrap:nowrap; width:100%;"></div>
+        <div id="addestramento-azione-zona" style="display:flex; flex-direction:column; align-items:center; gap:5px;"></div>
       </div>
     </div>`;
 
@@ -7711,7 +7711,7 @@ function renderizzaRoundAddestramento() {
     const nem = valoreConTerreno(round.nemica, statRound, terrenoRound);
 
     zonaCarte.innerHTML = costruisciCartaEsempioTutorial(round.mia) + costruisciCartaEsempioTutorial(round.nemica);
-    zonaAzione.innerHTML = `<button type="button" id="addestramento-rivela-btn" class="events-btn events-btn-main" style="max-width:220px;">Rivela il risultato</button>`;
+    zonaAzione.innerHTML = `<button type="button" id="addestramento-rivela-btn" class="events-btn events-btn-main" style="max-width:220px; padding:8px 14px; margin-top:0;">Rivela il risultato</button>`;
 
     document.getElementById("addestramento-rivela-btn").addEventListener("click", () => {
       mostraEsitoRoundAddestramento(mia, nem, mia.finale > nem.finale);
@@ -7760,7 +7760,7 @@ function mostraEsitoRoundAddestramento(mia, nem, vinto, scartata) {
 
   const zonaAzione = document.getElementById("addestramento-azione-zona");
   zonaAzione.innerHTML = `
-    <button type="button" id="addestramento-avanti-round-btn" class="events-btn events-btn-main" style="max-width:220px;">
+    <button type="button" id="addestramento-avanti-round-btn" class="events-btn events-btn-main" style="max-width:220px; padding:8px 14px; margin-top:0;">
       ${addestramentoRoundAttuale + 1 < ADDESTRAMENTO_TAPPE[addestramentoTappaAttuale].round.length ? "Round successivo" : "Vedi risultato tappa"}
     </button>`;
 
