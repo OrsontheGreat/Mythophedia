@@ -102,7 +102,7 @@ let fakeSelectUltimoFiltroTratto = "";
 
 function potenziaMenuATendina() {
 
-  const selettori = document.querySelectorAll("select.deploy-select, #modal-sort-select, #modal-rarita-select, #modal-tratto-select");
+  const selettori = document.querySelectorAll("select.deploy-select, #modal-sort-select, #modal-rarita-select, #modal-tratto-select, #fatiche20-rarita-select, #fatiche20-tratto-select");
 
   selettori.forEach(sel => {
 
@@ -5080,6 +5080,7 @@ function renderContenutoFatiche() {
     if (fatica1Stato.carteSelezionate.length < 20) {
       content.innerHTML = htmlSelezioneCarteFatiche();
       collegaEventiSelezioneFatiche();
+      potenziaMenuATendina();
     } else {
       content.innerHTML = htmlScalaFatiche();
       collegaEventiScalaFatiche();
@@ -9146,8 +9147,52 @@ function collegaEventiCerbero() {
   document.getElementById("cerbero-chiudi-btn")?.addEventListener("click", chiudiPartitaCerbero);
 }
 
+let fatiche20FiltroRarita = "";
+let fatiche20FiltroTratto = "";
+
 function htmlSelezioneCarteFatiche() {
-  const carte = deckGiocatore.filter(c => !c.isJolly);
+  return `
+    <div style="padding:10px 20px; display:flex; flex-direction:column; height:100%; min-height:0;">
+      <div style="background:rgba(15,10,5,0.6); border-radius:10px; padding:12px; margin-bottom:10px; color:#e0d5c1; font-size:0.85rem;">
+        <p style="color:#c9a054; font-style:italic; margin-bottom:8px;">La pelle del Leone di Nemea era talmente resistente da respingere ogni lama: Eracle dovette strangolarlo a mani nude nella sua prima, leggendaria fatica.</p>
+        <p>Scegli esattamente <b>20 carte</b> dal tuo mazzo: le userai, una alla volta, per affrontare la scala di 10 nemici. Ogni carta selezionata potrà essere usata <b>una sola volta</b> per tutta la settimana. La scelta resta valida fino al prossimo rinnovo settimanale.</p>
+      </div>
+      <div style="display:flex; gap:8px; justify-content:center; margin-bottom:8px;">
+        <select id="fatiche20-rarita-select" class="sort-select">
+          <option value="">Tutte le rarità</option>
+          <option value="1">Solo Comuni</option>
+          <option value="2">Solo Non Comuni</option>
+          <option value="3">Solo Rare</option>
+          <option value="4">Solo Epiche</option>
+          <option value="5">Solo Mitiche</option>
+          <option value="6">Solo Leggendarie</option>
+        </select>
+        <select id="fatiche20-tratto-select" class="sort-select">
+          <option value="">Tutti i tratti</option>
+          <option value="arrampicata">Solo Arrampicata</option>
+          <option value="equilibrio">Solo Equilibrio</option>
+          <option value="volo">Solo Volo</option>
+          <option value="nuoto">Solo Nuoto</option>
+          <option value="nessuno">Solo senza tratto</option>
+        </select>
+      </div>
+      <div id="fatiche-contatore-selezione" style="text-align:center; font-weight:bold; color:#ffcc66; margin-bottom:8px;">${selezioneTemporaneaFatiche.size} / 20 selezionate</div>
+      <div id="fatiche20-lista-carte" style="flex:1; min-height:0; overflow-y:auto; display:flex; flex-direction:column; gap:6px;"></div>
+      <button type="button" id="fatiche-conferma-btn" class="events-btn events-btn-main" style="margin-top:10px;" ${selezioneTemporaneaFatiche.size === 20 ? "" : "disabled"}>
+        Conferma le tue 20 carte
+      </button>
+    </div>`;
+}
+
+function aggiornaListaCarteFatiche() {
+  let carte = deckGiocatore.filter(c => !c.isJolly);
+  if (fatiche20FiltroRarita) carte = carte.filter(c => c.livello === parseInt(fatiche20FiltroRarita));
+  if (fatiche20FiltroTratto) carte = carte.filter(c => {
+    const tratti = c.tratti || [];
+    return fatiche20FiltroTratto === "nessuno" ? tratti.length === 0 : tratti.includes(fatiche20FiltroTratto);
+  });
+  carte = ordinaCarteRaccoglitore(carte, "rarita_desc");
+
   const righe = carte.map(c => {
     const checked = selezioneTemporaneaFatiche.has(c.id) ? "checked" : "";
     return `
@@ -9158,23 +9203,9 @@ function htmlSelezioneCarteFatiche() {
       </label>`;
   }).join("");
 
-  return `
-    <div style="padding:10px 20px; display:flex; flex-direction:column; height:100%; min-height:0;">
-      <div style="background:rgba(15,10,5,0.6); border-radius:10px; padding:12px; margin-bottom:10px; color:#e0d5c1; font-size:0.85rem;">
-        <p style="color:#c9a054; font-style:italic; margin-bottom:8px;">La pelle del Leone di Nemea era talmente resistente da respingere ogni lama: Eracle dovette strangolarlo a mani nude nella sua prima, leggendaria fatica.</p>
-        <p>Scegli esattamente <b>20 carte</b> dal tuo mazzo: le userai, una alla volta, per affrontare la scala di 10 nemici. Ogni carta selezionata potrà essere usata <b>una sola volta</b> per tutta la settimana. La scelta resta valida fino al prossimo rinnovo settimanale.</p>
-      </div>
-      <div id="fatiche-contatore-selezione" style="text-align:center; font-weight:bold; color:#ffcc66; margin-bottom:8px;">${selezioneTemporaneaFatiche.size} / 20 selezionate</div>
-      <div style="flex:1; min-height:0; overflow-y:auto; display:flex; flex-direction:column; gap:6px;">
-        ${righe || '<p style="text-align:center; color:#a89a7a;">Il tuo mazzo non ha ancora carte disponibili.</p>'}
-      </div>
-      <button type="button" id="fatiche-conferma-btn" class="events-btn events-btn-main" style="margin-top:10px;" ${selezioneTemporaneaFatiche.size === 20 ? "" : "disabled"}>
-        Conferma le tue 20 carte
-      </button>
-    </div>`;
-}
+  const lista = document.getElementById("fatiche20-lista-carte");
+  if (lista) lista.innerHTML = righe || '<p style="text-align:center; color:#a89a7a;">Nessuna carta corrisponde a questo filtro.</p>';
 
-function collegaEventiSelezioneFatiche() {
   document.querySelectorAll(".fatiche-check").forEach(chk => {
     chk.addEventListener("change", (e) => {
       const id = e.target.dataset.id;
@@ -9188,6 +9219,21 @@ function collegaEventiSelezioneFatiche() {
       document.getElementById("fatiche-conferma-btn").disabled = selezioneTemporaneaFatiche.size !== 20;
     });
   });
+}
+
+function collegaEventiSelezioneFatiche() {
+  aggiornaListaCarteFatiche();
+
+  const selRarita = document.getElementById("fatiche20-rarita-select");
+  const selTratto = document.getElementById("fatiche20-tratto-select");
+  if (selRarita) {
+    selRarita.value = fatiche20FiltroRarita;
+    selRarita.addEventListener("change", () => { fatiche20FiltroRarita = selRarita.value; aggiornaListaCarteFatiche(); });
+  }
+  if (selTratto) {
+    selTratto.value = fatiche20FiltroTratto;
+    selTratto.addEventListener("change", () => { fatiche20FiltroTratto = selTratto.value; aggiornaListaCarteFatiche(); });
+  }
 
   document.getElementById("fatiche-conferma-btn")?.addEventListener("click", () => {
     fatica1Stato.carteSelezionate = Array.from(selezioneTemporaneaFatiche);
