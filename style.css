@@ -2925,7 +2925,7 @@ html.narrow-420 .mythic-map {
   background: linear-gradient(to bottom, #1e1e30, #14141f);
   border: 2px solid #6b6b9a;
   border-radius: 16px;
-  padding: 20px;
+  padding: 14px;
   box-shadow: 0 0 40px rgba(0,0,0,0.6);
 }
 
@@ -2998,43 +2998,43 @@ html.narrow-420 .mythic-map {
 }
 
 .fs-card-nome {
-  font-size: 1.3rem;
+  font-size: 1.15rem;
   font-weight: bold;
   color: #fff;
-  margin-bottom: 6px;
+  margin-bottom: 3px;
   word-break: break-word;
 }
 
 .fs-card-stelle {
   color: #ffcc66;
-  font-size: 1.2rem;
+  font-size: 1rem;
   letter-spacing: 2px;
-  margin-bottom: 12px;
+  margin-bottom: 6px;
 }
 
 .fs-card-stats {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  margin-bottom: 12px;
+  gap: 6px;
+  margin-bottom: 6px;
 }
 
 .fs-stat-line {
   background: rgba(255,255,255,0.06);
   border-radius: 8px;
-  padding: 8px;
+  padding: 5px;
   display: flex;
   flex-direction: column;
 }
 
 .fs-stat-label {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   color: #aaa;
   text-transform: uppercase;
 }
 
 .fs-stat-val {
-  font-size: 1.25rem;
+  font-size: 1.05rem;
   font-weight: bold;
   color: #fff;
 }
@@ -3059,8 +3059,8 @@ html.narrow-420 .mythic-map {
 }
 
 .fs-card-vendi {
-  margin-top: 14px;
-  padding: 10px !important;
+  margin-top: 8px;
+  padding: 8px !important;
   font-size: 0.9rem !important;
   background: linear-gradient(to bottom, #742a2a, #4a1d1d);
   border-color: #5c2323;

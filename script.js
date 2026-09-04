@@ -1471,34 +1471,34 @@ function mostraCartaFullscreen(carta, opzioniExtra) {
   const pctVigoreFs = calcolaVigorePercentuale(carta);
   let bottoneEvolviFsHTML;
   if (carta.isJolly) {
-    bottoneEvolviFsHTML = `<button type="button" class="events-btn" style="background:#4a5568; cursor:not-allowed; width:100%;" disabled>Solo per Sacrifici</button>`;
+    bottoneEvolviFsHTML = `<button type="button" class="events-btn" style="background:#4a5568; cursor:not-allowed; width:100%; padding:8px 14px; margin-top:0;" disabled>Solo per Sacrifici</button>`;
   } else if (carta.stelle >= 8) {
-    bottoneEvolviFsHTML = `<button type="button" class="events-btn" style="background:#4a5568; cursor:not-allowed; width:100%;" disabled>Evoluzione Max</button>`;
+    bottoneEvolviFsHTML = `<button type="button" class="events-btn" style="background:#4a5568; cursor:not-allowed; width:100%; padding:8px 14px; margin-top:0;" disabled>Evoluzione Max</button>`;
   } else if (carta.occupataInDifesa) {
-    bottoneEvolviFsHTML = `<button type="button" class="events-btn" style="background:#4a5568; cursor:not-allowed; width:100%;" disabled>Impegnata in Difesa</button>`;
+    bottoneEvolviFsHTML = `<button type="button" class="events-btn" style="background:#4a5568; cursor:not-allowed; width:100%; padding:8px 14px; margin-top:0;" disabled>Impegnata in Difesa</button>`;
   } else if (carta.bloccataInDuello) {
-    bottoneEvolviFsHTML = `<button type="button" class="events-btn" style="background:#4a5568; cursor:not-allowed; width:100%;" disabled>Impegnata in un Duello</button>`;
+    bottoneEvolviFsHTML = `<button type="button" class="events-btn" style="background:#4a5568; cursor:not-allowed; width:100%; padding:8px 14px; margin-top:0;" disabled>Impegnata in un Duello</button>`;
   } else if (pctVigoreFs <= 0) {
-    bottoneEvolviFsHTML = `<button type="button" class="events-btn" style="background:#4a5568; cursor:not-allowed; width:100%;" disabled>Esausta</button>`;
+    bottoneEvolviFsHTML = `<button type="button" class="events-btn" style="background:#4a5568; cursor:not-allowed; width:100%; padding:8px 14px; margin-top:0;" disabled>Esausta</button>`;
   } else {
-    bottoneEvolviFsHTML = `<button type="button" class="events-btn" id="fs-card-evolvi-btn" style="background:linear-gradient(to bottom, #2f855a, #22543d); border-color:#22543d; width:100%;">Evolvi (Migliora)</button>`;
+    bottoneEvolviFsHTML = `<button type="button" class="events-btn" id="fs-card-evolvi-btn" style="background:linear-gradient(to bottom, #2f855a, #22543d); border-color:#22543d; width:100%; padding:8px 14px; margin-top:0;">Evolvi (Migliora)</button>`;
   }
 
   let bottoneAzioneHTML;
   if (modalitaBattaglia) {
-    bottoneAzioneHTML = `<div style="display:flex; gap:8px; margin-top:14px;">
+    bottoneAzioneHTML = `<div style="display:flex; gap:8px; margin-top:8px;">
       <div style="flex:1;">${bottoneEvolviFsHTML}</div>
       <button type="button" class="events-btn fs-card-vendi" id="fs-card-battaglia-btn" style="flex:1; margin-top:0; background:linear-gradient(to bottom, #b7791f, #8a5b12); border-color:#8a5b12;">⚔️ Vai in Battaglia</button>
     </div>`;
   } else {
-    bottoneAzioneHTML = `<div style="display:flex; gap:8px; margin-top:14px;">
+    bottoneAzioneHTML = `<div style="display:flex; gap:8px; margin-top:8px;">
       <div style="flex:1;">${bottoneEvolviFsHTML}</div>
       <button type="button" class="events-btn fs-card-vendi" id="fs-card-vendi-btn" style="flex:1; margin-top:0;">Vendi (${prezzoVendita} 🪙)</button>
     </div>`;
   }
 
   const bottonePlastificaHTML = carta.isJolly ? "" : `
-    <button type="button" class="events-btn" id="fs-card-plastifica-btn" style="width:100%; margin-top:8px; background:${carta.plastificata ? "linear-gradient(to bottom, #4a5568, #2d3748)" : "linear-gradient(to bottom, #3182ce, #2262a8)"}; border-color:${carta.plastificata ? "#2d3748" : "#2262a8"};">
+    <button type="button" class="events-btn" id="fs-card-plastifica-btn" style="width:100%; margin-top:6px; padding:8px 14px; background:${carta.plastificata ? "linear-gradient(to bottom, #4a5568, #2d3748)" : "linear-gradient(to bottom, #3182ce, #2262a8)"}; border-color:${carta.plastificata ? "#2d3748" : "#2262a8"};">
       ${carta.plastificata ? "📦 Rimuovi Plastificazione" : "📦 Plastifica"}
     </button>`;
 
