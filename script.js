@@ -6444,35 +6444,37 @@ function collegaEventiIdra() {
   });
 }
 
-// ===== "La Trappola nella Neve": inseguimento a resistenza, non più scavo (Quarta Fatica) =====
+// ===== "La Trappola nella Neve": schivata a tempo su 3 corsie (Quarta Fatica) =====
 
 let trappolaStato = { tentativiOggi: 0, dataUltimoTentativo: "" };
 
 const TRAPPOLA_TENTATIVI_MAX = 1;
-const TRAPPOLA_ENERGIA_MAX = 100;
-const TRAPPOLA_COSTO_BASE_INSEGUI = 12;
-const TRAPPOLA_COSTO_CRESCITA_INSEGUI = 3;
-const TRAPPOLA_DANNO_CINGHIALE_MIN = 15;
-const TRAPPOLA_DANNO_CINGHIALE_MAX = 25;
-const TRAPPOLA_RECUPERO_GIOCATORE_RIPOSO = 20;
-const TRAPPOLA_RECUPERO_CINGHIALE_RIPOSO = 10;
+const TRAPPOLA_VITE_MAX = 3;
+const TRAPPOLA_COLPI_NECESSARI = 6;
+const TRAPPOLA_TEMPO_INIZIALE_MS = 1300;
+const TRAPPOLA_TEMPO_RIDUZIONE_MS = 55;
+const TRAPPOLA_TEMPO_MINIMO_MS = 550;
+const TRAPPOLA_NOMI_CORSIE = ["Sinistra", "Centro", "Destra"];
 
 const TRAPPOLA_PREMI_VITTORIA = [
-  { turniMax: 4, dracme: 220, frammenti: 1 },
-  { turniMax: 6, dracme: 140, frammenti: 0 },
-  { turniMax: 9, dracme: 80, frammenti: 0 },
-  { turniMax: 13, dracme: 40, frammenti: 0 },
-  { turniMax: Infinity, dracme: 20, frammenti: 0 }
+  { roundMax: 7, dracme: 220, frammenti: 1 },
+  { roundMax: 9, dracme: 140, frammenti: 0 },
+  { roundMax: 12, dracme: 80, frammenti: 0 },
+  { roundMax: 16, dracme: 40, frammenti: 0 },
+  { roundMax: Infinity, dracme: 20, frammenti: 0 }
 ];
 
 let trappolaInPartita = false;
 let trappolaGiocoFinito = false;
-let trappolaEnergiaGiocatore = TRAPPOLA_ENERGIA_MAX;
-let trappolaEnergiaCinghiale = TRAPPOLA_ENERGIA_MAX;
-let trappolaTurnoAttuale = 0;
+let trappolaVitaGiocatore = TRAPPOLA_VITE_MAX;
+let trappolaColpiInflitti = 0;
+let trappolaRoundAttuale = 0;
+let trappolaCorsiaPericolosa = null;
+let trappolaTimerId = null;
+let trappolaFeedbackTesto = "";
+let trappolaFeedbackTipo = "";
 let trappolaEsitoTesto = "";
-let trappolaUltimaAzioneTesto = "";
-let trappolaBloccaClick = false;
+let trappolaInputBloccato = false;
 
 function dataOggiStringaTrappola() { return new Date().toISOString().slice(0, 10); }
 
@@ -6484,14 +6486,14 @@ function assicuraStatoTrappola() {
   }
 }
 
-function calcolaPremioVittoriaTrappola(turni) {
-  for (const p of TRAPPOLA_PREMI_VITTORIA) if (turni <= p.turniMax) return p;
+function calcolaPremioVittoriaTrappola(round) {
+  for (const p of TRAPPOLA_PREMI_VITTORIA) if (round <= p.roundMax) return p;
   return { dracme: 20, frammenti: 0 };
 }
 
 function calcolaPremioSconfittaTrappola() {
-  // Premio di consolazione proporzionale a quanto il cinghiale era stato sfiancato prima del crollo
-  const percentualeInflitta = 1 - (trappolaEnergiaCinghiale / TRAPPOLA_ENERGIA_MAX);
+  // Premio di consolazione proporzionale a quanti colpi erano già stati inflitti prima del crollo
+  const percentualeInflitta = trappolaColpiInflitti / TRAPPOLA_COLPI_NECESSARI;
   return Math.round(percentualeInflitta * 60);
 }
 
@@ -6504,28 +6506,32 @@ function iniziaPartitaTrappola() {
 
   trappolaInPartita = true;
   trappolaGiocoFinito = false;
-  trappolaEnergiaGiocatore = TRAPPOLA_ENERGIA_MAX;
-  trappolaEnergiaCinghiale = TRAPPOLA_ENERGIA_MAX;
-  trappolaTurnoAttuale = 0;
-  trappolaUltimaAzioneTesto = "";
+  trappolaVitaGiocatore = TRAPPOLA_VITE_MAX;
+  trappolaColpiInflitti = 0;
+  trappolaRoundAttuale = 0;
+  trappolaFeedbackTesto = "";
+  trappolaFeedbackTipo = "";
+  trappolaInputBloccato = false;
 
-  renderContenutoFatiche();
+  avviaRoundTrappola();
 }
 
 function terminaTrappola(vittoria) {
+  if (trappolaTimerId) { clearTimeout(trappolaTimerId); trappolaTimerId = null; }
+
   trappolaInPartita = false;
   trappolaGiocoFinito = true;
 
   if (vittoria) {
-    const premio = calcolaPremioVittoriaTrappola(trappolaTurnoAttuale);
+    const premio = calcolaPremioVittoriaTrappola(trappolaRoundAttuale);
     dracmeAttuali += premio.dracme;
     if (premio.frammenti > 0) ambraAttuale += premio.frammenti;
-    if (trappolaTurnoAttuale <= 9) segnaFaticaCompletata("trappola");
-    trappolaEsitoTesto = `🐗 Il cinghiale è sfinito, la caccia è tua! Catturato in ${trappolaTurnoAttuale} turni. Bottino: ${premio.dracme} Dracme${premio.frammenti > 0 ? ` e ${premio.frammenti} Frammento d'Ambra` : ""}.`;
+    segnaFaticaCompletata("trappola");
+    trappolaEsitoTesto = `🐗 Il cinghiale, sfiancato dalle continue capriole nella neve alta, crolla: la caccia è tua! Bottino: ${premio.dracme} Dracme${premio.frammenti > 0 ? ` e ${premio.frammenti} Frammento d'Ambra` : ""}.`;
   } else {
     const dracmeConsolazione = calcolaPremioSconfittaTrappola();
     dracmeAttuali += dracmeConsolazione;
-    trappolaEsitoTesto = `Le forze ti abbandonano nella neve alta: il cinghiale fugge. Per lo sforzo comunque profuso guadagni ${dracmeConsolazione} Dracme.`;
+    trappolaEsitoTesto = `Il cinghiale ti travolge nella neve alta: troppe cariche a segno. Per lo sforzo comunque profuso guadagni ${dracmeConsolazione} Dracme.`;
   }
 
   aggiornaTopbarProfilo();
@@ -6533,37 +6539,57 @@ function terminaTrappola(vittoria) {
   renderContenutoFatiche();
 }
 
-function eseguiTurnoTrappola(azione) {
-  if (trappolaBloccaClick || !trappolaInPartita) return;
-  trappolaBloccaClick = true;
+function avviaRoundTrappola() {
+  trappolaRoundAttuale++;
+  trappolaCorsiaPericolosa = Math.floor(Math.random() * 3);
+  trappolaFeedbackTesto = "";
+  trappolaFeedbackTipo = "";
+  trappolaInputBloccato = false;
 
-  trappolaTurnoAttuale++;
-
-  if (azione === "insegui") {
-    const costoGiocatore = TRAPPOLA_COSTO_BASE_INSEGUI + (trappolaTurnoAttuale - 1) * TRAPPOLA_COSTO_CRESCITA_INSEGUI;
-    const dannoCinghiale = TRAPPOLA_DANNO_CINGHIALE_MIN + Math.random() * (TRAPPOLA_DANNO_CINGHIALE_MAX - TRAPPOLA_DANNO_CINGHIALE_MIN);
-    trappolaEnergiaGiocatore = Math.max(0, trappolaEnergiaGiocatore - costoGiocatore);
-    trappolaEnergiaCinghiale = Math.max(0, trappolaEnergiaCinghiale - dannoCinghiale);
-    trappolaUltimaAzioneTesto = `Insegui nella neve alta: -${Math.round(costoGiocatore)} a te, -${Math.round(dannoCinghiale)} al cinghiale.`;
-  } else {
-    trappolaEnergiaGiocatore = Math.min(TRAPPOLA_ENERGIA_MAX, trappolaEnergiaGiocatore + TRAPPOLA_RECUPERO_GIOCATORE_RIPOSO);
-    trappolaEnergiaCinghiale = Math.min(TRAPPOLA_ENERGIA_MAX, trappolaEnergiaCinghiale + TRAPPOLA_RECUPERO_CINGHIALE_RIPOSO);
-    trappolaUltimaAzioneTesto = `Riprendi fiato: +${TRAPPOLA_RECUPERO_GIOCATORE_RIPOSO} a te, ma anche il cinghiale recupera +${TRAPPOLA_RECUPERO_CINGHIALE_RIPOSO}.`;
-  }
-
-  if (trappolaEnergiaCinghiale <= 0) {
-    trappolaBloccaClick = false;
-    terminaTrappola(true);
-    return;
-  }
-  if (trappolaEnergiaGiocatore <= 0) {
-    trappolaBloccaClick = false;
-    terminaTrappola(false);
-    return;
-  }
-
-  trappolaBloccaClick = false;
   renderContenutoFatiche();
+
+  const tempoRound = Math.max(TRAPPOLA_TEMPO_MINIMO_MS, TRAPPOLA_TEMPO_INIZIALE_MS - (trappolaRoundAttuale - 1) * TRAPPOLA_TEMPO_RIDUZIONE_MS);
+
+  requestAnimationFrame(() => {
+    const barra = document.getElementById("trappola-barra-tempo");
+    if (barra) {
+      barra.style.transition = "none";
+      barra.style.width = "100%";
+      requestAnimationFrame(() => {
+        barra.style.transition = `width ${tempoRound}ms linear`;
+        barra.style.width = "0%";
+      });
+    }
+  });
+
+  trappolaTimerId = setTimeout(() => risolviRoundTrappola(null), tempoRound);
+}
+
+function risolviRoundTrappola(corsiaScelta) {
+  if (trappolaInputBloccato || !trappolaInPartita) return;
+  trappolaInputBloccato = true;
+
+  if (trappolaTimerId) { clearTimeout(trappolaTimerId); trappolaTimerId = null; }
+
+  const schivataRiuscita = corsiaScelta !== null && corsiaScelta !== trappolaCorsiaPericolosa;
+
+  if (schivataRiuscita) {
+    trappolaColpiInflitti++;
+    trappolaFeedbackTipo = "successo";
+    trappolaFeedbackTesto = "💥 Schivata perfetta! Il cinghiale finisce contro un tronco.";
+  } else {
+    trappolaVitaGiocatore--;
+    trappolaFeedbackTipo = "danno";
+    trappolaFeedbackTesto = corsiaScelta === null ? "🩸 Troppo lento: il cinghiale ti travolge!" : "🩸 Corsia sbagliata: il cinghiale ti travolge!";
+  }
+
+  renderContenutoFatiche();
+
+  setTimeout(() => {
+    if (trappolaColpiInflitti >= TRAPPOLA_COLPI_NECESSARI) { terminaTrappola(true); return; }
+    if (trappolaVitaGiocatore <= 0) { terminaTrappola(false); return; }
+    avviaRoundTrappola();
+  }, 750);
 }
 
 function chiudiPartitaTrappola() {
@@ -6581,12 +6607,12 @@ function htmlSchermataTrappola() {
 
     return `
       <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; gap:14px; padding:14px;">
-        <div style="background:rgba(15,10,5,0.6); border-radius:10px; padding:14px; color:#e0d5c1; font-size:0.85rem; max-width:400px; text-align:center;">
-          <p style="color:#c9a054; font-style:italic; margin-bottom:8px;">Il Cinghiale d'Erimanto seminava il terrore tra i monti dell'Arcadia: Eracle non lo uccise, lo inseguì senza sosta nella neve alta finché la bestia, ormai sfinita, non poté più fuggire.</p>
-          <p>Ad ogni turno scegli se <b>inseguire</b> (consuma energia tua, ma indebolisce il cinghiale — la neve si fa più pesante ad ogni passo) o <b>riprendere fiato</b> (recuperi energia, ma anche il cinghiale ne approfitta per riprendersi). Chi resta senza energie per primo, perde.</p>
+        <div style="background:rgba(15,10,5,0.6); border-radius:10px; padding:14px; color:#e0d5c1; font-size:0.85rem; max-width:440px; text-align:center;">
+          <p style="color:#c9a054; font-style:italic; margin-bottom:8px;">Il Cinghiale d'Erimanto seminava il terrore tra i monti dell'Arcadia: Eracle lo stanò tra la neve alta, schivando ogni sua carica furiosa finché la bestia, sfinita, non poté più muoversi.</p>
+          <p>Il cinghiale carica da una delle <b>3 corsie</b>: guarda bene quale si illumina di pericolo, e tocca in tempo una delle <b>altre due</b> per schivare. Sbagli corsia, o sei troppo lento? Ti travolge. Serve <b>${TRAPPOLA_COLPI_NECESSARI} schivate</b> per sfiancarlo — ma hai solo <b>${TRAPPOLA_VITE_MAX} vite</b>, e ogni carica è più veloce della precedente.</p>
         </div>
         <button type="button" id="trappola-inizia-btn" class="events-btn events-btn-main" style="max-width:260px;" ${disponibile ? "" : "disabled"}>
-          ${disponibile ? "🐗 Inizia l'inseguimento" : "Nessun tentativo rimasto oggi"}
+          ${disponibile ? "🐗 Inizia la caccia" : "Nessun tentativo rimasto oggi"}
         </button>
         <p style="color:#a89a7a; font-size:0.8rem;">Tentativi rimasti oggi: <b style="color:#ffcc66;">${tentativiRimasti} / ${TRAPPOLA_TENTATIVI_MAX}</b></p>
       </div>`;
@@ -6595,49 +6621,48 @@ function htmlSchermataTrappola() {
   if (trappolaGiocoFinito) {
     return `
       <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; gap:16px; padding:14px;">
-        <div style="background:rgba(15,10,5,0.6); border-radius:12px; padding:20px; color:#e0d5c1; font-size:0.95rem; max-width:400px; text-align:center;">
+        <div style="background:rgba(15,10,5,0.6); border-radius:12px; padding:20px; color:#e0d5c1; font-size:0.95rem; max-width:420px; text-align:center;">
           ${trappolaEsitoTesto}
         </div>
         <button type="button" id="trappola-chiudi-btn" class="events-btn events-btn-main" style="max-width:240px;">Continua</button>
       </div>`;
   }
 
-  const percTu = Math.round((trappolaEnergiaGiocatore / TRAPPOLA_ENERGIA_MAX) * 100);
-  const percCinghiale = Math.round((trappolaEnergiaCinghiale / TRAPPOLA_ENERGIA_MAX) * 100);
+  const corsieHTML = TRAPPOLA_NOMI_CORSIE.map((nome, idx) => {
+    const inPericolo = idx === trappolaCorsiaPericolosa;
+    return `
+      <button type="button" class="trappola-corsia-btn ${inPericolo ? "trappola-corsia-pericolo" : ""}" data-corsia="${idx}" ${trappolaInputBloccato ? "disabled" : ""}>
+        <span style="font-size:1.6rem;">${inPericolo ? "⚠️🐗" : "🌲"}</span>
+        <span style="font-size:0.68rem;">${nome}</span>
+      </button>`;
+  }).join("");
 
   return `
-    <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; gap:14px; padding:14px;">
-      <div style="color:#e0d5c1; font-size:0.85rem;">Turno <b style="color:#ffcc66;">${trappolaTurnoAttuale}</b></div>
-
-      <div style="width:100%; max-width:360px; display:flex; flex-direction:column; gap:10px;">
-        <div>
-          <div style="display:flex; justify-content:space-between; font-size:0.78rem; color:#a89a7a; margin-bottom:3px;">
-            <span>🏃 La tua energia</span><span>${percTu}%</span>
-          </div>
-          <div class="trappola-barra-energia"><div class="trappola-barra-riempimento trappola-barra-giocatore" style="width:${percTu}%;"></div></div>
-        </div>
-        <div>
-          <div style="display:flex; justify-content:space-between; font-size:0.78rem; color:#a89a7a; margin-bottom:3px;">
-            <span>🐗 Energia del cinghiale</span><span>${percCinghiale}%</span>
-          </div>
-          <div class="trappola-barra-energia"><div class="trappola-barra-riempimento trappola-barra-cinghiale" style="width:${percCinghiale}%;"></div></div>
-        </div>
+    <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; gap:10px; padding:10px;">
+      <div style="display:flex; gap:18px; align-items:center;">
+        <div style="color:#e0d5c1; font-size:0.82rem;">Round <b style="color:#ffcc66;">${trappolaRoundAttuale}</b></div>
+        <div style="color:#e0d5c1; font-size:0.82rem;">💥 Colpi: <b style="color:#7ee787;">${trappolaColpiInflitti}/${TRAPPOLA_COLPI_NECESSARI}</b></div>
+        <div style="color:#e0d5c1; font-size:0.82rem;">${"❤️".repeat(trappolaVitaGiocatore)}${"🖤".repeat(TRAPPOLA_VITE_MAX - trappolaVitaGiocatore)}</div>
       </div>
 
-      <div style="min-height:20px; color:#ffcc66; font-size:0.82rem; text-align:center; max-width:340px;">${trappolaUltimaAzioneTesto}</div>
-
-      <div style="display:flex; gap:12px;">
-        <button type="button" id="trappola-insegui-btn" class="events-btn events-btn-main" style="max-width:170px;">🏃 Insegui</button>
-        <button type="button" id="trappola-riposa-btn" class="events-btn events-btn-main" style="max-width:170px;">💨 Riprendi fiato</button>
+      <div style="width:100%; max-width:420px; height:8px; background:rgba(255,255,255,0.1); border-radius:4px; overflow:hidden;">
+        <div id="trappola-barra-tempo" style="height:100%; width:100%; background:linear-gradient(to right, #7ee787, #ecc94b, #f56565);"></div>
       </div>
+
+      <div style="min-height:20px; font-size:0.82rem; text-align:center; max-width:380px; color:${trappolaFeedbackTipo === "successo" ? "#7ee787" : (trappolaFeedbackTipo === "danno" ? "#f56565" : "#a89a7a")};">
+        ${trappolaFeedbackTesto || "Tocca una corsia SICURA per schivare!"}
+      </div>
+
+      <div style="display:flex; gap:12px;">${corsieHTML}</div>
     </div>`;
 }
 
 function collegaEventiTrappola() {
   document.getElementById("trappola-inizia-btn")?.addEventListener("click", iniziaPartitaTrappola);
   document.getElementById("trappola-chiudi-btn")?.addEventListener("click", chiudiPartitaTrappola);
-  document.getElementById("trappola-insegui-btn")?.addEventListener("click", () => eseguiTurnoTrappola("insegui"));
-  document.getElementById("trappola-riposa-btn")?.addEventListener("click", () => eseguiTurnoTrappola("riposa"));
+  document.querySelectorAll(".trappola-corsia-btn").forEach(btn => {
+    btn.addEventListener("click", () => risolviRoundTrappola(parseInt(btn.dataset.corsia)));
+  });
 }
 
 // ===== "Il Toro Furioso": tempismo su barra a moto oscillante (Settima Fatica) =====
