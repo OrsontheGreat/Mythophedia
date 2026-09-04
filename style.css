@@ -2666,16 +2666,16 @@ html.narrow-700 .events-row { flex-direction: column; }
 }
 
 .tutorial-carta-esempio-stats {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px 6px;
   color: #e0d5c1;
   font-size: 0.66rem;
   text-align: center;
 }
 
-#addestramento-content .tutorial-carta-esempio { width: min(140px, calc(var(--app-height) * 20 / 100)); }
-#addestramento-content .tutorial-carta-esempio-img { width: 100%; height: min(150px, calc(var(--app-height) * 24 / 100)); }
+#addestramento-content .tutorial-carta-esempio { width: min(190px, calc(var(--app-height) * 46 / 100)); }
+#addestramento-content .tutorial-carta-esempio-img { width: 100%; height: min(100px, calc(var(--app-height) * 24 / 100)); }
 
 .tutorial-carta-esempio-tratto {
   color: #7ee787;
