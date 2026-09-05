@@ -1549,7 +1549,6 @@ function mostraCartaFullscreen(carta, opzioniExtra) {
 
   document.getElementById("fs-card-evolvi-btn")?.addEventListener("click", () => {
     overlay.remove();
-    document.querySelectorAll(".modal-overlay:not(.hidden)").forEach(m => { if (m.id !== "evolution-modal") m.classList.add("hidden"); });
     apriFinestraEvoluzione(carta);
   });
 
@@ -6672,11 +6671,16 @@ let toroStato = { tentativiOggi: 0, dataUltimoTentativo: "" };
 const TORO_TENTATIVI_MAX = 1;
 const TORO_VITE_MAX = 3;
 const TORO_PREMI = [
-  { soglia: 12, dracme: 250 },
-  { soglia: 9, dracme: 150 },
-  { soglia: 6, dracme: 80 },
-  { soglia: 3, dracme: 35 },
-  { soglia: 1, dracme: 10 }
+  { soglia: 20, dracme: 600, frammenti: 8 },
+  { soglia: 18, dracme: 550, frammenti: 7 },
+  { soglia: 16, dracme: 480, frammenti: 6 },
+  { soglia: 14, dracme: 420, frammenti: 5 },
+  { soglia: 12, dracme: 360, frammenti: 4 },
+  { soglia: 10, dracme: 300, frammenti: 3 },
+  { soglia: 8, dracme: 220, frammenti: 2 },
+  { soglia: 6, dracme: 150, frammenti: 1 },
+  { soglia: 3, dracme: 70, frammenti: 0 },
+  { soglia: 1, dracme: 20, frammenti: 0 }
 ];
 
 let toroInPartita = false;
@@ -6712,8 +6716,8 @@ function larghezzaToro(round) {
 }
 
 function calcolaPremioToro(roundSuperati) {
-  for (const p of TORO_PREMI) if (roundSuperati >= p.soglia) return p.dracme;
-  return 0;
+  for (const p of TORO_PREMI) if (roundSuperati >= p.soglia) return p;
+  return { dracme: 0, frammenti: 0 };
 }
 
 function posizioneMarcatoreToro(elapsedMs, periodoMs) {
@@ -6768,10 +6772,11 @@ async function tentaAfferraToro() {
   if (toroViteRimaste <= 0) {
     const roundSuperati = toroRoundAttuale - 1;
     const premio = calcolaPremioToro(roundSuperati);
-    dracmeAttuali += premio;
+    dracmeAttuali += premio.dracme;
+    if (premio.frammenti > 0) ambraAttuale += premio.frammenti;
     if (roundSuperati >= 6) segnaFaticaCompletata("toro");
     toroGiocoFinito = true;
-    toroEsitoTesto = `Il Toro di Creta ti ha disarcionato dopo ${roundSuperati} round superati. Premio: ${premio} Dracme.`;
+    toroEsitoTesto = `Il Toro di Creta ti ha disarcionato dopo ${roundSuperati} round superati. Premio: ${premio.dracme} Dracme${premio.frammenti > 0 ? ` e ${premio.frammenti} Frammenti d'Ambra` : ""}.`;
     aggiornaTopbarProfilo();
     salvaProgressoCloud();
     toroBloccaClick = false;
