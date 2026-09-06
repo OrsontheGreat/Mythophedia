@@ -10147,7 +10147,7 @@ document.getElementById("close-clan-modal").addEventListener("click", () => {
 
 function generaMappaGuerra(callback) {
 
-  if (mappaGuerraClan.length > 0) { callback(); return; }
+  if (mappaGuerraClan.length === RIGHE_MAPPA_GUERRA && Array.isArray(mappaGuerraClan[0]) && mappaGuerraClan[0].length === COLONNE_MAPPA_GUERRA) { callback(); return; }
 
   function generaMappaGuerraLocaleFresca() {
 
@@ -10245,11 +10245,17 @@ function generaMappaGuerra(callback) {
 
   dbFirebase.ref("guerre_reali/" + clanMioAttuale.firebaseId).once("value").then((snapshot) => {
 
-    if (snapshot.exists()) {
+    const datiCaricati = snapshot.exists() ? snapshot.val() : null;
 
-      mappaGuerraClan = snapshot.val();
+    const strutturaValida = Array.isArray(datiCaricati) && datiCaricati.length === RIGHE_MAPPA_GUERRA && Array.isArray(datiCaricati[0]) && datiCaricati[0].length === COLONNE_MAPPA_GUERRA;
+
+    if (strutturaValida) {
+
+      mappaGuerraClan = datiCaricati;
 
     } else {
+
+      if (datiCaricati) console.warn("Mappa di guerra salvata con struttura non valida o non aggiornata: la rigenero da zero.");
 
       generaMappaGuerraLocaleFresca();
 
