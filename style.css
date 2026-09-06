@@ -1069,13 +1069,13 @@ html.forza-landscape .close-btn { font-size: 1.6rem; }
 
 .hex-grid-container { flex: 1; background: radial-gradient(ellipse at center, #241a0f 0%, #140f08 65%, #090705 100%); border: 1px solid #3a3222; border-radius: 8px; overflow: auto; padding: 25px; position: relative; height: 100%; display: flex; }
 
-.hex-grid { width: max-content; display: flex; flex-direction: column; margin: auto; }
+.hex-grid { width: max-content; display: flex; flex-direction: column; margin: auto; flex-shrink: 0; }
 
 .hex-row { display: flex; margin-bottom: -9px; }
 
 .hex-row:nth-child(even) { margin-left: 19px; }
 
-.hexagon { width: 37px; height: 42px; background-color: #222; clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); margin-right: 3px; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: all 0.2s ease; position: relative; font-size: 0.58rem; font-weight: bold; }
+.hexagon { width: 37px; height: 42px; background-color: #222; clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); margin-right: 3px; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: all 0.2s ease; position: relative; font-size: 0.58rem; font-weight: bold; flex-shrink: 0; }
 
 .hexagon::after {
   content: "";
