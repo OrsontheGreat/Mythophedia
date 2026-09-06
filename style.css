@@ -759,9 +759,9 @@ html.forza-landscape .close-btn { font-size: 1.6rem; }
 
 #clan-war-modal .hex-info-panel {
 
-  height: calc(var(--app-height) * 78 / 100) !important;
+  height: 100%;
 
-  max-height: calc(var(--app-height) * 78 / 100) !important;
+  max-height: 100%;
 
   justify-content: space-between;
 
@@ -771,7 +771,7 @@ html.forza-landscape .close-btn { font-size: 1.6rem; }
 
 #clan-war-modal .hex-grid-container {
 
-  height: calc(var(--app-height) * 78 / 100) !important;
+  height: 100%;
 
 }
 
