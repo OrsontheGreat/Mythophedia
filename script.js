@@ -432,9 +432,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
  
 
-  const RIGHE_MAPPA_GUERRA = 10;
+  const RIGHE_MAPPA_GUERRA = 9;
 
-  const COLONNE_MAPPA_GUERRA = 10;
+  const COLONNE_MAPPA_GUERRA = 9;
 
  
 
