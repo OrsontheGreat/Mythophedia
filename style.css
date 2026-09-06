@@ -1067,9 +1067,9 @@ html.forza-landscape .close-btn { font-size: 1.6rem; }
 
 .map-screen-layout { flex: 1; display: grid; grid-template-columns: 1.8fr 1.6fr; gap: 20px; overflow: hidden; height: 100%; min-height: 0; }
 
-.hex-grid-container { flex: 1; background: radial-gradient(ellipse at center, #241a0f 0%, #140f08 65%, #090705 100%); border: 1px solid #3a3222; border-radius: 8px; overflow: auto; padding: 25px; position: relative; height: 100%; display: flex; align-items: center; justify-content: center; }
+.hex-grid-container { flex: 1; background: radial-gradient(ellipse at center, #241a0f 0%, #140f08 65%, #090705 100%); border: 1px solid #3a3222; border-radius: 8px; overflow: auto; padding: 25px; position: relative; height: 100%; display: flex; }
 
-.hex-grid { width: max-content; display: flex; flex-direction: column; }
+.hex-grid { width: max-content; display: flex; flex-direction: column; margin: auto; }
 
 .hex-row { display: flex; margin-bottom: -9px; }
 

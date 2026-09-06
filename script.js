@@ -7217,11 +7217,11 @@ let giardinoStato = { tentativiOggi: 0, dataUltimoTentativo: "" };
 const GIARDINO_TENTATIVI_MAX = 3;
 const GIARDINO_ALBERI = 6;
 const GIARDINO_PREMI = [
-  { soglia: 10, dracme: 220, frammenti: 1 },
-  { soglia: 8, dracme: 150, frammenti: 0 },
-  { soglia: 6, dracme: 90, frammenti: 0 },
-  { soglia: 4, dracme: 45, frammenti: 0 },
-  { soglia: 2, dracme: 15, frammenti: 0 }
+  { soglia: 10, dracme: 280, frammenti: 1 },
+  { soglia: 8, dracme: 190, frammenti: 0 },
+  { soglia: 6, dracme: 115, frammenti: 0 },
+  { soglia: 4, dracme: 60, frammenti: 0 },
+  { soglia: 2, dracme: 20, frammenti: 0 }
 ];
 
 let giardinoInPartita = false;
@@ -8989,7 +8989,9 @@ let cerberoStato = { tentativiOggi: 0, dataUltimoTentativo: "" };
 const CERBERO_TENTATIVI_MAX = 1;
 const CERBERO_TARGET = [7, 8.5, 10];
 const CERBERO_PREMIO_TESTA = [100, 200];
-const CERBERO_PREMIO_FINALE = { dracme: 400, frammenti: 3 };
+const CERBERO_FRAMMENTI_TESTA = [2, 4, 8];
+const CERBERO_PREMIO_FINALE = { dracme: 400, frammenti: 8 };
+const CERBERO_DRACME_PARTECIPAZIONE = 100;
 const CERBERO_NOMI_STAT = { ferocia: "Ferocia", balzo: "Balzo", corazza: "Corazza", istinto: "Istinto" };
 
 let cerberoInPartita = false;
@@ -9072,8 +9074,8 @@ async function affrontaTestaCerbero() {
   if (vittoria) {
 
     if (cerberoTestaAttuale === 2) {
-      cerberoTotaleDracmeRun += CERBERO_PREMIO_FINALE.dracme;
-      dracmeAttuali += CERBERO_PREMIO_FINALE.dracme;
+      cerberoTotaleDracmeRun += CERBERO_PREMIO_FINALE.dracme + CERBERO_DRACME_PARTECIPAZIONE;
+      dracmeAttuali += CERBERO_PREMIO_FINALE.dracme + CERBERO_DRACME_PARTECIPAZIONE;
       ambraAttuale += CERBERO_PREMIO_FINALE.frammenti;
       cerberoGiocoFinito = true;
       cerberoEsitoTesto = `🏆 Hai domato Cerbero in persona, guardiano delle Porte degli Inferi! Bottino totale: ${cerberoTotaleDracmeRun} Dracme, ${CERBERO_PREMIO_FINALE.frammenti} Frammenti d'Ambra.`;
@@ -9082,14 +9084,18 @@ async function affrontaTestaCerbero() {
       sparaParticelle(6);
     } else {
       const premio = CERBERO_PREMIO_TESTA[cerberoTestaAttuale];
+      const frammentiTesta = CERBERO_FRAMMENTI_TESTA[cerberoTestaAttuale];
       cerberoTotaleDracmeRun += premio;
       dracmeAttuali += premio;
+      ambraAttuale += frammentiTesta;
       cerberoTestaAttuale++;
       aggiornaTopbarProfilo();
       salvaProgressoCloud();
     }
 
   } else {
+    cerberoTotaleDracmeRun += CERBERO_DRACME_PARTECIPAZIONE;
+    dracmeAttuali += CERBERO_DRACME_PARTECIPAZIONE;
     cerberoGiocoFinito = true;
     cerberoEsitoTesto = `Cerbero ti ha fermato alla testa numero ${cerberoTestaAttuale + 1}. Bottino di questo tentativo: ${cerberoTotaleDracmeRun} Dracme.`;
     aggiornaTopbarProfilo();
