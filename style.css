@@ -64,6 +64,10 @@ body, html {
 
   height: var(--app-height);
 
+  padding: max(env(safe-area-inset-top, 0px), env(safe-area-inset-right, 0px), env(safe-area-inset-bottom, 0px), env(safe-area-inset-left, 0px));
+
+  box-sizing: border-box;
+
   background-image: url('img/sfondi/sfondo.png');
 
   background-size: cover;

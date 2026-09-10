@@ -6,7 +6,7 @@
 
 <meta charset="UTF-8">
 
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 
 <title>Mythophedia - Grand Strategy Card Game</title>
 
@@ -847,7 +847,42 @@ sans-serif; font-size: 0.9rem; line-height: 1.5;"></div>
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('service-worker.js').catch(() => {});
+    // Se al caricamento della pagina esiste già un controller, vuol dire che questa non è
+    // la primissima visita: un eventuale cambio di controller da qui in poi è un vero
+    // aggiornamento e vale la pena ricaricare. Alla primissima visita in assoluto invece
+    // non c'è ancora nessun controller, e la sua comparsa non è un aggiornamento da segnalare.
+    const eraGiaControllata = !!navigator.serviceWorker.controller;
+
+    navigator.serviceWorker.register('service-worker.js').then((registrazione) => {
+
+      // Controllo subito se c'è una versione più recente, invece di aspettare
+      // il controllo automatico del browser (che può aspettare anche 24 ore).
+      registrazione.update().catch(() => {});
+
+      // Ricontrollo ogni volta che l'app torna in primo piano — è esattamente il momento
+      // in cui qualcuno riapre il gioco dopo giorni di assenza.
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+          registrazione.update().catch(() => {});
+        }
+      });
+
+      // Ricontrollo periodico anche durante sessioni di gioco lunghe.
+      setInterval(() => registrazione.update().catch(() => {}), 5 * 60 * 1000);
+
+    }).catch(() => {});
+
+    // Quando una versione nuova prende il controllo (skipWaiting + clients.claim nel
+    // service worker), ricarico la pagina una sola volta per mostrare subito i file freschi,
+    // invece di lasciare l'utente bloccato su una versione vecchia già caricata in memoria.
+    // Salto la primissima attivazione in assoluto, che non è un vero aggiornamento.
+    let ricaricaGiaAvvenuta = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (!eraGiaControllata) return;
+      if (ricaricaGiaAvvenuta) return;
+      ricaricaGiaAvvenuta = true;
+      window.location.reload();
+    });
   });
 }
 </script>
