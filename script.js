@@ -7427,7 +7427,7 @@ const TUTORIAL_PASSI = [
   },
   {
     selettore: "#btn-mercato",
-    testo: "L'Agorà è il Mercato: qui spendi le tue Dracme e i tuoi Frammenti d'Ambra per acquistare pacchetti di nuove creature, o espandere il tuo mazzo."
+    testo: "L'Agorà è il Mercato: qui spendi le tue Dracme e i tuoi Frammenti d'Ambra per acquistare pacchetti di nuove creature, o per espandere il tuo mazzo."
   },
   {
     selettore: "#btn-raccoglitore",

@@ -583,7 +583,7 @@ html.forza-landscape .close-btn { font-size: 1.6rem; }
 
 .fake-select-list {
 
-  position: absolute;
+  position: fixed;
 
   top: 0;
 
@@ -593,7 +593,7 @@ html.forza-landscape .close-btn { font-size: 1.6rem; }
 
   bottom: 0;
 
-  z-index: 50;
+  z-index: 2000;
 
   max-height: none;
 
