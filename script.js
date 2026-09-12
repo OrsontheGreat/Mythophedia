@@ -8743,11 +8743,24 @@ function renderizzaHubEventi() {
       </div>
       <div style="display:flex; gap:8px;">
         <button type="button" id="ev-torna-selettore-btn" class="events-btn" style="max-width:160px; font-size:0.75rem;">← Altri Eventi</button>
+        <button type="button" id="ev-mostra-premi-btn" class="events-btn" style="max-width:120px; font-size:0.75rem;">🏆 Premi</button>
         <button type="button" id="ev-cambia-squadra-btn" class="events-btn" style="max-width:200px; font-size:0.75rem;">Cambia squadra</button>
+      </div>
+      <div id="ev-tabella-premi" class="hidden">
+        ${htmlTabellaPremi([
+          { etichetta: "🥇 1°", premio: "500 Dracme, 3 Frammenti, pacchetto Epica" },
+          { etichetta: "🥈 2°-3°", premio: "350 Dracme, 2 Frammenti, pacchetto Rara" },
+          { etichetta: "4°-10°", premio: "200 Dracme, 1 Frammento, pacchetto Non Comune" },
+          { etichetta: "11°-25°", premio: "100 Dracme, 1 Frammento" },
+          { etichetta: "Altri", premio: "50 Dracme di partecipazione" }
+        ], "#ffcc66")}
       </div>
       <div style="display:flex; flex-direction:column; gap:8px; width:100%; align-items:center;">${avversariHTML || '<p style="color:#a89a7a;">Nessun avversario disponibile al momento.</p>'}</div>`;
 
     document.getElementById("ev-torna-selettore-btn").addEventListener("click", apriEventi);
+    document.getElementById("ev-mostra-premi-btn").addEventListener("click", () => {
+      document.getElementById("ev-tabella-premi").classList.toggle("hidden");
+    });
     document.getElementById("ev-cambia-squadra-btn").addEventListener("click", renderizzaSelezioneSquadraEventi);
     document.querySelectorAll(".ev-sfida-btn").forEach(btn => {
       btn.addEventListener("click", () => avviaSfidaEventi(btn.dataset.id, elenco.find(e => e.id === btn.dataset.id)));
@@ -8787,10 +8800,27 @@ function avviaSfidaEventi(avversarioId, avversarioDati) {
 
 function terrenoCongenialeCreatura(tratti) {
   if (!tratti || tratti.length === 0) return null;
-  if (tratti.includes("volo")) return { emoji: "🌬️", nome: "Aria", chiavi: ["aria"] };
-  if (tratti.includes("nuoto")) return { emoji: "🌊", nome: "Acqua", chiavi: ["acqua"] };
-  if (tratti.includes("arrampicata") || tratti.includes("equilibrio")) return { emoji: "🌲⛰️", nome: "Foresta/Terra", chiavi: ["foresta", "terra"] };
-  return null;
+
+  const MAPPA_TRATTI = {
+    volo: { emoji: "🌬️", nome: "Aria", chiavi: ["aria"] },
+    nuoto: { emoji: "🌊", nome: "Acqua", chiavi: ["acqua"] },
+    arrampicata: { emoji: "🌲⛰️", nome: "Foresta/Terra", chiavi: ["foresta", "terra"] },
+    equilibrio: { emoji: "🌲⛰️", nome: "Foresta/Terra", chiavi: ["foresta", "terra"] }
+  };
+
+  const nomiUnici = [];
+  const emojiUniche = [];
+  const chiaviUnite = [];
+
+  tratti.forEach(t => {
+    const voce = MAPPA_TRATTI[String(t).toLowerCase().trim()];
+    if (!voce) return;
+    if (!nomiUnici.includes(voce.nome)) { nomiUnici.push(voce.nome); emojiUniche.push(voce.emoji); }
+    voce.chiavi.forEach(k => { if (!chiaviUnite.includes(k)) chiaviUnite.push(k); });
+  });
+
+  if (nomiUnici.length === 0) return null;
+  return { emoji: emojiUniche.join(""), nome: nomiUnici.join(" + "), chiavi: chiaviUnite };
 }
 
 function renderizzaAnteprimaSfidaEventi(avversarioId, avversarioDati, terreno, modalitaScelta, statistiche) {
@@ -9003,6 +9033,15 @@ function risolviFineSfidaEventi(avversarioId, avversarioDati, roundVinti) {
 }
 
 let eventiUltimoCicloPartecipato = 0;
+
+function htmlTabellaPremi(righe, coloreAccento) {
+  const righeHTML = righe.map(r => `
+    <div style="display:flex; justify-content:space-between; gap:10px; padding:5px 0; border-bottom:1px solid rgba(255,255,255,0.08); font-size:0.78rem;">
+      <span style="color:${coloreAccento}; font-weight:bold; white-space:nowrap;">${r.etichetta}</span>
+      <span style="color:#e0d5c1; text-align:right;">${r.premio}</span>
+    </div>`).join("");
+  return `<div style="background:rgba(0,0,0,0.4); border:1px solid ${coloreAccento}; border-radius:10px; padding:10px 14px; width:100%; max-width:380px;">${righeHTML}</div>`;
+}
 
 function calcolaPremioPiazzamentoEventi(posizione, puntiOttenuti) {
   if (posizione === 1) return { dracme: 500, ambra: 3, livelloCartaPacco: 4, testo: "🥇 1° posto!" };
@@ -9326,11 +9365,24 @@ function renderizzaHubArgonauti() {
       </div>
       <div style="display:flex; gap:8px;">
         <button type="button" id="arg-torna-selettore-btn" class="events-btn" style="max-width:160px; font-size:0.75rem;">← Altri Eventi</button>
+        <button type="button" id="arg-mostra-premi-btn" class="events-btn argonauti-btn-main" style="max-width:120px; font-size:0.75rem;">🏆 Premi</button>
         <button type="button" id="arg-cambia-squadra-btn" class="events-btn" style="max-width:200px; font-size:0.75rem;">Cambia squadra</button>
+      </div>
+      <div id="arg-tabella-premi" class="hidden">
+        ${htmlTabellaPremi([
+          { etichetta: "🥇 1°", premio: "500 Dracme, 3 Frammenti, il Vello d'Oro (60% Epica / 35% Mitica / 5% Leggendaria)" },
+          { etichetta: "🥈 2°-3°", premio: "350 Dracme, 2 Frammenti, pacchetto Rara" },
+          { etichetta: "4°-10°", premio: "200 Dracme, 1 Frammento, pacchetto Non Comune" },
+          { etichetta: "11°-25°", premio: "100 Dracme, 1 Frammento" },
+          { etichetta: "Altri", premio: "50 Dracme di partecipazione" }
+        ], "#7ecbe0")}
       </div>
       <div style="display:flex; flex-direction:column; gap:8px; width:100%; align-items:center;">${avversariHTML || '<p style="color:#a89a7a;">Nessun avversario disponibile al momento.</p>'}</div>`;
 
     document.getElementById("arg-torna-selettore-btn").addEventListener("click", apriEventi);
+    document.getElementById("arg-mostra-premi-btn").addEventListener("click", () => {
+      document.getElementById("arg-tabella-premi").classList.toggle("hidden");
+    });
     document.getElementById("arg-cambia-squadra-btn").addEventListener("click", renderizzaSelezioneSquadraArgonauti);
     document.querySelectorAll(".arg-sfida-btn").forEach(btn => {
       btn.addEventListener("click", () => avviaSfidaArgonauti(btn.dataset.id, elenco.find(e => e.id === btn.dataset.id)));
@@ -10132,7 +10184,13 @@ document.getElementById("close-addestramento-modal")?.addEventListener("click", 
 document.getElementById("btn-eventi-torneo")?.addEventListener("click", apriEventi);
 
 document.getElementById("close-eventi-modal")?.addEventListener("click", () => {
-  document.getElementById("eventi-modal").classList.add("hidden");
+  const modalCard = document.querySelector("#eventi-modal .modal-card");
+  const dentroUnEvento = modalCard.classList.contains("eventi-bg-attivo") || modalCard.classList.contains("argonauti-bg-attivo");
+  if (dentroUnEvento) {
+    apriEventi();
+  } else {
+    document.getElementById("eventi-modal").classList.add("hidden");
+  }
 });
 
 // Icona di richiamo per ogni mitologia (segnaposto in attesa di illustrazioni dedicate)
