@@ -7512,15 +7512,15 @@ const TUTORIAL_PASSI = [
   },
   {
     selettore: "#btn-mercato",
-    testo: "L'Agorà è il Mercato: qui spendi le tue Dracme e i tuoi Frammenti d'Ambra per acquistare pacchetti di nuove creature, o per espandere il tuo mazzo."
+    testo: "Il Mercato Generale: qui spendi le tue Dracme e i tuoi Frammenti d'Ambra per acquistare pacchetti di nuove creature, o per espandere il tuo mazzo."
   },
   {
     selettore: "#btn-raccoglitore",
-    testo: "La Biblioteca custodisce il tuo Raccoglitore: tutte le creature che possiedi, le loro statistiche, e da qui puoi anche evolverle per renderle più forti."
+    testo: "Il Raccoglitore: tutte le creature che possiedi, le loro statistiche, e da qui puoi anche evolverle per renderle più forti."
   },
   {
     selettore: "#btn-eventi-fatiche",
-    testo: "Qui sotto trovi Le Dodici Fatiche: undici minigiochi diversi, uno per ciascuna prova mitologica di Eracle, più una scala di combattimenti a difficoltà crescente. Un modo diverso — spesso più leggero — per guadagnare Dracme e Frammenti ogni giorno."
+    testo: "Qui sotto trovi Le Dodici Fatiche: 12 prove diverse, una per ciascuna sfida mitologica di Eracle. Undici sono disponibili subito; la dodicesima — Cerbero, il guardiano degli Inferi — si sblocca solo dopo averne superate abbastanza altre. Un modo diverso — spesso più leggero — per guadagnare Dracme e Frammenti ogni giorno."
   },
   {
     selettore: "#btn-eventi-torneo",
