@@ -1607,6 +1607,52 @@ html.narrow-420 #clan-join-creation-view {
 
 /* ===== Animazione apertura pacchetto: carte che si girano una alla volta ===== */
 
+.pack-reveal-singola {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 20px;
+  cursor: pointer;
+  animation: pack-reveal-comparsa 0.4s ease;
+}
+
+@keyframes pack-reveal-comparsa {
+  from { opacity: 0; transform: scale(0.85); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.pack-reveal-img {
+  font-size: 5.5rem;
+  filter: drop-shadow(0 0 18px rgba(201, 160, 84, 0.5));
+}
+
+.pack-reveal-singola.rare-glow .pack-reveal-img {
+  filter: drop-shadow(0 0 26px rgba(246, 224, 94, 0.85));
+}
+
+.pack-reveal-nome {
+  font-family: 'Cinzel', 'Georgia', serif;
+  font-weight: bold;
+  font-size: 1.3rem;
+  color: #ffcc66;
+  text-align: center;
+}
+
+.pack-reveal-rarita {
+  color: #c9a054;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.pack-reveal-contatore {
+  color: #a89a7a;
+  font-size: 0.8rem;
+  margin: 4px 0 8px;
+}
+
 .pack-flip-row {
 
   display: flex;
@@ -2100,6 +2146,80 @@ html.narrow-700 .events-row { flex-direction: column; }
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
+}
+
+.modal-card.argonauti-bg-attivo {
+  background-image: linear-gradient(160deg, #0d1f26, #071015);
+}
+
+.eventi-selettore-riga {
+  display: flex;
+  gap: 20px;
+  width: 100%;
+  height: 100%;
+  padding: 10px;
+}
+
+.eventi-pannello-tipo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 14px;
+  padding: 24px 18px;
+  text-align: center;
+}
+
+.eventi-pannello-olimpici {
+  background: linear-gradient(160deg, rgba(199, 154, 66, 0.18), rgba(30, 22, 10, 0.6));
+  border: 2px solid #c9a054;
+}
+
+.eventi-pannello-argonauti {
+  background: linear-gradient(160deg, rgba(126, 203, 224, 0.15), rgba(10, 22, 28, 0.6));
+  border: 2px solid #7ecbe0;
+}
+
+.eventi-pannello-titolo {
+  font-family: 'Cinzel', 'Georgia', serif;
+  font-weight: bold;
+  font-size: 1.3rem;
+  color: #ffcc66;
+}
+
+.eventi-pannello-argonauti .eventi-pannello-titolo {
+  color: #7ecbe0;
+}
+
+.eventi-pannello-sottotitolo {
+  color: #e0d5c1;
+  font-size: 0.82rem;
+  font-style: italic;
+  margin-bottom: 6px;
+}
+
+.eventi-pannello-info {
+  color: #a89a7a;
+  font-size: 0.78rem;
+  margin: 0;
+}
+
+.argonauti-btn-main {
+  background: rgba(20, 35, 40, 0.55) !important;
+  border-color: #7ecbe0 !important;
+  color: #7ecbe0 !important;
+}
+
+.argonauti-btn-main:disabled {
+  background: #2a2a30 !important;
+  border-color: #4a4a52 !important;
+  color: #6b6b72 !important;
+}
+
+html.narrow-700 .eventi-selettore-riga {
+  flex-direction: column;
 }
 
 .modal-card.fatiche-bg-attivo .modal-header h2 {

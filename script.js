@@ -4158,7 +4158,38 @@ function apriAnimazionePacco(pack, nuoveCarte, nomiPossedutiPrimaDelPacco) {
 
   pacco.classList.add("pack-in-apertura");
 
-  setTimeout(() => mostraGrigliaCarteEstratte(pack, nuoveCarte, nomiPossedutiPrimaDelPacco), 650);
+  setTimeout(() => mostraCartaSingolaReveal(pack, nuoveCarte, nomiPossedutiPrimaDelPacco, 0), 650);
+
+}
+
+function mostraCartaSingolaReveal(pack, nuoveCarte, nomiPossedutiPrimaDelPacco, indice) {
+
+  if (indice >= nuoveCarte.length) {
+    mostraGrigliaCarteEstratte(pack, nuoveCarte, nomiPossedutiPrimaDelPacco);
+    return;
+  }
+
+  const c = nuoveCarte[indice];
+  const eNuova = nomiPossedutiPrimaDelPacco && !nomiPossedutiPrimaDelPacco.has(c.nome);
+  const isUltima = indice === nuoveCarte.length - 1;
+  const raro = c.livello >= 3 ? " rare-glow" : "";
+
+  document.getElementById("battle-report-content").innerHTML = `
+    <div class="pack-reveal-singola${raro}" id="pack-reveal-singola">
+      ${eNuova ? '<div class="pack-flip-badge-nuova" style="position:static; margin-bottom:6px;">nuova!</div>' : ''}
+      <div class="pack-reveal-img">${miniImmagineCarta(c, 130)}</div>
+      <div class="pack-reveal-nome">${c.nome}</div>
+      <div class="pack-reveal-rarita">${ETICHETTE_LIVELLI[c.livello]}</div>
+      <p class="pack-reveal-contatore">${indice + 1} / ${nuoveCarte.length}</p>
+      <button type="button" class="events-btn events-btn-main" id="pack-reveal-avanti-btn" style="max-width:220px;">${isUltima ? "Vedi tutte insieme" : "Tocca per la prossima carta"}</button>
+    </div>`;
+
+  suonaEffettoRarita(c.livello);
+  sparaParticelle(c.livello);
+
+  document.getElementById("pack-reveal-singola").addEventListener("click", () => {
+    mostraCartaSingolaReveal(pack, nuoveCarte, nomiPossedutiPrimaDelPacco, indice + 1);
+  }, { once: true });
 
 }
 
@@ -7470,7 +7501,7 @@ const TUTORIAL_PASSI = [
   },
   {
     selettore: "#btn-eventi-torneo",
-    testo: "Accanto trovi gli Eventi: una classifica a cicli di 2 giorni contro altri Evocatori veri. Ogni ciclo ha le sue regole su quali carte puoi schierare — sempre pensate per non escludere chi ha appena iniziato."
+    testo: "Accanto trovi gli Eventi: qui in realtà ne trovi due, entrambi a cicli di 2 giorni contro altri Evocatori veri. I Giochi Olimpici sono la competizione classica; gli Argonauti richiedono invece un intero equipaggio della stessa identica rarità — e il vincitore porta a casa un premio speciale, il Vello d'Oro."
   },
   {
     selettore: "#dracme-count",
@@ -8503,6 +8534,41 @@ function calcolaTerrenoEventi(numeroCiclo) {
 }
 
 function apriEventi() {
+  document.getElementById("eventi-modal").classList.remove("hidden");
+  document.querySelector("#eventi-modal .modal-card").classList.remove("eventi-bg-attivo", "argonauti-bg-attivo");
+
+  const cicloOlimpici = calcolaNumeroCicloEventiCorrente();
+  const restrizioneOlimpici = generaRestrizioneEventi(cicloOlimpici);
+  const oreOlimpici = Math.floor((EVENTI_DURATA_CICLO_MS - (Date.now() % EVENTI_DURATA_CICLO_MS)) / (60 * 60 * 1000));
+
+  const cicloArgonauti = calcolaNumeroCicloArgonautiCorrente();
+  const restrizioneArgonauti = generaRestrizioneArgonauti(cicloArgonauti);
+  const tempoTrascorsoArg = Date.now() - ARGONAUTI_SFASAMENTO_MS;
+  const oreArgonauti = Math.floor((EVENTI_DURATA_CICLO_MS - (tempoTrascorsoArg % EVENTI_DURATA_CICLO_MS)) / (60 * 60 * 1000));
+
+  document.getElementById("eventi-content").innerHTML = `
+    <div class="eventi-selettore-riga">
+      <div class="eventi-pannello-tipo eventi-pannello-olimpici" id="pannello-apri-olimpici">
+        <div class="eventi-pannello-titolo">🏆 I Giochi Olimpici</div>
+        <p class="eventi-pannello-sottotitolo">La grande competizione, aperta a tutti</p>
+        <p class="eventi-pannello-info">${testoRestrizioneEventi(restrizioneOlimpici)}</p>
+        <p class="eventi-pannello-info">Termina tra ${oreOlimpici}h</p>
+        <button type="button" class="events-btn events-btn-main" id="btn-entra-olimpici">Entra nell'Arena</button>
+      </div>
+      <div class="eventi-pannello-tipo eventi-pannello-argonauti" id="pannello-apri-argonauti">
+        <div class="eventi-pannello-titolo">⚓ Gli Argonauti</div>
+        <p class="eventi-pannello-sottotitolo">Un equipaggio di eroi dello stesso rango</p>
+        <p class="eventi-pannello-info">${testoRestrizioneArgonauti(restrizioneArgonauti)}</p>
+        <p class="eventi-pannello-info">Termina tra ${oreArgonauti}h</p>
+        <button type="button" class="events-btn events-btn-main argonauti-btn-main" id="btn-entra-argonauti">Salpa con la Nave Argo</button>
+      </div>
+    </div>`;
+
+  document.getElementById("btn-entra-olimpici").addEventListener("click", apriGiochiOlimpici);
+  document.getElementById("btn-entra-argonauti").addEventListener("click", apriArgonauti);
+}
+
+function apriGiochiOlimpici() {
   eventiNumeroCicloCorrente = calcolaNumeroCicloEventiCorrente();
   eventiRestrizioneCorrente = generaRestrizioneEventi(eventiNumeroCicloCorrente);
   eventiTerrenoCorrente = calcolaTerrenoEventi(eventiNumeroCicloCorrente);
@@ -8510,6 +8576,7 @@ function apriEventi() {
 
   document.getElementById("eventi-content").innerHTML = `<p style="text-align:center; color:#a89a7a;">Preparazione dell'arena in corso...</p>`;
   document.getElementById("eventi-modal").classList.remove("hidden");
+  document.querySelector("#eventi-modal .modal-card").classList.remove("argonauti-bg-attivo");
   document.querySelector("#eventi-modal .modal-card").classList.add("eventi-bg-attivo");
 
   if (!utenteFirebaseAttuale) return;
@@ -8674,9 +8741,13 @@ function renderizzaHubEventi() {
         <p style="color:#e0d5c1; font-size:0.85rem; margin-top:4px;">La tua posizione: <b style="color:#ffcc66;">${miaPosizione}</b> — Punti: <b style="color:#ffcc66;">${mioPunteggio}</b></p>
         <p style="color:${eventiSfideRimaste > 0 ? '#7ee787' : '#f56565'}; font-size:0.78rem;">Sfide disponibili: ${eventiSfideRimaste} / ${EVENTI_SFIDE_MAX}</p>
       </div>
-      <button type="button" id="ev-cambia-squadra-btn" class="events-btn" style="max-width:200px; font-size:0.75rem;">Cambia squadra</button>
+      <div style="display:flex; gap:8px;">
+        <button type="button" id="ev-torna-selettore-btn" class="events-btn" style="max-width:160px; font-size:0.75rem;">← Altri Eventi</button>
+        <button type="button" id="ev-cambia-squadra-btn" class="events-btn" style="max-width:200px; font-size:0.75rem;">Cambia squadra</button>
+      </div>
       <div style="display:flex; flex-direction:column; gap:8px; width:100%; align-items:center;">${avversariHTML || '<p style="color:#a89a7a;">Nessun avversario disponibile al momento.</p>'}</div>`;
 
+    document.getElementById("ev-torna-selettore-btn").addEventListener("click", apriEventi);
     document.getElementById("ev-cambia-squadra-btn").addEventListener("click", renderizzaSelezioneSquadraEventi);
     document.querySelectorAll(".ev-sfida-btn").forEach(btn => {
       btn.addEventListener("click", () => avviaSfidaEventi(btn.dataset.id, elenco.find(e => e.id === btn.dataset.id)));
@@ -8987,6 +9058,583 @@ function controllaFineCicloEventi(callback) {
       </div>`;
 
     document.getElementById("ev-continua-dopo-premio-btn").addEventListener("click", callback);
+  }).catch(() => { salvaProgressoCloud(); callback(); });
+}
+
+// ===== Gli Argonauti: secondo evento, rarità fissa a rotazione (mai Leggendaria), ciclo sfasato di un giorno =====
+
+const ARGONAUTI_SFASAMENTO_MS = 1 * 24 * 60 * 60 * 1000;
+const ARGONAUTI_SFIDE_MAX = 5;
+
+let argonautiSquadraDifensiva = null;
+let argonautiSfideRimaste = ARGONAUTI_SFIDE_MAX;
+let argonautiTimestampUltimaSfida = null;
+let argonautiUltimoCicloPremiato = 0;
+let argonautiPartiteGiocateQuestoCiclo = 0;
+let argonautiUltimoCicloPartecipato = 0;
+
+function calcolaNumeroCicloArgonautiCorrente() {
+  return Math.floor((Date.now() - ARGONAUTI_SFASAMENTO_MS) / EVENTI_DURATA_CICLO_MS);
+}
+
+function generaRestrizioneArgonauti(numeroCiclo) {
+  const rand = pseudoRandomSeminato(numeroCiclo * 5309 + 41);
+  const raritaEsatta = 1 + Math.floor(rand() * 5);
+  return { raritaEsatta };
+}
+
+function cartaAmmissibileArgonauti(carta, restrizione) {
+  return carta.livello === restrizione.raritaEsatta;
+}
+
+function testoRestrizioneArgonauti(restrizione) {
+  return `Solo carte: ${ETICHETTE_LIVELLI[restrizione.raritaEsatta]}`;
+}
+
+function assicuraRicaricaSfideArgonauti() {
+  if (argonautiSfideRimaste >= ARGONAUTI_SFIDE_MAX) {
+    argonautiTimestampUltimaSfida = null;
+    return;
+  }
+  if (!argonautiTimestampUltimaSfida) {
+    argonautiTimestampUltimaSfida = Date.now();
+    return;
+  }
+  const oreTrascorse = Math.floor((Date.now() - argonautiTimestampUltimaSfida) / (60 * 60 * 1000));
+  if (oreTrascorse <= 0) return;
+  argonautiSfideRimaste = Math.min(ARGONAUTI_SFIDE_MAX, argonautiSfideRimaste + oreTrascorse);
+  argonautiTimestampUltimaSfida += oreTrascorse * 60 * 60 * 1000;
+  if (argonautiSfideRimaste >= ARGONAUTI_SFIDE_MAX) argonautiTimestampUltimaSfida = null;
+}
+
+function generaSquadraBotArgonauti(restrizione, rand) {
+  const pool = CARTE_FISSE.filter(c => c.livello === restrizione.raritaEsatta);
+  const squadra = [];
+  for (let i = 0; i < 5; i++) {
+    const base = pool[Math.floor(rand() * pool.length)];
+    squadra.push({ nome: base.nome, immagine: base.immagine, tratti: base.tratti || [], statistiche: { ...base.statisticheFisse } });
+  }
+  return squadra;
+}
+
+function seminaLottiBotArgonauti(numeroCiclo, restrizione, callback) {
+  const rand = pseudoRandomSeminato(numeroCiclo * 88897 + 3);
+  const NUM_BOT = 40;
+  let scritture = 0;
+  for (let i = 0; i < NUM_BOT; i++) {
+    const nome = EVENTI_NOMI_BOT[Math.floor(rand() * EVENTI_NOMI_BOT.length)] + " " + (i + 1);
+    const punteggio = Math.floor(rand() * 26);
+    const squadra = generaSquadraBotArgonauti(restrizione, rand);
+    dbFirebase.ref(`argonauti_classifica/${numeroCiclo}/bot_${i}`).set({ nome, punteggio, squadra, eBot: true })
+      .catch(() => {})
+      .finally(() => { scritture++; if (scritture >= NUM_BOT && callback) callback(); });
+  }
+}
+
+function assicuraClassificaArgonautiSeminata(numeroCiclo, restrizione, callback) {
+  dbFirebase.ref(`argonauti_classifica/${numeroCiclo}/bot_0`).once("value").then(snapshot => {
+    if (snapshot.exists()) {
+      callback();
+    } else {
+      seminaLottiBotArgonauti(numeroCiclo, restrizione, callback);
+    }
+  }).catch(() => callback());
+}
+
+let argonautiNumeroCicloCorrente = null;
+let argonautiRestrizioneCorrente = null;
+let argonautiTerrenoCorrente = null;
+
+function calcolaTerrenoArgonauti(numeroCiclo) {
+  const rand = pseudoRandomSeminato(numeroCiclo * 60013 + 19);
+  return EVENTI_TERRENI[Math.floor(rand() * EVENTI_TERRENI.length)];
+}
+
+function apriArgonauti() {
+  argonautiNumeroCicloCorrente = calcolaNumeroCicloArgonautiCorrente();
+  argonautiRestrizioneCorrente = generaRestrizioneArgonauti(argonautiNumeroCicloCorrente);
+  argonautiTerrenoCorrente = calcolaTerrenoArgonauti(argonautiNumeroCicloCorrente);
+  assicuraRicaricaSfideArgonauti();
+
+  document.getElementById("eventi-content").innerHTML = `<p style="text-align:center; color:#a89a7a;">Preparazione della spedizione in corso...</p>`;
+  document.getElementById("eventi-modal").classList.remove("hidden");
+  document.querySelector("#eventi-modal .modal-card").classList.remove("eventi-bg-attivo");
+  document.querySelector("#eventi-modal .modal-card").classList.add("argonauti-bg-attivo");
+
+  if (!utenteFirebaseAttuale) return;
+
+  controllaFineCicloArgonauti(() => {
+    dbFirebase.ref(`argonauti_classifica/${argonautiNumeroCicloCorrente}/${utenteFirebaseAttuale.uid}`).once("value").then(snapshot => {
+      if (snapshot.exists() && snapshot.val().squadra) {
+        argonautiSquadraDifensiva = snapshot.val().squadra;
+        assicuraClassificaArgonautiSeminata(argonautiNumeroCicloCorrente, argonautiRestrizioneCorrente, renderizzaHubArgonauti);
+      } else {
+        argonautiPartiteGiocateQuestoCiclo = 0;
+        renderizzaSelezioneSquadraArgonauti();
+      }
+    }).catch(() => renderizzaSelezioneSquadraArgonauti());
+  });
+}
+
+function renderizzaSelezioneSquadraArgonauti() {
+  const contenitore = document.getElementById("eventi-content");
+  const slotsHTML = Array.from({ length: 5 }, (_, i) => `
+    <div class="select-row sott-select-row">
+      <span>${i + 1}°:</span>
+      <select id="arg-deploy-slot-${i}" class="deploy-select"></select>
+    </div>`).join("");
+
+  contenitore.innerHTML = `
+    <div style="text-align:center; width:100%;">
+      <p style="color:#7ecbe0; font-weight:bold;">⚓ Gli Argonauti — Nuova Spedizione</p>
+      <p style="color:#a89a7a; font-size:0.8rem;">${testoRestrizioneArgonauti(argonautiRestrizioneCorrente)}</p>
+      <p style="color:#7ecbe0; font-size:0.82rem; font-weight:bold; margin-top:4px;">Terreno di questa spedizione: ${terrenoEmoji(argonautiTerrenoCorrente)}</p>
+      <p style="color:#a89a7a; font-size:0.75rem; margin-top:4px;">Scegli le 5 carte con cui parteciperai — verranno usate sia quando sfidi altri, sia come tua difesa quando qualcuno sfida te.</p>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:5px; width:100%; max-width:360px;">${slotsHTML}</div>
+    <button type="button" id="arg-conferma-squadra-btn" class="events-btn events-btn-main argonauti-btn-main" style="max-width:240px;" disabled>Scegli le tue 5 creature</button>`;
+
+  popolaSelectSchieramentoArgonauti();
+  potenziaMenuATendina();
+}
+
+function popolaSelectSchieramentoArgonauti() {
+  let valoriSelezionati = [];
+  for (let i = 0; i < 5; i++) {
+    const s = document.getElementById(`arg-deploy-slot-${i}`);
+    if (s && s.value) valoriSelezionati.push(s.value);
+  }
+
+  for (let i = 0; i < 5; i++) {
+    const select = document.getElementById(`arg-deploy-slot-${i}`);
+    if (!select) continue;
+    const currentVal = select.value;
+    select.innerHTML = '<option value="">-- Seleziona --</option>';
+
+    deckGiocatore.forEach(carta => {
+      if (carta.isJolly || !cartaAmmissibileArgonauti(carta, argonautiRestrizioneCorrente)) return;
+      if (valoriSelezionati.includes(carta.id) && carta.id !== currentVal) return;
+
+      const option = document.createElement("option");
+      option.value = carta.id;
+      let stringaTratti = carta.tratti && carta.tratti.length > 0 ? ` [${carta.tratti.join(",")}]` : " [Nessuno]";
+      option.innerText = `${iconaCartaTesto(carta)} ${carta.nome} F:${carta.statistiche.ferocia} B:${carta.statistiche.balzo} C:${carta.statistiche.corazza} I:${carta.statistiche.istinto}${stringaTratti}`;
+      option.dataset.carta = JSON.stringify({ nome: carta.nome, immagine: carta.immagine, tratti: carta.tratti || [], stelle: carta.stelle, livello: carta.livello, statistiche: carta.statistiche });
+      if (carta.id === currentVal) option.selected = true;
+      select.appendChild(option);
+    });
+
+    select.removeEventListener("change", gestisciCambioSelectArgonauti);
+    select.addEventListener("change", gestisciCambioSelectArgonauti);
+  }
+}
+
+function gestisciCambioSelectArgonauti() {
+  popolaSelectSchieramentoArgonauti();
+  const btn = document.getElementById("arg-conferma-squadra-btn");
+  let scelti = [];
+  let valido = true;
+  for (let i = 0; i < 5; i++) {
+    const val = document.getElementById(`arg-deploy-slot-${i}`).value;
+    if (!val || scelti.includes(val)) valido = false;
+    else scelti.push(val);
+  }
+  if (btn) {
+    btn.disabled = !valido;
+    btn.innerText = valido ? "Conferma squadra" : "Scegli le tue 5 creature";
+  }
+}
+
+document.getElementById("eventi-modal")?.addEventListener("click", (e) => {
+  if (e.target && e.target.id === "arg-conferma-squadra-btn" && !e.target.disabled) {
+    confermaSquadraArgonauti();
+  }
+});
+
+function confermaSquadraArgonauti() {
+  const squadra = [];
+  for (let i = 0; i < 5; i++) {
+    const cardId = document.getElementById(`arg-deploy-slot-${i}`).value;
+    const carta = deckGiocatore.find(c => c.id === cardId);
+    squadra.push({ nome: carta.nome, immagine: carta.immagine, tratti: carta.tratti || [], statistiche: { ...carta.statistiche } });
+  }
+  argonautiSquadraDifensiva = squadra;
+  argonautiUltimoCicloPartecipato = argonautiNumeroCicloCorrente;
+  argonautiPartiteGiocateQuestoCiclo = 0;
+
+  dbFirebase.ref(`argonauti_classifica/${argonautiNumeroCicloCorrente}/${utenteFirebaseAttuale.uid}`).set({
+    nome: nicknameUtente, punteggio: 0, squadra, eBot: false
+  }).then(() => {
+    salvaProgressoCloud();
+    assicuraClassificaArgonautiSeminata(argonautiNumeroCicloCorrente, argonautiRestrizioneCorrente, renderizzaHubArgonauti);
+  }).catch((err) => {
+    console.error("Errore salvataggio squadra Argonauti:", err);
+    document.getElementById("eventi-content").innerHTML = `
+      <p style="text-align:center; color:#f56565;">Non è stato possibile salvare la squadra. Controlla la connessione e riprova.</p>
+      <button type="button" id="arg-riprova-squadra-btn" class="events-btn events-btn-main" style="max-width:220px;">Riprova</button>`;
+    document.getElementById("arg-riprova-squadra-btn").addEventListener("click", renderizzaSelezioneSquadraArgonauti);
+  });
+}
+
+function renderizzaHubArgonauti() {
+  assicuraRicaricaSfideArgonauti();
+  const contenitore = document.getElementById("eventi-content");
+  const tempoTrascorso = Date.now() - ARGONAUTI_SFASAMENTO_MS;
+  const tempoAlProssimoCiclo = EVENTI_DURATA_CICLO_MS - (tempoTrascorso % EVENTI_DURATA_CICLO_MS);
+  const oreRimaste = Math.floor(tempoAlProssimoCiclo / (60 * 60 * 1000));
+
+  dbFirebase.ref(`argonauti_classifica/${argonautiNumeroCicloCorrente}`).once("value").then(snapshot => {
+    const dati = snapshot.val() || {};
+    const elenco = Object.entries(dati).map(([id, v]) => ({ id, ...v })).sort((a, b) => b.punteggio - a.punteggio);
+    const mioIndice = elenco.findIndex(e => e.id === utenteFirebaseAttuale.uid);
+    const mioPunteggio = mioIndice >= 0 ? elenco[mioIndice].punteggio : 0;
+    const miaPosizione = mioIndice >= 0 ? mioIndice + 1 : "-";
+
+    let avversari;
+    if (argonautiPartiteGiocateQuestoCiclo === 0) {
+      const candidatiSfidabili = elenco.filter(e => e.id !== utenteFirebaseAttuale.uid);
+      const scelti = new Set();
+      while (scelti.size < Math.min(5, candidatiSfidabili.length)) {
+        scelti.add(candidatiSfidabili[Math.floor(Math.random() * candidatiSfidabili.length)].id);
+      }
+      const idScelti = elenco.filter(e => scelti.has(e.id) || e.id === utenteFirebaseAttuale.uid).map(e => e.id);
+      avversari = elenco.filter(e => idScelti.includes(e.id));
+    } else if (mioIndice >= 0) {
+      const inizio = Math.max(0, mioIndice - 5);
+      const fine = Math.min(elenco.length, mioIndice + 6);
+      avversari = elenco.slice(inizio, fine);
+    } else {
+      avversari = elenco.slice(0, 5);
+    }
+
+    const avversariHTML = avversari.map(a => {
+      const sonoIo = a.id === utenteFirebaseAttuale.uid;
+      return `
+      <div style="display:flex; justify-content:space-between; align-items:center; background:${sonoIo ? 'rgba(126,203,224,0.15)' : 'rgba(0,0,0,0.35)'}; border:1px solid ${sonoIo ? '#7ecbe0' : '#2f4f5c'}; border-radius:8px; padding:8px 12px; width:100%; max-width:420px;">
+        <span style="color:#e0d5c1; font-size:0.85rem;">${sonoIo ? "⭐" : (a.eBot ? "🤖" : "👤")} ${a.nome}${sonoIo ? " (Tu)" : ""} <span style="color:#7ecbe0;">(${a.punteggio} pt)</span></span>
+        ${sonoIo ? "" : `<button type="button" class="events-btn arg-sfida-btn argonauti-btn-main" data-id="${a.id}" style="max-width:100px; font-size:0.75rem; padding:6px 10px;" ${argonautiSfideRimaste <= 0 ? "disabled" : ""}>Sfida</button>`}
+      </div>`;
+    }).join("");
+
+    contenitore.innerHTML = `
+      <div style="text-align:center; width:100%;">
+        <p style="color:#7ecbe0; font-weight:bold;">⚓ Spedizione in corso — termina tra ${oreRimaste}h</p>
+        <p style="color:#a89a7a; font-size:0.78rem;">${testoRestrizioneArgonauti(argonautiRestrizioneCorrente)}</p>
+        <p style="color:#7ecbe0; font-size:0.78rem; font-weight:bold;">Terreno: ${terrenoEmoji(argonautiTerrenoCorrente)}</p>
+        <p style="color:#e0d5c1; font-size:0.85rem; margin-top:4px;">La tua posizione: <b style="color:#7ecbe0;">${miaPosizione}</b> — Punti: <b style="color:#7ecbe0;">${mioPunteggio}</b></p>
+        <p style="color:${argonautiSfideRimaste > 0 ? '#7ee787' : '#f56565'}; font-size:0.78rem;">Sfide disponibili: ${argonautiSfideRimaste} / ${ARGONAUTI_SFIDE_MAX}</p>
+      </div>
+      <div style="display:flex; gap:8px;">
+        <button type="button" id="arg-torna-selettore-btn" class="events-btn" style="max-width:160px; font-size:0.75rem;">← Altri Eventi</button>
+        <button type="button" id="arg-cambia-squadra-btn" class="events-btn" style="max-width:200px; font-size:0.75rem;">Cambia squadra</button>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:8px; width:100%; align-items:center;">${avversariHTML || '<p style="color:#a89a7a;">Nessun avversario disponibile al momento.</p>'}</div>`;
+
+    document.getElementById("arg-torna-selettore-btn").addEventListener("click", apriEventi);
+    document.getElementById("arg-cambia-squadra-btn").addEventListener("click", renderizzaSelezioneSquadraArgonauti);
+    document.querySelectorAll(".arg-sfida-btn").forEach(btn => {
+      btn.addEventListener("click", () => avviaSfidaArgonauti(btn.dataset.id, elenco.find(e => e.id === btn.dataset.id)));
+    });
+  }).catch((err) => {
+    console.error("Errore lettura classifica Argonauti:", err);
+    contenitore.innerHTML = `
+      <p style="text-align:center; color:#f56565;">Non è stato possibile caricare la classifica. Controlla la connessione e riprova.</p>
+      <button type="button" id="arg-riprova-hub-btn" class="events-btn events-btn-main" style="max-width:220px;">Riprova</button>`;
+    document.getElementById("arg-riprova-hub-btn").addEventListener("click", renderizzaHubArgonauti);
+  });
+}
+
+let argonautiSquadraLocaleOrdinata = null;
+let argonautiIndiceSelezionatoPerScambio = null;
+
+function avviaSfidaArgonauti(avversarioId, avversarioDati) {
+  if (argonautiSfideRimaste <= 0 || !avversarioDati) return;
+
+  const tutteStat = ["ferocia", "balzo", "corazza", "istinto"];
+  const modalitaScelta = EVENTI_MODALITA[Math.floor(Math.random() * EVENTI_MODALITA.length)];
+  const statisticheMescolate = tutteStat.slice().sort(() => Math.random() - 0.5);
+  const argonautiStatistiche = statisticheMescolate.slice(0, modalitaScelta.numStat);
+  const argonautiTerreno = argonautiTerrenoCorrente;
+
+  argonautiSquadraLocaleOrdinata = argonautiSquadraDifensiva.map(c => ({ ...c }));
+  argonautiIndiceSelezionatoPerScambio = null;
+
+  renderizzaAnteprimaSfidaArgonauti(avversarioId, avversarioDati, argonautiTerreno, modalitaScelta, argonautiStatistiche);
+}
+
+function renderizzaAnteprimaSfidaArgonauti(avversarioId, avversarioDati, terreno, modalitaScelta, statistiche) {
+  const contenitore = document.getElementById("eventi-content");
+  const terrenoAttualeMin = (terreno || "").toLowerCase();
+
+  const rigaCongeniale = (c) => {
+    const cong = terrenoCongenialeCreatura(c.tratti);
+    if (!cong) return `<div style="font-size:0.6rem; color:#6b5f45; margin-top:1px;">— nessun terreno preferito —</div>`;
+    const favorevole = cong.chiavi.includes(terrenoAttualeMin);
+    return `<div style="font-size:0.6rem; margin-top:1px; font-weight:${favorevole ? "bold" : "normal"}; color:${favorevole ? "#7ee787" : "#a89a7a"};">${cong.emoji} ${cong.nome}${favorevole ? " ✓" : ""}</div>`;
+  };
+
+  const cartaOpponenteHTML = (c) => `
+    <div style="background:rgba(0,0,0,0.35); border:1px solid #2f4f5c; border-radius:8px; padding:6px; text-align:center; width:90px; display:flex; flex-direction:column; align-items:center;">
+      <div style="font-size:1.4rem;">${miniImmagineCarta(c, 30)}</div>
+      <div style="font-size:0.68rem; font-weight:bold; color:#e0d5c1; margin-top:2px; min-height:2.2em; display:flex; align-items:center;">${c.nome}</div>
+      <div style="font-size:0.62rem; color:#a89a7a;">F:${c.statistiche.ferocia} B:${c.statistiche.balzo}<br>C:${c.statistiche.corazza} I:${c.statistiche.istinto}</div>
+      ${rigaCongeniale(c)}
+    </div>`;
+
+  const cartaMiaHTML = (c, idx) => `
+    <div class="arg-carta-riordino" data-idx="${idx}" style="background:${idx === argonautiIndiceSelezionatoPerScambio ? 'rgba(126,203,224,0.3)' : 'rgba(0,0,0,0.35)'}; border:1px solid ${idx === argonautiIndiceSelezionatoPerScambio ? '#7ecbe0' : '#2f4f5c'}; border-radius:8px; padding:6px; text-align:center; width:90px; cursor:pointer; display:flex; flex-direction:column; align-items:center;">
+      <div style="font-size:1.4rem;">${miniImmagineCarta(c, 30)}</div>
+      <div style="font-size:0.68rem; font-weight:bold; color:#e0d5c1; margin-top:2px; min-height:2.2em; display:flex; align-items:center;">${c.nome}</div>
+      <div style="font-size:0.62rem; color:#a89a7a;">F:${c.statistiche.ferocia} B:${c.statistiche.balzo}<br>C:${c.statistiche.corazza} I:${c.statistiche.istinto}</div>
+      ${rigaCongeniale(c)}
+    </div>`;
+
+  const righeRound = Array.from({ length: 5 }, (_, idx) => `
+    <div style="display:flex; align-items:center; gap:10px;">
+      ${cartaOpponenteHTML(avversarioDati.squadra[idx])}
+      <span style="color:#7ecbe0; font-size:0.7rem; font-weight:bold; width:20px; text-align:center;">R${idx + 1}</span>
+      ${cartaMiaHTML(argonautiSquadraLocaleOrdinata[idx], idx)}
+    </div>`).join("");
+
+  contenitore.innerHTML = `
+    <div style="text-align:center; width:100%;">
+      <p style="color:#7ecbe0; font-weight:bold;">Sfida contro ${avversarioDati.nome}</p>
+      <p style="color:#a89a7a; font-size:0.8rem;">Terreno: ${terrenoEmoji(terreno)} — Modalità: ${modalitaScelta.nome} (${statistiche.map(s => s.toUpperCase()).join(" + ")})</p>
+    </div>
+    <div style="display:flex; gap:10px; justify-content:center; font-size:0.75rem; font-weight:bold;">
+      <span style="color:#f56565; width:90px; text-align:center;">Avversario</span>
+      <span style="width:20px;"></span>
+      <span style="color:#7ee787; width:90px; text-align:center;">Tu — tocca 2 per scambiare</span>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:8px; align-items:center;">${righeRound}</div>
+    <div style="display:flex; gap:10px;">
+      <button type="button" id="arg-annulla-anteprima-btn" class="events-btn" style="max-width:160px; font-size:0.8rem;">Annulla</button>
+      <button type="button" id="arg-combatti-btn" class="events-btn events-btn-main argonauti-btn-main" style="max-width:200px;">⚔️ Combatti</button>
+    </div>`;
+
+  document.querySelectorAll(".arg-carta-riordino").forEach(el => {
+    el.addEventListener("click", () => {
+      const idx = parseInt(el.dataset.idx);
+      if (argonautiIndiceSelezionatoPerScambio === null) {
+        argonautiIndiceSelezionatoPerScambio = idx;
+      } else if (argonautiIndiceSelezionatoPerScambio === idx) {
+        argonautiIndiceSelezionatoPerScambio = null;
+      } else {
+        const tmp = argonautiSquadraLocaleOrdinata[idx];
+        argonautiSquadraLocaleOrdinata[idx] = argonautiSquadraLocaleOrdinata[argonautiIndiceSelezionatoPerScambio];
+        argonautiSquadraLocaleOrdinata[argonautiIndiceSelezionatoPerScambio] = tmp;
+        argonautiIndiceSelezionatoPerScambio = null;
+      }
+      renderizzaAnteprimaSfidaArgonauti(avversarioId, avversarioDati, terreno, modalitaScelta, statistiche);
+    });
+  });
+
+  document.getElementById("arg-annulla-anteprima-btn").addEventListener("click", renderizzaHubArgonauti);
+  document.getElementById("arg-combatti-btn").addEventListener("click", () => {
+    confermaBattagliaArgonauti(avversarioId, avversarioDati, terreno, modalitaScelta, statistiche);
+  });
+}
+
+function confermaBattagliaArgonauti(avversarioId, avversarioDati, argonautiTerreno, modalitaScelta, argonautiStatistiche) {
+  assicuraRicaricaSfideArgonauti();
+  argonautiSfideRimaste--;
+  if (!argonautiTimestampUltimaSfida) argonautiTimestampUltimaSfida = Date.now();
+
+  const squadraDaUsare = argonautiSquadraLocaleOrdinata;
+
+  document.getElementById("eventi-modal").classList.add("hidden");
+
+  let roundVintiArgonauti = 0;
+  nuovoRegistroBattaglia();
+  document.getElementById("battle-title-outcome").innerText = `SFIDA CONTRO ${avversarioDati.nome.toUpperCase()}...`;
+  document.getElementById("battle-report-content").innerHTML = "";
+  document.getElementById("battle-result-modal").classList.remove("hidden");
+  let argRoundIdx = 0;
+
+  function eseguiProssimoRoundArgonauti() {
+    if (argRoundIdx >= 5) {
+      risolviFineSfidaArgonauti(avversarioId, avversarioDati, roundVintiArgonauti);
+      return;
+    }
+
+    const miaCarta = squadraDaUsare[argRoundIdx];
+    const cartaAvversaria = avversarioDati.squadra[argRoundIdx];
+
+    let sommaMioVal = 0, sommaAvvVal = 0;
+    argonautiStatistiche.forEach(stat => {
+      sommaMioVal += miaCarta.statistiche[stat];
+      sommaAvvVal += cartaAvversaria.statistiche[stat];
+    });
+
+    let mioValBase = parseFloat((sommaMioVal / argonautiStatistiche.length).toFixed(1));
+    let avvValBase = parseFloat((sommaAvvVal / argonautiStatistiche.length).toFixed(1));
+    let mioMod = calcolaModificatoreTerreno(miaCarta.tratti || [], argonautiTerreno);
+    let avvMod = calcolaModificatoreTerreno(cartaAvversaria.tratti || [], argonautiTerreno);
+    let mioValFinale = parseFloat((mioValBase + mioMod).toFixed(1));
+    let avvValFinale = parseFloat((avvValBase + avvMod).toFixed(1));
+
+    const esitoRound = (mioValFinale > avvValFinale);
+    if (esitoRound) roundVintiArgonauti++;
+
+    const spiegaMio = spiegaModificatoreTerreno(miaCarta.tratti || [], argonautiTerreno);
+    const spiegaAvv = spiegaModificatoreTerreno(cartaAvversaria.tratti || [], argonautiTerreno);
+    registraRoundBattaglia({
+      numeroRound: argRoundIdx + 1,
+      mioNome: miaCarta.nome,
+      nemicoNome: cartaAvversaria.nome,
+      statistiche: argonautiStatistiche,
+      mioBase: mioValBase, mioModificatore: mioMod, mioSpiegazioneModificatore: spiegaMio.spiegazione, mioFinale: mioValFinale,
+      nemicoBase: avvValBase, nemicoModificatore: avvMod, nemicoSpiegazioneModificatore: spiegaAvv.spiegazione, nemicoFinale: avvValFinale,
+      vinto: esitoRound
+    });
+
+    let roundCardId = `clash-arg-row-${argRoundIdx}`;
+    let rLineHTML = `
+      <div class="battle-arena-row" id="${roundCardId}">
+        <div class="effetto-impatto">${svgEsplosioneImpatto()}</div>
+        <div class="mini-card-anim" id="my-arg-card-${argRoundIdx}">
+          <div style="font-size:0.8rem; font-weight:bold; color:#7ecbe0;">${miaCarta.nome}</div>
+          <div style="font-size:1.5rem; margin:5px 0;">${miniImmagineCarta(miaCarta, 40)}</div>
+          <div style="font-size:0.75rem; font-weight:bold; color:#fff;">PUNTI: ${mioValFinale}</div>
+        </div>
+        <div class="vs-clash-text" id="vs-text-arg-${argRoundIdx}">ROUND ${argRoundIdx + 1}</div>
+        <div class="mini-card-anim" id="nem-arg-card-${argRoundIdx}">
+          <div style="font-size:0.8rem; font-weight:bold; color:#f56565;">${cartaAvversaria.nome}</div>
+          <div style="font-size:1.5rem; margin:5px 0;">${miniImmagineCarta(cartaAvversaria, 40)}</div>
+          <div style="font-size:0.75rem; font-weight:bold; color:#fff;">PUNTI: ${avvValFinale}</div>
+        </div>
+      </div>`;
+
+    if (argRoundIdx === 0) {
+      document.getElementById("battle-report-content").innerHTML = `<p style="text-align:center; color:#a89a7a; font-size:0.8rem;">Modalità: ${modalitaScelta.nome} (${argonautiStatistiche.map(s => s.toUpperCase()).join(" + ")}) — Terreno: ${terrenoEmoji(argonautiTerreno)}</p>` + rLineHTML;
+    } else {
+      document.getElementById("battle-report-content").insertAdjacentHTML("beforeend", rLineHTML);
+    }
+
+    let targetRow = document.getElementById(roundCardId);
+    if (targetRow) targetRow.scrollIntoView({ behavior: 'smooth', block: 'end' });
+
+    setTimeout(() => {
+      document.getElementById(`my-arg-card-${argRoundIdx}`).classList.add("mia-card-scatto");
+      document.getElementById(`nem-arg-card-${argRoundIdx}`).classList.add("nemica-card-scatto");
+      document.getElementById(`vs-text-arg-${argRoundIdx}`).classList.add("shake");
+
+      document.getElementById(roundCardId)?.classList.add("impatto-flash");
+      document.getElementById(roundCardId)?.querySelector(".effetto-impatto")?.classList.add("attivo");
+
+      setTimeout(() => {
+        if (esitoRound) {
+          document.getElementById(`nem-arg-card-${argRoundIdx}`).classList.add("card-sconfitta");
+          document.getElementById(`vs-text-arg-${argRoundIdx}`).innerHTML = "VINCI";
+          document.getElementById(`vs-text-arg-${argRoundIdx}`).style.color = "#7ee787";
+        } else {
+          document.getElementById(`my-arg-card-${argRoundIdx}`).classList.add("card-sconfitta");
+          document.getElementById(`vs-text-arg-${argRoundIdx}`).innerHTML = "PERDI";
+          document.getElementById(`vs-text-arg-${argRoundIdx}`).style.color = "#f56565";
+        }
+        argRoundIdx++;
+        setTimeout(eseguiProssimoRoundArgonauti, 1000);
+      }, 400);
+    }, 600);
+  }
+
+  setTimeout(eseguiProssimoRoundArgonauti, 500);
+}
+
+function risolviFineSfidaArgonauti(avversarioId, avversarioDati, roundVinti) {
+  argonautiPartiteGiocateQuestoCiclo++;
+
+  let epilogoHTML = `<div class="info-divider"></div>`;
+  document.getElementById("battle-title-outcome").innerText = `Sfida conclusa: ${roundVinti} punti guadagnati`;
+
+  epilogoHTML += `<p style="text-align:center; font-size:1.2rem; color:#7ecbe0; font-weight:bold;">+${roundVinti} punti</p>`;
+  epilogoHTML += `<p style="text-align:center; color:#e0d5c1;">Round vinti contro ${avversarioDati.nome}: ${roundVinti} su 5</p>`;
+
+  if (utenteFirebaseAttuale) {
+    const rifMio = dbFirebase.ref(`argonauti_classifica/${argonautiNumeroCicloCorrente}/${utenteFirebaseAttuale.uid}/punteggio`);
+    rifMio.transaction(punteggioAttuale => (punteggioAttuale || 0) + roundVinti).catch((err) => {
+      console.error("Errore aggiornamento punteggio Argonauti:", err);
+    });
+  }
+
+  epilogoHTML += `<div style="text-align:center; margin-top:12px; display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+    <button type="button" class="events-btn btn-vedi-statistiche" style="max-width:220px;">📊 Vedi Statistiche di Battaglia</button>
+    <button type="button" class="events-btn events-btn-main argonauti-btn-main" id="arg-torna-hub-btn" style="max-width:220px;">Torna alla Spedizione</button>
+  </div>`;
+
+  document.getElementById("battle-report-content").insertAdjacentHTML("beforeend", epilogoHTML);
+
+  document.getElementById("arg-torna-hub-btn").addEventListener("click", () => {
+    document.getElementById("battle-result-modal").classList.add("hidden");
+    document.getElementById("eventi-modal").classList.remove("hidden");
+    renderizzaHubArgonauti();
+  });
+}
+
+function estraiCreaturaVelloDoro() {
+  const rand = Math.random();
+  let livello;
+  if (rand < 0.60) livello = 4;
+  else if (rand < 0.95) livello = 5;
+  else livello = 6;
+  return estraiCartaPerLivello(livello);
+}
+
+function calcolaPremioPiazzamentoArgonauti(posizione, puntiOttenuti) {
+  if (posizione === 1) return { dracme: 500, ambra: 3, veloDoro: true, testo: "🥇 1° posto — Il Vello d'Oro è tuo!" };
+  if (posizione >= 2 && posizione <= 3) return { dracme: 350, ambra: 2, livelloCartaPacco: 3, testo: `🥈 ${posizione}° posto!` };
+  if (posizione >= 4 && posizione <= 10) return { dracme: 200, ambra: 1, livelloCartaPacco: 2, testo: `${posizione}° posto` };
+  if (posizione >= 11 && posizione <= 25) return { dracme: 100, ambra: 1, livelloCartaPacco: 0, testo: `${posizione}° posto` };
+  if (puntiOttenuti > 0) return { dracme: 50, ambra: 0, livelloCartaPacco: 0, testo: "Premio di partecipazione" };
+  return null;
+}
+
+function controllaFineCicloArgonauti(callback) {
+  const cicloAttuale = calcolaNumeroCicloArgonautiCorrente();
+
+  if (!argonautiUltimoCicloPartecipato || argonautiUltimoCicloPartecipato >= cicloAttuale || argonautiUltimoCicloPremiato >= argonautiUltimoCicloPartecipato || !utenteFirebaseAttuale) {
+    callback();
+    return;
+  }
+
+  dbFirebase.ref(`argonauti_classifica/${argonautiUltimoCicloPartecipato}`).once("value").then(snapshot => {
+    const dati = snapshot.val() || {};
+    const elenco = Object.entries(dati).map(([id, v]) => ({ id, ...v })).sort((a, b) => b.punteggio - a.punteggio);
+    const mioIndice = elenco.findIndex(e => e.id === utenteFirebaseAttuale.uid);
+    argonautiUltimoCicloPremiato = argonautiUltimoCicloPartecipato;
+
+    if (mioIndice < 0) { salvaProgressoCloud(); callback(); return; }
+
+    const posizione = mioIndice + 1;
+    const puntiOttenuti = elenco[mioIndice].punteggio;
+    const premio = calcolaPremioPiazzamentoArgonauti(posizione, puntiOttenuti);
+
+    if (!premio) { salvaProgressoCloud(); callback(); return; }
+
+    dracmeAttuali += premio.dracme;
+    ambraAttuale += premio.ambra;
+    let cartaVinta = null;
+    if (premio.veloDoro) cartaVinta = estraiCreaturaVelloDoro();
+    else if (premio.livelloCartaPacco > 0) cartaVinta = estraiCartaPerLivello(premio.livelloCartaPacco);
+    if (cartaVinta) deckGiocatore.push(cartaVinta);
+
+    document.getElementById("dracme-count").innerText = dracmeAttuali;
+    document.getElementById("ambra-count").innerText = ambraAttuale;
+    salvaProgressoCloud();
+
+    document.getElementById("eventi-content").innerHTML = `
+      <div style="display:flex; align-items:center; gap:18px; width:100%; height:100%;">
+        <div class="tutorial-chirone-box" style="flex:1; max-width:none; margin:0; border-color:#7ecbe0;">
+          <div class="tutorial-chirone-testo">
+            <p style="font-weight:bold; color:#7ecbe0; font-size:1.1rem;">${premio.testo}</p>
+            <p style="margin-top:6px;">La spedizione precedente si è conclusa: hai totalizzato <b>${puntiOttenuti} punti</b>.</p>
+            <p style="margin-top:6px; color:#7ecbe0; font-weight:bold;">Premio: ${premio.dracme} Dracme${premio.ambra > 0 ? `, ${premio.ambra} Frammenti d'Ambra` : ""}${cartaVinta ? `, e la carta ${cartaVinta.nome}!` : ""}</p>
+          </div>
+        </div>
+        <button type="button" id="arg-continua-dopo-premio-btn" class="events-btn events-btn-main argonauti-btn-main" style="flex:0 0 auto; width:auto; margin-top:0; padding:14px 24px;">Continua</button>
+      </div>`;
+
+    document.getElementById("arg-continua-dopo-premio-btn").addEventListener("click", callback);
   }).catch(() => { salvaProgressoCloud(); callback(); });
 }
 
@@ -10635,7 +11283,7 @@ const CAPITOLI_GUIDA = [
 
   { id: "mondi", titolo: "🗺️ Mondi e Sottomondi", html: `<h3>I Mondi</h3><p>Il vero banco di prova di ogni Evocatore sono i <strong>Mondi</strong>: mappe vastissime fatte di esagoni, dove conquisti territorio sfidando avversari che non serve nemmeno trovare online — li affronti attraverso le difese che hanno lasciato.</p><p>Ogni Mondo ha una soglia d'ingresso pensata per il tuo livello di esperienza, dal principiante che muove i primi passi fino al veterano che accetta ogni carta in gioco.</p><h3>I Sottomondi</h3><p>Ogni Mondo si divide ulteriormente in Sottomondi, ciascuno con la propria variante di regole:</p><ul><li><strong>Normale:</strong> una statistica variabile a settimana</li><li><strong>Bifase:</strong> media di 2 statistiche</li><li><strong>Trifase:</strong> media di 3 statistiche</li><li><strong>Nebbia di Guerra:</strong> non vedi le carte avversarie</li></ul><p>Ogni settimana la mappa si rinnova, e chi ha conquistato di più viene ricompensato di conseguenza. Nessuna conquista è mai per sempre — ma nessuna vittoria è mai sprecata.</p>` },
 
-  { id: "eventi", titolo: "🏆 Eventi", html: `<h3>Una classifica, due giorni</h3><p>Se cerchi una sfida più diretta contro altri Evocatori veri, gli Eventi sono la tua arena. Ogni due giorni parte un nuovo ciclo, con una <strong>restrizione</strong> che decide quali carte puoi schierare (a volte solo Comuni, a volte con una statistica minima richiesta) — pensata apposta per non escludere mai chi ha appena iniziato. La restrizione, insieme al terreno di quel ciclo, la conosci subito, prima ancora di scegliere la tua squadra di 5.</p><h3>Come si sfida</h3><p>La prima sfida di ogni ciclo è casuale; dopo, potrai sfidare solo i 5 Evocatori subito sopra e i 5 subito sotto di te in classifica — più sali, più cambiano gli avversari a portata di mano. Prima di ogni scontro vedi in anteprima la squadra avversaria e puoi riordinare la tua, per sfruttare al meglio modalità e terreno di quella specifica sfida. Hai 5 sfide disponibili, che si ricaricano una ogni ora.</p><h3>Punteggio e premi</h3><p>Ogni round vinto in uno scontro vale 1 punto, fino a un massimo di 5 a sfida. Alla fine del ciclo, il piazzamento in classifica decide il premio — Dracme, Frammenti d'Ambra, e per i migliori anche pacchetti di carte — assegnato non appena il ciclo successivo comincia.</p><p><em>Consiglio da Evocatore: dato che restrizione e terreno sono fissi per tutto il ciclo, prenditi un momento a scegliere la squadra con criterio prima di lanciarti — è una decisione che vale due giorni interi.</em></p>` },
+  { id: "eventi", titolo: "🏆 Eventi", html: `<h3>Due arene, due spiriti diversi</h3><p>Aprendo gli Eventi trovi due competizioni distinte, ciascuna con il proprio ciclo di due giorni e la propria classifica: scegli quale affrontare, o entrambe.</p><h3>🏆 I Giochi Olimpici</h3><p>La grande competizione, aperta a tutti. Ogni ciclo porta una <strong>restrizione</strong> che decide quali carte puoi schierare (a volte solo Comuni, a volte con una statistica minima richiesta) — pensata apposta per non escludere mai chi ha appena iniziato.</p><h3>⚓ Gli Argonauti</h3><p>Una spedizione con un equipaggio scelto: qui la restrizione è sempre <strong>una sola rarità esatta</strong> (mai Leggendaria), diversa ad ogni ciclo — un ciclo tutti con carte Comuni, il successivo tutti con Rare, e così via. Il suo ciclo è sfasato di un giorno rispetto ai Giochi Olimpici, così c'è sempre una delle due competizioni a metà strada. Il premio per il 1° posto è speciale: <strong>il Vello d'Oro</strong>, una creatura rara estratta tra Epica (60%), Mitica (35%) e persino Leggendaria (5%).</p><h3>Come si sfida</h3><p>In entrambi gli eventi, la restrizione e il terreno del ciclo li conosci subito, prima ancora di scegliere la tua squadra di 5. La prima sfida di ogni ciclo è casuale; dopo, potrai sfidare solo i 5 Evocatori subito sopra e i 5 subito sotto di te in classifica. Prima di ogni scontro vedi in anteprima la squadra avversaria e puoi riordinare la tua. Hai 5 sfide disponibili per evento, che si ricaricano una ogni ora.</p><h3>Punteggio e premi</h3><p>Ogni round vinto in uno scontro vale 1 punto, fino a un massimo di 5 a sfida. Alla fine del ciclo, il piazzamento in classifica decide il premio — Dracme, Frammenti d'Ambra, e per i migliori anche pacchetti di carte — assegnato non appena il ciclo successivo comincia.</p><p><em>Consiglio da Evocatore: dato che restrizione e terreno sono fissi per tutto il ciclo, prenditi un momento a scegliere la squadra con criterio prima di lanciarti — è una decisione che vale due giorni interi.</em></p>` },
 
   { id: "mercato", titolo: "🛒 Mercato", html: `<h3>Pacchetti di carte</h3><p>Le Dracme guadagnate in battaglia e i rari Frammenti d'Ambra trovati lungo il cammino sono la chiave per aprire nuovi pacchetti al Mercato. Ogni pacchetto è una porta verso creature che ancora non conosci — alcune comuni, altre che si lasciano scoprire solo da chi ha pazienza e fortuna in egual misura.</p><h3>Risorse</h3><ul><li><strong>Dracme:</strong> valuta comune, si ottiene giocando</li><li><strong>Frammenti d'Ambra:</strong> valuta rara, per pacchetti di livello superiore</li></ul>` },
 
