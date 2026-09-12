@@ -2656,37 +2656,50 @@ function aggiornaValidazioneAttacco() {
 
 function calcolaModificatoreTerreno(tratti, terreno) {
 
-  let mod = 0.0;
-
   const terrMod = terreno.toLowerCase();
+  let sommaPositivi = 0.0;
+  let peggiorNegativo = 0.0;
+  let almenoUnTratto = false;
 
-  tratti.forEach(t => {
+  (tratti || []).forEach(t => {
 
     const tratto = String(t).toLowerCase().trim();
+    let mod = 0.0;
 
     if (tratto === "volo") {
 
-      if (terrMod === "aria") mod += 2.0;
+      if (terrMod === "aria") mod = 2.0;
 
-      if (terrMod === "acqua") mod -= 2.0;
+      if (terrMod === "acqua") mod = -2.0;
 
     } else if (tratto === "arrampicata" || tratto === "equilibrio") {
 
-      if (terrMod === "foresta" || terrMod === "terra") mod += 2.0;
+      if (terrMod === "foresta" || terrMod === "terra") mod = 2.0;
 
-      if (terrMod === "acqua" || terrMod === "aria") mod -= 2.0;
+      if (terrMod === "acqua" || terrMod === "aria") mod = -2.0;
 
     } else if (tratto === "nuoto") {
 
-      if (terrMod === "acqua") mod += 2.0;
+      if (terrMod === "acqua") mod = 2.0;
 
-      if (terrMod === "aria") mod -= 2.0;
+      if (terrMod === "aria") mod = -2.0;
+
+    } else {
+
+      return;
 
     }
 
+    if (mod > 0) {
+      sommaPositivi += mod;
+    } else if (!almenoUnTratto || mod < peggiorNegativo) {
+      peggiorNegativo = mod;
+    }
+    almenoUnTratto = true;
+
   });
 
-  return mod;
+  return sommaPositivi > 0 ? sommaPositivi : peggiorNegativo;
 
 }
 
@@ -2702,9 +2715,12 @@ function nuovoRegistroBattaglia() {
 // di quale tratto ha causato il bonus/penalità, usata solo per il resoconto: la funzione originale
 // resta invariata ovunque venga già usata per il calcolo vero e proprio dello scontro.
 function spiegaModificatoreTerreno(tratti, terreno) {
-  let valore = 0.0;
-  let spiegazioni = [];
   const terrMod = terreno.toLowerCase();
+  let sommaPositivi = 0.0;
+  let spiegazioniPositive = [];
+  let peggiorNegativo = 0.0;
+  let trattoPeggiore = null;
+  let almenoUnTratto = false;
 
   (tratti || []).forEach(t => {
     const tratto = String(t).toLowerCase().trim();
@@ -2719,15 +2735,30 @@ function spiegaModificatoreTerreno(tratti, terreno) {
     } else if (tratto === "nuoto") {
       if (terrMod === "acqua") bonus = 2.0;
       if (terrMod === "aria") bonus = -2.0;
+    } else {
+      return;
     }
 
-    if (bonus !== 0) {
-      valore += bonus;
-      spiegazioni.push(`${t} (${bonus > 0 ? "+" : ""}${bonus.toFixed(1)})`);
+    if (bonus > 0) {
+      sommaPositivi += bonus;
+      spiegazioniPositive.push(`${t} (+${bonus.toFixed(1)})`);
+    } else if (!almenoUnTratto || bonus < peggiorNegativo) {
+      peggiorNegativo = bonus;
+      trattoPeggiore = t;
     }
+    almenoUnTratto = true;
   });
 
-  return { valore: parseFloat(valore.toFixed(1)), spiegazione: spiegazioni.join(", ") };
+  let valore, spiegazione;
+  if (sommaPositivi > 0) {
+    valore = sommaPositivi;
+    spiegazione = spiegazioniPositive.join(", ");
+  } else {
+    valore = peggiorNegativo;
+    spiegazione = (trattoPeggiore && peggiorNegativo !== 0) ? `${trattoPeggiore} (${peggiorNegativo.toFixed(1)})` : "";
+  }
+
+  return { valore: parseFloat(valore.toFixed(1)), spiegazione: spiegazione };
 }
 
 function registraRoundBattaglia(dati) {
