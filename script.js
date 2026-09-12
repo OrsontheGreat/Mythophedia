@@ -4131,6 +4131,8 @@ function acquistaPacchetto(id) {
 
 function mostraPaccoDaAprire(pack, nuoveCarte, nomiPossedutiPrimaDelPacco) {
 
+  document.querySelector("#battle-result-modal .modal-header").classList.add("hidden");
+
   document.getElementById("battle-report-content").innerHTML = `
     <div class="pack-apertura-scena">
       <div class="pack-fisico" id="pack-fisico-clic">
@@ -4233,7 +4235,16 @@ function mostraGrigliaCarteEstratte(pack, nuoveCarte, nomiPossedutiPrimaDelPacco
 
     <div class="pack-flip-row">${cartineFlipHTML}</div>
 
+    <div style="text-align:center; margin-top:14px;">
+      <button type="button" id="pack-grid-chiudi-btn" class="events-btn events-btn-main" style="max-width:200px; margin:0 auto;">Continua</button>
+    </div>
+
   `;
+
+  document.getElementById("pack-grid-chiudi-btn").addEventListener("click", () => {
+    document.querySelector("#battle-result-modal .modal-header").classList.remove("hidden");
+    document.getElementById("battle-result-modal").classList.add("hidden");
+  });
 
   nuoveCarte.forEach((c, idx) => {
 
