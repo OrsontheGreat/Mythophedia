@@ -4178,12 +4178,16 @@ function mostraCartaSingolaReveal(pack, nuoveCarte, nomiPossedutiPrimaDelPacco, 
 
   document.getElementById("battle-report-content").innerHTML = `
     <div class="pack-reveal-singola${raro}" id="pack-reveal-singola">
-      ${eNuova ? '<div class="pack-flip-badge-nuova" style="position:static; margin-bottom:6px;">nuova!</div>' : ''}
-      <div class="pack-reveal-img">${miniImmagineCarta(c, 130)}</div>
-      <div class="pack-reveal-nome">${c.nome}</div>
-      <div class="pack-reveal-rarita">${ETICHETTE_LIVELLI[c.livello]}</div>
-      <p class="pack-reveal-contatore">${indice + 1} / ${nuoveCarte.length}</p>
-      <button type="button" class="events-btn events-btn-main" id="pack-reveal-avanti-btn" style="max-width:220px;">${isUltima ? "Vedi tutte insieme" : "Tocca per la prossima carta"}</button>
+      <div class="pack-reveal-blocco-carta">
+        ${eNuova ? '<div class="pack-flip-badge-nuova" style="position:static; margin-bottom:6px;">nuova!</div>' : ''}
+        <div class="pack-reveal-img">${miniImmagineCarta(c, 150)}</div>
+        <div class="pack-reveal-nome">${c.nome}</div>
+        <div class="pack-reveal-rarita">${ETICHETTE_LIVELLI[c.livello]}</div>
+      </div>
+      <div class="pack-reveal-blocco-lato">
+        <p class="pack-reveal-contatore">${indice + 1} / ${nuoveCarte.length}</p>
+        <button type="button" class="events-btn events-btn-main" id="pack-reveal-avanti-btn" style="max-width:200px;">${isUltima ? "Vedi tutte insieme" : "Tocca per la prossima carta"}</button>
+      </div>
     </div>`;
 
   suonaEffettoRarita(c.livello);
@@ -5398,11 +5402,12 @@ const AUGIA_MOSSE_EXTRA_QTY = 10;
 const AUGIA_COSTO_MOSSE_EXTRA = 200;
 
 const AUGIA_PREMI = [
-  { soglia: 600, dracme: 220 },
-  { soglia: 450, dracme: 130 },
-  { soglia: 300, dracme: 70 },
-  { soglia: 150, dracme: 30 },
-  { soglia: 50, dracme: 10 }
+  { soglia: 750, dracme: 300, ambra: 2 },
+  { soglia: 600, dracme: 220, ambra: 0 },
+  { soglia: 450, dracme: 130, ambra: 0 },
+  { soglia: 300, dracme: 70, ambra: 0 },
+  { soglia: 150, dracme: 30, ambra: 0 },
+  { soglia: 50, dracme: 10, ambra: 0 }
 ];
 
 let augiaGriglia = [];
@@ -5418,8 +5423,8 @@ function msRimanentiAugia() {
 }
 
 function calcolaPremioAugia(punteggio) {
-  for (const p of AUGIA_PREMI) if (punteggio >= p.soglia) return p.dracme;
-  return 0;
+  for (const p of AUGIA_PREMI) if (punteggio >= p.soglia) return p;
+  return { dracme: 0, ambra: 0 };
 }
 
 function generaGrigliaAugia() {
@@ -5522,7 +5527,8 @@ function comparaMosseAugia() {
 
 function ritiraPremioAugia() {
   const premio = calcolaPremioAugia(augiaPunteggio);
-  dracmeAttuali += premio;
+  dracmeAttuali += premio.dracme;
+  if (premio.ambra > 0) ambraAttuale += premio.ambra;
   if (augiaPunteggio >= 300) segnaFaticaCompletata("augia");
   augiaInPartita = false;
   augiaGiocoFinito = false;
@@ -5585,7 +5591,7 @@ function htmlFineAugia() {
       <div class="augia-overlay-box">
         <p style="font-size:1rem; color:#ffcc66; font-weight:bold; margin-bottom:6px;">Mosse esaurite!</p>
         <p style="font-size:0.9rem; color:#e0d5c1; margin-bottom:4px;">Punteggio: <b>${augiaPunteggio}</b></p>
-        <p style="font-size:0.85rem; color:#c9a054; margin-bottom:14px;">Premio disponibile: ${premio} Dracme</p>
+        <p style="font-size:0.85rem; color:#c9a054; margin-bottom:14px;">Premio disponibile: ${premio.dracme} Dracme${premio.ambra > 0 ? `, ${premio.ambra} Frammenti d'Ambra` : ""}</p>
         <button type="button" id="augia-ritira-btn" class="events-btn events-btn-main" style="margin-bottom:8px; max-width:240px;">🏆 Ritira Premio</button>
         <button type="button" id="augia-compra-mosse-btn" class="events-btn events-btn-small" style="max-width:240px;" ${puoComprare ? "" : "disabled"}>
           ▶️ +10 Mosse (${AUGIA_COSTO_MOSSE_EXTRA} Dracme)
@@ -5771,9 +5777,10 @@ async function affrontaTappaCavalle() {
     if (cavalleTappaAttuale >= CAVALLE_TAPPE.length) {
       const vincitaFinale = Math.round(cavallePuntata * cavalleMoltiplicatoreAttuale);
       dracmeAttuali += vincitaFinale;
+      ambraAttuale += 2;
       segnaFaticaCompletata("cavalle");
       cavalleGiocoFinito = true;
-      cavalleEsitoTesto = `🏆 Hai domato tutte e quattro le cavalle! Vinci ${vincitaFinale} Dracme.`;
+      cavalleEsitoTesto = `🏆 Hai domato tutte e quattro le cavalle! Vinci ${vincitaFinale} Dracme e 2 Frammenti d'Ambra.`;
       aggiornaTopbarProfilo();
       salvaProgressoCloud();
     }
@@ -5790,9 +5797,11 @@ function ritiraCavalle() {
   if (cavalleBloccaClick || cavalleTappaAttuale === 0) return;
   const vincita = Math.round(cavallePuntata * cavalleMoltiplicatoreAttuale);
   dracmeAttuali += vincita;
+  let frammenti = 0;
+  if (cavalleTappaAttuale >= 3) { frammenti = 1; ambraAttuale += 1; }
   if (cavalleTappaAttuale >= 2) segnaFaticaCompletata("cavalle");
   cavalleGiocoFinito = true;
-  cavalleEsitoTesto = `Ti sei ritirato in tempo, portando a casa ${vincita} Dracme.`;
+  cavalleEsitoTesto = `Ti sei ritirato in tempo, portando a casa ${vincita} Dracme${frammenti > 0 ? " e 1 Frammento d'Ambra" : ""}.`;
   aggiornaTopbarProfilo();
   salvaProgressoCloud();
   renderContenutoFatiche();
@@ -5880,11 +5889,12 @@ const INSEGUIMENTO_TARGET = "🦌";
 const INSEGUIMENTO_DECOY = ["🐺", "🦊", "🐗", "🐻", "🦅", "🐇", "🦉", "🐿️"];
 
 const INSEGUIMENTO_PREMI = [
-  { soglia: 15, dracme: 250 },
-  { soglia: 12, dracme: 150 },
-  { soglia: 9, dracme: 80 },
-  { soglia: 6, dracme: 40 },
-  { soglia: 3, dracme: 15 }
+  { soglia: 20, dracme: 320, ambra: 2 },
+  { soglia: 15, dracme: 250, ambra: 0 },
+  { soglia: 12, dracme: 150, ambra: 0 },
+  { soglia: 9, dracme: 80, ambra: 0 },
+  { soglia: 6, dracme: 40, ambra: 0 },
+  { soglia: 3, dracme: 15, ambra: 0 }
 ];
 
 let inseguimentoInPartita = false;
@@ -5908,8 +5918,8 @@ function assicuraStatoInseguimento() {
 }
 
 function calcolaPremioInseguimento(round) {
-  for (const p of INSEGUIMENTO_PREMI) if (round >= p.soglia) return p.dracme;
-  return 0;
+  for (const p of INSEGUIMENTO_PREMI) if (round >= p.soglia) return p;
+  return { dracme: 0, ambra: 0 };
 }
 
 function calcolaTempoRoundInseguimento(round) {
@@ -5979,9 +5989,10 @@ function gestisciEsitoInseguimento(indovinata) {
     if (inseguimentoViteRimaste <= 0) {
       inseguimentoGiocoFinito = true;
       const premio = calcolaPremioInseguimento(inseguimentoRoundAttuale);
-      dracmeAttuali += premio;
+      dracmeAttuali += premio.dracme;
+      if (premio.ambra > 0) ambraAttuale += premio.ambra;
       if (inseguimentoRoundAttuale >= 9) segnaFaticaCompletata("inseguimento");
-      inseguimentoEsitoTesto = `La cerva è sparita nel bosco dopo ${inseguimentoRoundAttuale} inseguimenti riusciti. Premio: ${premio} Dracme.`;
+      inseguimentoEsitoTesto = `La cerva è sparita nel bosco dopo ${inseguimentoRoundAttuale} inseguimenti riusciti. Premio: ${premio.dracme} Dracme${premio.ambra > 0 ? `, ${premio.ambra} Frammenti d'Ambra` : ""}.`;
       aggiornaTopbarProfilo();
       salvaProgressoCloud();
       renderContenutoFatiche();
@@ -6066,11 +6077,12 @@ const MIRA_VELOCITA = 2.6;
 const MIRA_TICK_MS = 40;
 
 const MIRA_PREMI = [
-  { soglia: 13, dracme: 220 },
-  { soglia: 10, dracme: 140 },
-  { soglia: 7, dracme: 85 },
-  { soglia: 4, dracme: 40 },
-  { soglia: 1, dracme: 15 }
+  { soglia: 15, dracme: 300, ambra: 2 },
+  { soglia: 13, dracme: 220, ambra: 0 },
+  { soglia: 10, dracme: 140, ambra: 0 },
+  { soglia: 7, dracme: 85, ambra: 0 },
+  { soglia: 4, dracme: 40, ambra: 0 },
+  { soglia: 1, dracme: 15, ambra: 0 }
 ];
 
 let miraInPartita = false;
@@ -6541,7 +6553,7 @@ let trappolaGiocoFinito = false;
 let trappolaVitaGiocatore = TRAPPOLA_VITE_MAX;
 let trappolaColpiInflitti = 0;
 let trappolaRoundAttuale = 0;
-let trappolaCorsiaPericolosa = null;
+let trappolaCorsiaSicura = null;
 let trappolaTimerId = null;
 let trappolaFeedbackTesto = "";
 let trappolaFeedbackTipo = "";
@@ -6613,7 +6625,7 @@ function terminaTrappola(vittoria) {
 
 function avviaRoundTrappola() {
   trappolaRoundAttuale++;
-  trappolaCorsiaPericolosa = Math.floor(Math.random() * 3);
+  trappolaCorsiaSicura = Math.floor(Math.random() * 3);
   trappolaFeedbackTesto = "";
   trappolaFeedbackTipo = "";
   trappolaInputBloccato = false;
@@ -6643,7 +6655,7 @@ function risolviRoundTrappola(corsiaScelta) {
 
   if (trappolaTimerId) { clearTimeout(trappolaTimerId); trappolaTimerId = null; }
 
-  const schivataRiuscita = corsiaScelta !== null && corsiaScelta !== trappolaCorsiaPericolosa;
+  const schivataRiuscita = corsiaScelta !== null && corsiaScelta === trappolaCorsiaSicura;
 
   if (schivataRiuscita) {
     trappolaColpiInflitti++;
@@ -6681,7 +6693,7 @@ function htmlSchermataTrappola() {
       <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; gap:14px; padding:14px;">
         <div style="background:rgba(15,10,5,0.6); border-radius:10px; padding:14px; color:#e0d5c1; font-size:0.85rem; max-width:440px; text-align:center;">
           <p style="color:#c9a054; font-style:italic; margin-bottom:8px;">Il Cinghiale d'Erimanto seminava il terrore tra i monti dell'Arcadia: Eracle lo stanò tra la neve alta, schivando ogni sua carica furiosa finché la bestia, sfinita, non poté più muoversi.</p>
-          <p>Il cinghiale carica da una delle <b>3 corsie</b>: guarda bene quale si illumina di pericolo, e tocca in tempo una delle <b>altre due</b> per schivare. Sbagli corsia, o sei troppo lento? Ti travolge. Serve <b>${TRAPPOLA_COLPI_NECESSARI} schivate</b> per sfiancarlo — ma hai solo <b>${TRAPPOLA_VITE_MAX} vite</b>, e ogni carica è più veloce della precedente.</p>
+          <p>Il cinghiale minaccia da <b>2 delle 3 corsie</b>: trova in tempo l'<b>unica corsia sicura</b> (senza il simbolo di pericolo) e toccala per schivare. Sbagli corsia, o sei troppo lento? Ti travolge. Serve <b>${TRAPPOLA_COLPI_NECESSARI} schivate</b> per sfiancarlo — ma hai solo <b>${TRAPPOLA_VITE_MAX} vite</b>, e ogni carica è più veloce della precedente.</p>
         </div>
         <button type="button" id="trappola-inizia-btn" class="events-btn events-btn-main" style="max-width:260px;" ${disponibile ? "" : "disabled"}>
           ${disponibile ? "🐗 Inizia la caccia" : "Nessun tentativo rimasto oggi"}
@@ -6701,7 +6713,7 @@ function htmlSchermataTrappola() {
   }
 
   const corsieHTML = TRAPPOLA_NOMI_CORSIE.map((nome, idx) => {
-    const inPericolo = idx === trappolaCorsiaPericolosa;
+    const inPericolo = idx !== trappolaCorsiaSicura;
     return `
       <button type="button" class="trappola-corsia-btn ${inPericolo ? "trappola-corsia-pericolo" : ""}" data-corsia="${idx}" ${trappolaInputBloccato ? "disabled" : ""}>
         <span style="font-size:1.6rem;">${inPericolo ? "⚠️🐗" : "🌲"}</span>

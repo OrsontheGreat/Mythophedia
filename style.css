@@ -1609,13 +1609,29 @@ html.narrow-420 #clan-join-creation-view {
 
 .pack-reveal-singola {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 30px;
   padding: 20px;
   cursor: pointer;
   animation: pack-reveal-comparsa 0.4s ease;
+}
+
+.pack-reveal-blocco-carta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.pack-reveal-blocco-lato {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding-left: 24px;
+  border-left: 1px solid rgba(201, 160, 84, 0.3);
 }
 
 @keyframes pack-reveal-comparsa {
@@ -1649,8 +1665,9 @@ html.narrow-420 #clan-join-creation-view {
 
 .pack-reveal-contatore {
   color: #a89a7a;
-  font-size: 0.8rem;
-  margin: 4px 0 8px;
+  font-size: 0.85rem;
+  margin: 0;
+  font-weight: bold;
 }
 
 .pack-flip-row {
