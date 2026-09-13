@@ -12293,6 +12293,11 @@ function raccogliDatiSalvataggio() {
     eventiUltimoCicloPremiato: eventiUltimoCicloPremiato,
     eventiUltimoCicloPartecipato: eventiUltimoCicloPartecipato,
     eventiPartiteGiocateQuestoCiclo: eventiPartiteGiocateQuestoCiclo,
+    argonautiSfideRimaste: argonautiSfideRimaste,
+    argonautiTimestampUltimaSfida: argonautiTimestampUltimaSfida,
+    argonautiUltimoCicloPremiato: argonautiUltimoCicloPremiato,
+    argonautiUltimoCicloPartecipato: argonautiUltimoCicloPartecipato,
+    argonautiPartiteGiocateQuestoCiclo: argonautiPartiteGiocateQuestoCiclo,
     ultimoSalvataggio: Date.now()
   };
 }
@@ -12568,6 +12573,21 @@ function applicaDatiCaricati(dati) {
   }
   if (typeof dati.eventiPartiteGiocateQuestoCiclo === "number") {
     eventiPartiteGiocateQuestoCiclo = dati.eventiPartiteGiocateQuestoCiclo;
+  }
+  if (typeof dati.argonautiSfideRimaste === "number") {
+    argonautiSfideRimaste = dati.argonautiSfideRimaste;
+  }
+  if (typeof dati.argonautiTimestampUltimaSfida === "number" || dati.argonautiTimestampUltimaSfida === null) {
+    argonautiTimestampUltimaSfida = dati.argonautiTimestampUltimaSfida;
+  }
+  if (typeof dati.argonautiUltimoCicloPremiato === "number") {
+    argonautiUltimoCicloPremiato = dati.argonautiUltimoCicloPremiato;
+  }
+  if (typeof dati.argonautiUltimoCicloPartecipato === "number") {
+    argonautiUltimoCicloPartecipato = dati.argonautiUltimoCicloPartecipato;
+  }
+  if (typeof dati.argonautiPartiteGiocateQuestoCiclo === "number") {
+    argonautiPartiteGiocateQuestoCiclo = dati.argonautiPartiteGiocateQuestoCiclo;
   }
   if (dati.tributoRaStato && typeof dati.tributoRaStato === "object") {
     tributoRaStato = Object.assign({ scambiOggi: 0, dataUltimoScambio: "" }, dati.tributoRaStato);
