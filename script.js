@@ -4770,7 +4770,7 @@ function aggiornaTopbarProfilo() {
   if (elBadgeTraguardi) {
     const numero = contaTraguardiSbloccati();
     if (numero > 0) {
-      elBadgeTraguardi.innerText = `🏆 ${numero}`;
+      elBadgeTraguardi.innerText = numero;
       elBadgeTraguardi.classList.remove("hidden");
     } else {
       elBadgeTraguardi.classList.add("hidden");
