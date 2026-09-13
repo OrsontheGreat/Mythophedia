@@ -4766,17 +4766,6 @@ function aggiornaTopbarProfilo() {
   const elUsername = document.getElementById("username");
   if (elUsername) elUsername.innerText = nicknameUtente;
 
-  const elBadgeTraguardi = document.getElementById("traguardi-badge-nickname");
-  if (elBadgeTraguardi) {
-    const numero = contaTraguardiSbloccati();
-    if (numero > 0) {
-      elBadgeTraguardi.innerText = numero;
-      elBadgeTraguardi.classList.remove("hidden");
-    } else {
-      elBadgeTraguardi.classList.add("hidden");
-    }
-  }
-
   const elDracme = document.getElementById("dracme-count");
   if (elDracme) elDracme.innerText = dracmeAttuali;
 
@@ -4850,6 +4839,8 @@ function apriPannelloProfiloEvocatore() {
 
       <button id="btn-save-profile-data" class="events-btn" style="padding:10px; font-size:0.85rem; margin-top:5px; background:linear-gradient(to bottom, #2f855a, #22543d); border-color:#22543d; width: 100%;">Salva Modifiche Profilo</button>
 
+      <button id="btn-vedi-traguardi" type="button" class="events-btn events-btn-main" style="width: 100%;">🏆 I Tuoi Traguardi (${contaTraguardiSbloccati()} / ${TRAGUARDI_DEFINIZIONI.length})</button>
+
     </div>`;
 
  
@@ -4867,6 +4858,8 @@ function apriPannelloProfiloEvocatore() {
  
 
   btnUpload.addEventListener("click", () => { inputAvatar.click(); });
+
+  document.getElementById("btn-vedi-traguardi").addEventListener("click", mostraElencoTraguardi);
 
  
 
@@ -6203,7 +6196,8 @@ function concludiSeFineFrecceMira() {
     miraInPartita = false;
     miraGiocoFinito = true;
     const premio = calcolaPremioMira(miraPunteggio);
-    dracmeAttuali += premio;
+    dracmeAttuali += premio.dracme;
+    if (premio.ambra > 0) ambraAttuale += premio.ambra;
     if (miraPunteggio >= 10) segnaFaticaCompletata("sonaglio");
     aggiornaTopbarProfilo();
     salvaProgressoCloud();
@@ -6295,7 +6289,7 @@ function htmlSchermataMira() {
         <div style="background:rgba(15,10,5,0.6); border-radius:12px; padding:20px; color:#e0d5c1; font-size:0.95rem; max-width:360px; text-align:center;">
           <p style="font-size:1.05rem; color:#ffcc66; font-weight:bold; margin-bottom:6px;">🏹 Faretra vuota</p>
           <p>Uccelli colpiti: <b>${miraPunteggio}</b> su ${MIRA_FRECCE_MAX} frecce</p>
-          <p style="color:#c9a054; margin-top:6px;">Premio: ${premio} Dracme</p>
+          <p style="color:#c9a054; margin-top:6px;">Premio: ${premio.dracme} Dracme${premio.ambra > 0 ? `, ${premio.ambra} Frammenti d'Ambra` : ""}</p>
         </div>
         <button type="button" id="mira-chiudi-btn" class="events-btn events-btn-main" style="max-width:240px;">Continua</button>
       </div>`;
@@ -9933,6 +9927,44 @@ function controllaTraguardi() {
 
 function contaTraguardiSbloccati() {
   return Object.keys(traguardiSbloccati).length;
+}
+
+function mostraElencoTraguardi() {
+  const categorie = {};
+  TRAGUARDI_DEFINIZIONI.forEach(t => {
+    if (!categorie[t.categoria]) categorie[t.categoria] = [];
+    categorie[t.categoria].push(t);
+  });
+
+  const categorieHTML = Object.entries(categorie).map(([nomeCategoria, elenco]) => {
+    const righeHTML = elenco.map(t => {
+      const sbloccato = !!traguardiSbloccati[t.id];
+      return `
+        <div style="display:flex; align-items:center; gap:8px; padding:6px 8px; border-radius:6px; background:${sbloccato ? 'rgba(126,231,135,0.1)' : 'rgba(0,0,0,0.25)'}; opacity:${sbloccato ? '1' : '0.6'};">
+          <span style="font-size:1rem;">${sbloccato ? "✅" : "🔒"}</span>
+          <span style="flex:1; font-size:0.8rem; color:${sbloccato ? '#e0d5c1' : '#a89a7a'};">${t.testo}</span>
+          <span style="font-size:0.7rem; color:#c9a054; white-space:nowrap;">${t.dracme}💰${t.ambra > 0 ? ` ${t.ambra}💎` : ""}</span>
+        </div>`;
+    }).join("");
+
+    return `
+      <div style="width:100%; margin-bottom:10px;">
+        <p style="color:#ffcc66; font-weight:bold; font-size:0.85rem; margin-bottom:6px;">${nomeCategoria}</p>
+        <div style="display:flex; flex-direction:column; gap:4px;">${righeHTML}</div>
+      </div>`;
+  }).join("");
+
+  document.getElementById("battle-title-outcome").innerText = "I Tuoi Traguardi";
+  document.getElementById("battle-report-content").innerHTML = `
+    <div style="text-align:center; margin-bottom:10px;">
+      <p style="color:#ffcc66; font-weight:bold; font-size:1.1rem;">${contaTraguardiSbloccati()} / ${TRAGUARDI_DEFINIZIONI.length} sbloccati</p>
+    </div>
+    <div style="width:100%; padding:0 4px;">${categorieHTML}</div>
+    <div style="text-align:center; margin-top:14px;">
+      <button type="button" id="btn-torna-profilo-da-traguardi" class="events-btn events-btn-main" style="max-width:200px;">Torna al Profilo</button>
+    </div>`;
+
+  document.getElementById("btn-torna-profilo-da-traguardi").addEventListener("click", apriPannelloProfiloEvocatore);
 }
 
 let traguardoModalAperto = false;
