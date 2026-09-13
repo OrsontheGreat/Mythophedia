@@ -3074,6 +3074,12 @@ function risolviFineInvasioneMappa(mazzoAttaccoSelezionato, roundVintiGiocatore)
 
   const vintoBattaglia = (roundVintiGiocatore >= 3);
 
+  if (vintoBattaglia) {
+    traguardiVittorieTotali++;
+    if (roundVintiGiocatore === 5) traguardiVittoriePerfette++;
+  }
+  controllaTraguardi();
+
   document.getElementById("battle-title-outcome").innerText = vintoBattaglia ? "Vittoria Assoluta!" : "Sconfitta";
 
   let epilogoHTML = `<div class="info-divider"></div>`;
@@ -3083,6 +3089,8 @@ function risolviFineInvasioneMappa(mazzoAttaccoSelezionato, roundVintiGiocatore)
   if (vintoBattaglia) {
 
     esagonoSelezionatoDati.conquistato = true; 
+
+    traguardiEsagoniConquistati++;
 
     esagonoSelezionatoDati.proprietario = nicknameUtente;
 
@@ -3958,6 +3966,9 @@ document.getElementById("btn-conferma-evoluzione").addEventListener("click", () 
 
   creaturaInEvoluzione.stelle += 1; 
 
+  traguardiEvoluzioniTotali++;
+  controllaTraguardi();
+
   aggiornaPulsantiLateraliRarita();
 
  
@@ -4120,6 +4131,12 @@ function acquistaPacchetto(id) {
   const nomiPossedutiPrimaDelPacco = new Set(deckGiocatore.map(c => c.nome));
 
   deckGiocatore = deckGiocatore.concat(nuoveCarte);
+
+  const leggendarieInQuestoPacco = nuoveCarte.filter(c => c.livello === 6).length;
+  if (leggendarieInQuestoPacco > 0) {
+    traguardiLeggendarieEstratte += leggendarieInQuestoPacco;
+    controllaTraguardi();
+  }
 
   aggiornaPulsantiLateraliRarita();
 
@@ -4748,6 +4765,17 @@ function suonaEffettoRarita(livello) {
 function aggiornaTopbarProfilo() {
   const elUsername = document.getElementById("username");
   if (elUsername) elUsername.innerText = nicknameUtente;
+
+  const elBadgeTraguardi = document.getElementById("traguardi-badge-nickname");
+  if (elBadgeTraguardi) {
+    const numero = contaTraguardiSbloccati();
+    if (numero > 0) {
+      elBadgeTraguardi.innerText = `🏆 ${numero}`;
+      elBadgeTraguardi.classList.remove("hidden");
+    } else {
+      elBadgeTraguardi.classList.add("hidden");
+    }
+  }
 
   const elDracme = document.getElementById("dracme-count");
   if (elDracme) elDracme.innerText = dracmeAttuali;
@@ -5528,6 +5556,7 @@ function comparaMosseAugia() {
 function ritiraPremioAugia() {
   const premio = calcolaPremioAugia(augiaPunteggio);
   dracmeAttuali += premio.dracme;
+  traguardiDracmeGuadagnateTotali += premio.dracme;
   if (premio.ambra > 0) ambraAttuale += premio.ambra;
   if (augiaPunteggio >= 300) segnaFaticaCompletata("augia");
   augiaInPartita = false;
@@ -5990,6 +6019,7 @@ function gestisciEsitoInseguimento(indovinata) {
       inseguimentoGiocoFinito = true;
       const premio = calcolaPremioInseguimento(inseguimentoRoundAttuale);
       dracmeAttuali += premio.dracme;
+      traguardiDracmeGuadagnateTotali += premio.dracme;
       if (premio.ambra > 0) ambraAttuale += premio.ambra;
       if (inseguimentoRoundAttuale >= 9) segnaFaticaCompletata("inseguimento");
       inseguimentoEsitoTesto = `La cerva è sparita nel bosco dopo ${inseguimentoRoundAttuale} inseguimenti riusciti. Premio: ${premio.dracme} Dracme${premio.ambra > 0 ? `, ${premio.ambra} Frammenti d'Ambra` : ""}.`;
@@ -6609,6 +6639,7 @@ function terminaTrappola(vittoria) {
   if (vittoria) {
     const premio = calcolaPremioVittoriaTrappola(trappolaRoundAttuale);
     dracmeAttuali += premio.dracme;
+    traguardiDracmeGuadagnateTotali += premio.dracme;
     if (premio.frammenti > 0) ambraAttuale += premio.frammenti;
     segnaFaticaCompletata("trappola");
     trappolaEsitoTesto = `🐗 Il cinghiale, sfiancato dalle continue capriole nella neve alta, crolla: la caccia è tua! Bottino: ${premio.dracme} Dracme${premio.frammenti > 0 ? ` e ${premio.frammenti} Frammento d'Ambra` : ""}.`;
@@ -6858,6 +6889,7 @@ async function tentaAfferraToro() {
     const roundSuperati = toroRoundAttuale - 1;
     const premio = calcolaPremioToro(roundSuperati);
     dracmeAttuali += premio.dracme;
+    traguardiDracmeGuadagnateTotali += premio.dracme;
     if (premio.frammenti > 0) ambraAttuale += premio.frammenti;
     if (roundSuperati >= 6) segnaFaticaCompletata("toro");
     toroGiocoFinito = true;
@@ -7203,6 +7235,7 @@ function terminaFurto(catturato) {
 
   const premio = calcolaPremioFurto(furtoTappaAttuale);
   dracmeAttuali += premio.dracme;
+  traguardiDracmeGuadagnateTotali += premio.dracme;
   if (premio.frammenti > 0) ambraAttuale += premio.frammenti;
   if (furtoTappaAttuale >= 8) segnaFaticaCompletata("gregge");
 
@@ -7412,6 +7445,7 @@ async function gestisciClickAlberoGiardino(indice) {
 
     const premio = calcolaPremioGiardino(giardinoLivelloRaggiunto);
     dracmeAttuali += premio.dracme;
+    traguardiDracmeGuadagnateTotali += premio.dracme;
     if (premio.frammenti > 0) ambraAttuale += premio.frammenti;
     if (giardinoLivelloRaggiunto >= 6) segnaFaticaCompletata("giardino");
 
@@ -7537,6 +7571,10 @@ const TUTORIAL_PASSI = [
   {
     carta: "Centauro",
     testo: "Ma c'è di più: alcune creature nascondono anche un dono speciale. Il mio Centauro ha l'<b>Equilibrio</b> — se la cava bene tra Foresta e Terra, ma soffre tra Acqua e Aria. Il Volo ama l'Aria e teme l'Acqua; il Nuoto è l'esatto contrario. Scegliere il terreno giusto può ribaltare uno scontro."
+  },
+  {
+    selettore: "#btn-profilo",
+    testo: "Un'ultima cosa: qui accanto al tuo nome compariranno dei Traguardi — obiettivi che sblocchi semplicemente giocando, dai più semplici (la tua prima carta) ai più leggendari (una creatura a 8 stelle, se mai ci riuscirai). Ogni volta che ne raggiungi uno, te lo segnalo con un premio da ritirare appena torni alla schermata principale."
   },
   {
     selettore: "#btn-apri-guida",
@@ -8378,6 +8416,9 @@ function risolviFineSotterraneo(mazzoSotterraneo, roundVinti) {
     if (primaVoltaSuQuestoLivello) sotterraneiLivelloMassimoConPremio = sotterraneiLivelloAttuale;
     sotterraneiVittorieOggi++;
     sotterraneiLivelloAttuale++;
+    traguardiVittorieTotali++;
+    if (roundVinti === 5) traguardiVittoriePerfette++;
+    controllaTraguardi();
     epilogoHTML += `<p style="text-align:center; color:#7ee787; font-weight:bold;">Livello superato! Ora sei al livello ${sotterraneiLivelloAttuale}.</p>`;
   } else {
     epilogoHTML += `<p style="text-align:center; color:#f56565; font-weight:bold;">Servono almeno 3 vittorie su 5 per superare il livello. Riprova quando vuoi.</p>`;
@@ -8701,6 +8742,8 @@ function confermaSquadraEventi() {
   }
   eventiSquadraDifensiva = squadra;
   eventiUltimoCicloPartecipato = eventiNumeroCicloCorrente;
+  traguardiEventiPartecipazioni++;
+  controllaTraguardi();
   eventiPartiteGiocateQuestoCiclo = 0;
 
   dbFirebase.ref(`eventi_classifica/${eventiNumeroCicloCorrente}/${utenteFirebaseAttuale.uid}`).set({
@@ -9028,6 +9071,12 @@ function confermaBattagliaEventi(avversarioId, avversarioDati, eventiTerreno, mo
 function risolviFineSfidaEventi(avversarioId, avversarioDati, roundVinti) {
   eventiPartiteGiocateQuestoCiclo++;
 
+  if (roundVinti >= 3) {
+    traguardiVittorieTotali++;
+    if (roundVinti === 5) traguardiVittoriePerfette++;
+  }
+  controllaTraguardi();
+
   let epilogoHTML = `<div class="info-divider"></div>`;
   document.getElementById("battle-title-outcome").innerText = `Sfida conclusa: ${roundVinti} punti guadagnati`;
 
@@ -9092,12 +9141,18 @@ function controllaFineCicloEventi(callback) {
     if (mioIndice < 0) { salvaProgressoCloud(); callback(); return; }
 
     const posizione = mioIndice + 1;
+    if (posizione === 1) traguardiEventiMiglior1oPosto++;
+    if (posizione <= 10) traguardiEventiTop10++;
+    if (posizione <= 25) traguardiEventiTop25++;
+    controllaTraguardi();
+
     const puntiOttenuti = elenco[mioIndice].punteggio;
     const premio = calcolaPremioPiazzamentoEventi(posizione, puntiOttenuti);
 
     if (!premio) { salvaProgressoCloud(); callback(); return; }
 
     dracmeAttuali += premio.dracme;
+    traguardiDracmeGuadagnateTotali += premio.dracme;
     ambraAttuale += premio.ambra;
     let cartaVinta = null;
     if (premio.livelloCartaPacco > 0) cartaVinta = estraiCartaPerLivello(premio.livelloCartaPacco);
@@ -9322,6 +9377,8 @@ function confermaSquadraArgonauti() {
   }
   argonautiSquadraDifensiva = squadra;
   argonautiUltimoCicloPartecipato = argonautiNumeroCicloCorrente;
+  traguardiEventiPartecipazioni++;
+  controllaTraguardi();
   argonautiPartiteGiocateQuestoCiclo = 0;
 
   dbFirebase.ref(`argonauti_classifica/${argonautiNumeroCicloCorrente}/${utenteFirebaseAttuale.uid}`).set({
@@ -9619,6 +9676,12 @@ function confermaBattagliaArgonauti(avversarioId, avversarioDati, argonautiTerre
 function risolviFineSfidaArgonauti(avversarioId, avversarioDati, roundVinti) {
   argonautiPartiteGiocateQuestoCiclo++;
 
+  if (roundVinti >= 3) {
+    traguardiVittorieTotali++;
+    if (roundVinti === 5) traguardiVittoriePerfette++;
+  }
+  controllaTraguardi();
+
   let epilogoHTML = `<div class="info-divider"></div>`;
   document.getElementById("battle-title-outcome").innerText = `Sfida conclusa: ${roundVinti} punti guadagnati`;
 
@@ -9681,12 +9744,18 @@ function controllaFineCicloArgonauti(callback) {
     if (mioIndice < 0) { salvaProgressoCloud(); callback(); return; }
 
     const posizione = mioIndice + 1;
+    if (posizione === 1) traguardiEventiMiglior1oPosto++;
+    if (posizione <= 10) traguardiEventiTop10++;
+    if (posizione <= 25) traguardiEventiTop25++;
+    controllaTraguardi();
+
     const puntiOttenuti = elenco[mioIndice].punteggio;
     const premio = calcolaPremioPiazzamentoArgonauti(posizione, puntiOttenuti);
 
     if (!premio) { salvaProgressoCloud(); callback(); return; }
 
     dracmeAttuali += premio.dracme;
+    traguardiDracmeGuadagnateTotali += premio.dracme;
     ambraAttuale += premio.ambra;
     let cartaVinta = null;
     if (premio.veloDoro) cartaVinta = estraiCreaturaVelloDoro();
@@ -9712,6 +9781,198 @@ function controllaFineCicloArgonauti(callback) {
     document.getElementById("arg-continua-dopo-premio-btn").addEventListener("click", callback);
   }).catch(() => { salvaProgressoCloud(); callback(); });
 }
+
+
+// ===== Sistema Traguardi: premi una tantum per obiettivi raggiunti, con coda e maschera di riscossione =====
+
+// Contatori dedicati, per traguardi che non si possono ricavare dallo stato attuale
+// (es. "vittorie totali" non si può contare guardando il mazzo, serve un contatore a parte).
+let traguardiVittorieTotali = 0;
+let traguardiVittoriePerfette = 0;
+let traguardiEvoluzioniTotali = 0;
+let traguardiEsagoniConquistati = 0;
+let traguardiLeggendarieEstratte = 0;
+let traguardiDracmeGuadagnateTotali = 0;
+let traguardiClanUnito = false;
+let traguardiClanDonazioneFatta = false;
+let traguardiClanGuerrePartecipate = 0;
+let traguardiClanGuerreVinte = 0;
+let traguardiEventiPartecipazioni = 0;
+let traguardiEventiMiglior1oPosto = 0;
+let traguardiEventiTop10 = 0;
+let traguardiEventiTop25 = 0;
+
+let traguardiSbloccati = {};
+let traguardiPremiInSospeso = [];
+
+function generaTraguardiSoglia(prefissoId, categoria, soglie, testoTemplate, funzioneValoreAttuale, premi) {
+  return soglie.map((soglia, idx) => ({
+    id: `${prefissoId}_${soglia}`,
+    categoria,
+    testo: testoTemplate(soglia),
+    controlla: () => funzioneValoreAttuale() >= soglia,
+    dracme: premi[idx] ? premi[idx].dracme : 50,
+    ambra: premi[idx] ? premi[idx].ambra : 0
+  }));
+}
+
+const TRAGUARDI_DEFINIZIONI = [
+
+  // ----- Collezione -----
+  ...generaTraguardiSoglia("collezione", "🎴 Collezione", [1, 3, 5, 10, 15, 20, 30, 40, 50, 75, 100, 150, 200],
+    (s) => `Possiedi ${s} creature diverse`,
+    () => new Set(deckGiocatore.filter(c => !c.isJolly).map(c => c.nome)).size,
+    [{ dracme: 30 }, { dracme: 40 }, { dracme: 50 }, { dracme: 60 }, { dracme: 80 }, { dracme: 100 }, { dracme: 150 }, { dracme: 200 }, { dracme: 280, ambra: 1 }, { dracme: 400, ambra: 1 }, { dracme: 550, ambra: 2 }, { dracme: 800, ambra: 3 }, { dracme: 1200, ambra: 4 }]
+  ),
+  {
+    id: "collezione_completa", categoria: "🎴 Collezione", testo: "Colleziona tutte le creature del gioco",
+    controlla: () => new Set(deckGiocatore.filter(c => !c.isJolly).map(c => c.nome)).size >= CARTE_FISSE.length,
+    dracme: 3000, ambra: 10
+  },
+  {
+    id: "collezione_ogni_rarita", categoria: "🎴 Collezione", testo: "Possiedi almeno una carta di ogni rarità",
+    controlla: () => [1, 2, 3, 4, 5, 6].every(lvl => deckGiocatore.some(c => c.livello === lvl)),
+    dracme: 150, ambra: 1
+  },
+
+  // ----- Evoluzione -----
+  ...generaTraguardiSoglia("evoluzione", "⭐ Evoluzione", [1, 3, 5, 10, 20, 40],
+    (s) => `Evolvi ${s} creature almeno una volta`,
+    () => traguardiEvoluzioniTotali,
+    [{ dracme: 50 }, { dracme: 80 }, { dracme: 120 }, { dracme: 200, ambra: 1 }, { dracme: 350, ambra: 1 }, { dracme: 600, ambra: 2 }]
+  ),
+  ...generaTraguardiSoglia("stelle", "⭐ Stelle massime", [2, 3, 4, 5, 6, 7],
+    (s) => `Porta una carta a ${s} stelle`,
+    () => Math.max(0, ...deckGiocatore.map(c => c.stelle || 0)),
+    [{ dracme: 40 }, { dracme: 70 }, { dracme: 120 }, { dracme: 200, ambra: 1 }, { dracme: 350, ambra: 2 }, { dracme: 600, ambra: 3 }]
+  ),
+  {
+    id: "stelle_8", categoria: "⭐ Stelle massime", testo: "Porta una carta a 8 stelle (il massimo)",
+    controlla: () => Math.max(0, ...deckGiocatore.map(c => c.stelle || 0)) >= 8,
+    dracme: 1500, ambra: 6
+  },
+
+  // ----- Combattimento -----
+  ...generaTraguardiSoglia("vittorie", "⚔️ Combattimento", [1, 5, 10, 25, 50, 100, 200, 350, 500],
+    (s) => `Vinci ${s} battaglie in totale`,
+    () => traguardiVittorieTotali,
+    [{ dracme: 30 }, { dracme: 50 }, { dracme: 80 }, { dracme: 130 }, { dracme: 200, ambra: 1 }, { dracme: 350, ambra: 1 }, { dracme: 550, ambra: 2 }, { dracme: 800, ambra: 3 }, { dracme: 1200, ambra: 4 }]
+  ),
+  ...generaTraguardiSoglia("perfette", "⚔️ Combattimento", [1, 10],
+    (s) => `Vinci ${s === 1 ? "uno scontro perfetto (5 a 0)" : `${s} scontri perfetti (5 a 0)`}`,
+    () => traguardiVittoriePerfette,
+    [{ dracme: 60 }, { dracme: 300, ambra: 2 }]
+  ),
+
+  // ----- Mondi e Sottomondi -----
+  ...generaTraguardiSoglia("esagoni", "🗺️ Mondi", [1, 5, 10, 25, 50, 100, 200],
+    (s) => `Conquista ${s} esagoni in totale`,
+    () => traguardiEsagoniConquistati,
+    [{ dracme: 30 }, { dracme: 50 }, { dracme: 80 }, { dracme: 130 }, { dracme: 220, ambra: 1 }, { dracme: 400, ambra: 2 }, { dracme: 700, ambra: 3 }]
+  ),
+
+  // ----- Clan -----
+  { id: "clan_unito", categoria: "🛡️ Clan", testo: "Unisciti al tuo primo Clan", controlla: () => traguardiClanUnito, dracme: 50 },
+  { id: "clan_donazione", categoria: "🛡️ Clan", testo: "Fai la tua prima donazione a un compagno di Clan", controlla: () => traguardiClanDonazioneFatta, dracme: 40 },
+  { id: "clan_guerra_1", categoria: "🛡️ Clan", testo: "Partecipa alla tua prima Guerra tra Clan", controlla: () => traguardiClanGuerrePartecipate >= 1, dracme: 60 },
+  { id: "clan_guerra_vinta_1", categoria: "🛡️ Clan", testo: "Vinci una Guerra tra Clan", controlla: () => traguardiClanGuerreVinte >= 1, dracme: 250, ambra: 2 },
+  { id: "clan_guerra_vinta_5", categoria: "🛡️ Clan", testo: "Vinci 5 Guerre tra Clan", controlla: () => traguardiClanGuerreVinte >= 5, dracme: 800, ambra: 4 },
+
+  // ----- Eventi -----
+  { id: "eventi_partecipazione", categoria: "🏆 Eventi", testo: "Partecipa al tuo primo Evento", controlla: () => traguardiEventiPartecipazioni >= 1, dracme: 50 },
+  { id: "eventi_top25", categoria: "🏆 Eventi", testo: "Piazzati nella top 25 di un ciclo", controlla: () => traguardiEventiTop25 >= 1, dracme: 100 },
+  { id: "eventi_top10", categoria: "🏆 Eventi", testo: "Piazzati nella top 10 di un ciclo", controlla: () => traguardiEventiTop10 >= 1, dracme: 200, ambra: 1 },
+  { id: "eventi_primo_posto", categoria: "🏆 Eventi", testo: "Vinci il 1° posto in un Evento", controlla: () => traguardiEventiMiglior1oPosto >= 1, dracme: 400, ambra: 2 },
+  { id: "eventi_primo_posto_5", categoria: "🏆 Eventi", testo: "Vinci il 1° posto in un Evento 5 volte", controlla: () => traguardiEventiMiglior1oPosto >= 5, dracme: 1000, ambra: 5 },
+
+  // ----- Le Dodici Fatiche -----
+  ...generaTraguardiSoglia("fatiche", "🎯 Le Dodici Fatiche", [1, 3, 6, 9, 11],
+    (s) => s === 11 ? "Completa tutte le 11 Fatiche libere almeno una volta" : `Completa ${s} Fatiche diverse almeno una volta`,
+    () => contaFaticheCompletate(),
+    [{ dracme: 40 }, { dracme: 80 }, { dracme: 150 }, { dracme: 250, ambra: 1 }, { dracme: 500, ambra: 3 }]
+  ),
+  { id: "fatiche_cerbero_sbloccato", categoria: "🎯 Le Dodici Fatiche", testo: "Sblocca Cerbero", controlla: () => contaFaticheCompletate() >= 11, dracme: 200, ambra: 1 },
+  { id: "fatiche_cerbero_sconfitto", categoria: "🎯 Le Dodici Fatiche", testo: "Sconfiggi Cerbero in persona", controlla: () => !!faticheCompletateStato["cerbero"], dracme: 600, ambra: 4 },
+  ...generaTraguardiSoglia("serie", "🎯 Serie Giornaliera", [3, 7, 14, 30, 60, 100],
+    (s) => `Raggiungi ${s} giorni di Serie Giornaliera`,
+    () => serieStato.giorni,
+    [{ dracme: 30 }, { dracme: 60 }, { dracme: 120 }, { dracme: 250, ambra: 1 }, { dracme: 500, ambra: 3 }, { dracme: 900, ambra: 5 }]
+  ),
+
+  // ----- Economia -----
+  ...generaTraguardiSoglia("dracme_totali", "💰 Economia", [500, 2000, 5000, 15000, 50000, 100000],
+    (s) => `Guadagna ${s.toLocaleString("it-IT")} Dracme in totale`,
+    () => traguardiDracmeGuadagnateTotali,
+    [{ dracme: 30 }, { dracme: 60 }, { dracme: 100 }, { dracme: 200, ambra: 1 }, { dracme: 400, ambra: 2 }, { dracme: 700, ambra: 4 }]
+  ),
+
+  // ----- Fortuna -----
+  { id: "fortuna_leggendaria_1", categoria: "🍀 Fortuna", testo: "Estrai una Leggendaria da un pacchetto", controlla: () => traguardiLeggendarieEstratte >= 1, dracme: 300, ambra: 2 },
+  { id: "fortuna_leggendaria_2", categoria: "🍀 Fortuna", testo: "Estrai due Leggendarie in totale", controlla: () => traguardiLeggendarieEstratte >= 2, dracme: 600, ambra: 4 },
+  { id: "fortuna_leggendaria_3", categoria: "🍀 Fortuna", testo: "Estrai tre Leggendarie in totale", controlla: () => traguardiLeggendarieEstratte >= 3, dracme: 900, ambra: 6 }
+
+];
+
+// Controlla ogni traguardo non ancora sbloccato; se una condizione è ora vera, lo segna come
+// sbloccato e accoda il premio (non lo assegna subito: aspetta che il giocatore lo riscuota
+// dalla maschera apposita, che compare quando si torna alla pagina principale).
+function controllaTraguardi() {
+  let trovatoNuovo = false;
+  TRAGUARDI_DEFINIZIONI.forEach(t => {
+    if (traguardiSbloccati[t.id]) return;
+    let esito = false;
+    try { esito = t.controlla(); } catch (e) { esito = false; }
+    if (esito) {
+      traguardiSbloccati[t.id] = true;
+      traguardiPremiInSospeso.push({ testo: t.testo, categoria: t.categoria, dracme: t.dracme, ambra: t.ambra || 0 });
+      trovatoNuovo = true;
+    }
+  });
+  if (trovatoNuovo) salvaProgressoCloud();
+}
+
+function contaTraguardiSbloccati() {
+  return Object.keys(traguardiSbloccati).length;
+}
+
+let traguardoModalAperto = false;
+
+function mostraProssimoTraguardoInSospeso() {
+  if (traguardoModalAperto) return;
+  if (traguardiPremiInSospeso.length === 0) return;
+
+  const altroModaleAperto = document.querySelectorAll(".modal-overlay:not(.hidden)").length > 0;
+  if (altroModaleAperto) return;
+
+  const premio = traguardiPremiInSospeso[0];
+  traguardoModalAperto = true;
+
+  document.getElementById("traguardo-categoria-testo").innerText = premio.categoria;
+  document.getElementById("traguardo-descrizione-testo").innerText = premio.testo;
+  document.getElementById("traguardo-premio-testo").innerText =
+    `+${premio.dracme} Dracme${premio.ambra > 0 ? `, +${premio.ambra} Frammenti d'Ambra` : ""}`;
+
+  document.getElementById("traguardo-modal").classList.remove("hidden");
+}
+
+document.getElementById("btn-riscuoti-traguardo")?.addEventListener("click", () => {
+  const premio = traguardiPremiInSospeso.shift();
+  if (premio) {
+    dracmeAttuali += premio.dracme;
+    traguardiDracmeGuadagnateTotali += premio.dracme;
+    if (premio.ambra > 0) ambraAttuale += premio.ambra;
+    aggiornaTopbarProfilo();
+    salvaProgressoCloud();
+  }
+
+  document.getElementById("traguardo-modal").classList.add("hidden");
+  traguardoModalAperto = false;
+
+  setTimeout(mostraProssimoTraguardoInSospeso, 400);
+});
+
+setInterval(mostraProssimoTraguardoInSospeso, 2000);
+
 
 // ===== Tracciamento completamento delle 11 Fatiche, per sbloccare Cerbero =====
 
@@ -10483,6 +10744,9 @@ function uniscitiAClanEsistente(clanId) {
 
   clanMioAttuale = clan;
 
+  traguardiClanUnito = true;
+  controllaTraguardi();
+
   aggiornaVisualizzazioneClan();
 
   alert(`Ti sei unito con successo al clan: ${clan.nome}!`);
@@ -10830,6 +11094,9 @@ document.getElementById("btn-conferma-donazione")?.addEventListener("click", () 
   }
 
   donazioneFattaOggi = true;
+
+  traguardiClanDonazioneFatta = true;
+  controllaTraguardi();
 
   aggiornaPulsantiLateraliRarita();
 
@@ -11859,7 +12126,7 @@ function risolviRicompensaSettimanaGuerra(adesso) {
 
   let ricompensaDracme = 0, ricompensaAmbra = 0;
 
-  if (posizione === 1) { ricompensaDracme = 500; ricompensaAmbra = 3; }
+  if (posizione === 1) { ricompensaDracme = 500; ricompensaAmbra = 3; traguardiClanGuerreVinte++; }
 
   else if (posizione === 2) { ricompensaDracme = 250; ricompensaAmbra = 1; }
 
@@ -11870,6 +12137,8 @@ function risolviRicompensaSettimanaGuerra(adesso) {
   dracmeAttuali += ricompensaDracme;
 
   ambraAttuale += ricompensaAmbra;
+
+  controllaTraguardi();
 
   document.getElementById("dracme-count").innerText = dracmeAttuali;
 
@@ -12139,6 +12408,13 @@ function risolviFineAssaltoGuerra(mazzoAttaccoGuerra, roundVintiGuerra) {
 
   const vintoAssalto = (roundVintiGuerra >= 3);
 
+  if (vintoAssalto) {
+    traguardiVittorieTotali++;
+    if (roundVintiGuerra === 5) traguardiVittoriePerfette++;
+  }
+  traguardiClanGuerrePartecipate++;
+  controllaTraguardi();
+
   let epilogoHTML = `<div class="info-divider"></div>`;
 
   if (vintoAssalto) {
@@ -12298,6 +12574,22 @@ function raccogliDatiSalvataggio() {
     argonautiUltimoCicloPremiato: argonautiUltimoCicloPremiato,
     argonautiUltimoCicloPartecipato: argonautiUltimoCicloPartecipato,
     argonautiPartiteGiocateQuestoCiclo: argonautiPartiteGiocateQuestoCiclo,
+    traguardiSbloccati: traguardiSbloccati,
+    traguardiPremiInSospeso: traguardiPremiInSospeso,
+    traguardiVittorieTotali: traguardiVittorieTotali,
+    traguardiVittoriePerfette: traguardiVittoriePerfette,
+    traguardiEvoluzioniTotali: traguardiEvoluzioniTotali,
+    traguardiEsagoniConquistati: traguardiEsagoniConquistati,
+    traguardiLeggendarieEstratte: traguardiLeggendarieEstratte,
+    traguardiDracmeGuadagnateTotali: traguardiDracmeGuadagnateTotali,
+    traguardiClanUnito: traguardiClanUnito,
+    traguardiClanDonazioneFatta: traguardiClanDonazioneFatta,
+    traguardiClanGuerrePartecipate: traguardiClanGuerrePartecipate,
+    traguardiClanGuerreVinte: traguardiClanGuerreVinte,
+    traguardiEventiPartecipazioni: traguardiEventiPartecipazioni,
+    traguardiEventiMiglior1oPosto: traguardiEventiMiglior1oPosto,
+    traguardiEventiTop10: traguardiEventiTop10,
+    traguardiEventiTop25: traguardiEventiTop25,
     ultimoSalvataggio: Date.now()
   };
 }
@@ -12589,6 +12881,26 @@ function applicaDatiCaricati(dati) {
   if (typeof dati.argonautiPartiteGiocateQuestoCiclo === "number") {
     argonautiPartiteGiocateQuestoCiclo = dati.argonautiPartiteGiocateQuestoCiclo;
   }
+  if (dati.traguardiSbloccati && typeof dati.traguardiSbloccati === "object") {
+    traguardiSbloccati = dati.traguardiSbloccati;
+  }
+  if (Array.isArray(dati.traguardiPremiInSospeso)) {
+    traguardiPremiInSospeso = dati.traguardiPremiInSospeso;
+  }
+  if (typeof dati.traguardiVittorieTotali === "number") traguardiVittorieTotali = dati.traguardiVittorieTotali;
+  if (typeof dati.traguardiVittoriePerfette === "number") traguardiVittoriePerfette = dati.traguardiVittoriePerfette;
+  if (typeof dati.traguardiEvoluzioniTotali === "number") traguardiEvoluzioniTotali = dati.traguardiEvoluzioniTotali;
+  if (typeof dati.traguardiEsagoniConquistati === "number") traguardiEsagoniConquistati = dati.traguardiEsagoniConquistati;
+  if (typeof dati.traguardiLeggendarieEstratte === "number") traguardiLeggendarieEstratte = dati.traguardiLeggendarieEstratte;
+  if (typeof dati.traguardiDracmeGuadagnateTotali === "number") traguardiDracmeGuadagnateTotali = dati.traguardiDracmeGuadagnateTotali;
+  if (typeof dati.traguardiClanUnito === "boolean") traguardiClanUnito = dati.traguardiClanUnito;
+  if (typeof dati.traguardiClanDonazioneFatta === "boolean") traguardiClanDonazioneFatta = dati.traguardiClanDonazioneFatta;
+  if (typeof dati.traguardiClanGuerrePartecipate === "number") traguardiClanGuerrePartecipate = dati.traguardiClanGuerrePartecipate;
+  if (typeof dati.traguardiClanGuerreVinte === "number") traguardiClanGuerreVinte = dati.traguardiClanGuerreVinte;
+  if (typeof dati.traguardiEventiPartecipazioni === "number") traguardiEventiPartecipazioni = dati.traguardiEventiPartecipazioni;
+  if (typeof dati.traguardiEventiMiglior1oPosto === "number") traguardiEventiMiglior1oPosto = dati.traguardiEventiMiglior1oPosto;
+  if (typeof dati.traguardiEventiTop10 === "number") traguardiEventiTop10 = dati.traguardiEventiTop10;
+  if (typeof dati.traguardiEventiTop25 === "number") traguardiEventiTop25 = dati.traguardiEventiTop25;
   if (dati.tributoRaStato && typeof dati.tributoRaStato === "object") {
     tributoRaStato = Object.assign({ scambiOggi: 0, dataUltimoScambio: "" }, dati.tributoRaStato);
   }

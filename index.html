@@ -81,6 +81,7 @@ object-fit: cover;">
 </div>
 
 <span id="username">Orson</span>
+<span id="traguardi-badge-nickname" class="hidden" style="font-size: 0.62rem; color: #ffcc66; background: rgba(0,0,0,0.4); border: 1px solid #c9a054; border-radius: 8px; padding: 1px 5px; margin-left: 4px;">🏆 0</span>
 
 </button>
 
@@ -793,6 +794,19 @@ sans-serif; font-size: 0.9rem; line-height: 1.5;"></div>
 <button type="button" id="close-battle-log-modal" class="close-btn">&times;</button>
 </header>
 <div id="battle-log-content" style="color: #fff; overflow-y: auto; padding: 10px; font-family: sans-serif; font-size: 0.9rem; line-height: 1.5;"></div>
+</div>
+</div>
+
+<div id="traguardo-modal" class="modal-overlay hidden" style="z-index: 3000;">
+<div class="modal-card traguardo-modal-card" style="max-width: 460px; height: auto; max-height: calc(var(--app-height) * 70 / 100); padding: 0; border-color: #ffcc66;">
+<div style="padding: 28px 24px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 10px;">
+<div style="font-size: 3rem;">🏆</div>
+<h2 style="margin: 0; color: #ffcc66; font-family: 'Cinzel', 'Georgia', serif;">Traguardo Raggiunto!</h2>
+<p id="traguardo-categoria-testo" style="color: #a89a7a; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; margin: 0;"></p>
+<p id="traguardo-descrizione-testo" style="color: #e0d5c1; font-size: 1rem; margin: 4px 0;"></p>
+<p id="traguardo-premio-testo" style="color: #7ee787; font-weight: bold; font-size: 1.1rem; margin: 4px 0 8px;"></p>
+<button type="button" class="events-btn events-btn-main" id="btn-riscuoti-traguardo" style="max-width: 220px;">Riscuoti</button>
+</div>
 </div>
 </div>
 
