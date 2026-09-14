@@ -4026,9 +4026,9 @@ const SCHEMI_PACCHETTI_RESTO = {
 
   9: { nome: "Flagello dei Cieli", costo: 8, valuta: "ambra", descrizione: "1 Mitica (Lvl 5) estratta dal pool supremo" },
 
-  10: { nome: "Respiro del Drago", costo: 15, valuta: "ambra", descrizione: "1 Mitica (Lvl 5) garantita + 0.1% possibilità Drago Ancestrale (Lvl 6) extra" },
+  10: { nome: "Respiro del Drago", costo: 15, valuta: "ambra", descrizione: "1 Mitica (Lvl 5) garantita + 2% possibilità Drago Ancestrale (Lvl 6) extra" },
 
-  11: { nome: "Il Tesoro dei Draghi Antichi", costo: 40, valuta: "ambra", descrizione: "1 Mitica (Lvl 5) garantita + 20% possibilità di un Drago Leggendario (Lvl 6) extra" },
+  11: { nome: "Il Tesoro dei Draghi Antichi", costo: 40, valuta: "ambra", descrizione: "1 Mitica, 2 Epiche, 2 Rare, 2 Non Comuni, 2 Comuni garantite + 5 slot deck extra + 20% possibilità di un Drago Leggendario (Lvl 6)" },
 
   12: { nome: "Creature degli Abissi e dei Cieli", costo: 600, valuta: "dracme", descrizione: "4 carte con tratto Nuoto o Volo, rarità mista (70% Comune, 25% Non Comune, 5% Rara)" },
 
@@ -4105,6 +4105,8 @@ function acquistaPacchetto(id) {
 
   if (deckGiocatore.length >= slotMassimiDeck) { alert(`Deck pieno! Capienza: ${slotMassimiDeck}`); return; }
 
+  if (id === 11 && (deckGiocatore.length + 9) > (slotMassimiDeck + 5)) { alert(`Questo pacchetto aggiunge 9 carte garantite: ti servono almeno 4 slot liberi prima dell'acquisto (i +5 slot del pacchetto coprono solo parte del bottino). Capienza attuale: ${slotMassimiDeck - deckGiocatore.length} liberi.`); return; }
+
  
 
   if (pack.valuta === "dracme") { 
@@ -4145,9 +4147,17 @@ function acquistaPacchetto(id) {
 
   else if (id === 9) { nuoveCarte.push(estraiCartaPerLivello(5)); }
 
-  else if (id === 10) { nuoveCarte.push(estraiCartaPerLivello(5)); if(Math.random() < 0.001) nuoveCarte.push(estraiCartaPerLivello(6)); }
+  else if (id === 10) { nuoveCarte.push(estraiCartaPerLivello(5)); if(Math.random() < 0.02) nuoveCarte.push(estraiCartaPerLivello(6)); }
 
-  else if (id === 11) { nuoveCarte.push(estraiCartaPerLivello(5)); if(Math.random() < 0.20) nuoveCarte.push(estraiCartaPerLivello(6)); }
+  else if (id === 11) {
+    nuoveCarte.push(estraiCartaPerLivello(5));
+    for (let i = 0; i < 2; i++) nuoveCarte.push(estraiCartaPerLivello(4));
+    for (let i = 0; i < 2; i++) nuoveCarte.push(estraiCartaPerLivello(3));
+    for (let i = 0; i < 2; i++) nuoveCarte.push(estraiCartaPerLivello(2));
+    for (let i = 0; i < 2; i++) nuoveCarte.push(estraiCartaPerLivello(1));
+    slotMassimiDeck += 5;
+    if (Math.random() < 0.20) nuoveCarte.push(estraiCartaPerLivello(6));
+  }
 
   else if (id === 12) { for(let i=0; i<4; i++) nuoveCarte.push(estraiCartaPerTratto(["nuoto", "volo"])); }
 
