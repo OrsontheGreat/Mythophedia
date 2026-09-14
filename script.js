@@ -6127,8 +6127,8 @@ function assicuraStatoMira() {
 }
 
 function calcolaPremioMira(punteggio) {
-  for (const p of MIRA_PREMI) if (punteggio >= p.soglia) return p.dracme;
-  return 0;
+  for (const p of MIRA_PREMI) if (punteggio >= p.soglia) return p;
+  return { dracme: 0, ambra: 0 };
 }
 
 function fermaCicloMira() {
@@ -12778,7 +12778,7 @@ document.getElementById("close-classifica-modal")?.addEventListener("click", () 
 function applicaDatiCaricati(dati) {
   deckGiocatore = dati.deckGiocatore || deckGiocatore;
 
-  dracmeAttuali = (typeof dati.dracmeAttuali === "number") ? dati.dracmeAttuali : dracmeAttuali;
+  dracmeAttuali = (typeof dati.dracmeAttuali === "number" && !isNaN(dati.dracmeAttuali)) ? dati.dracmeAttuali : dracmeAttuali;
   ambraAttuale = (typeof dati.ambraAttuale === "number") ? dati.ambraAttuale : ambraAttuale;
   livelloGiocatore = dati.livelloGiocatore || livelloGiocatore;
   xpAttuali = (typeof dati.xpAttuali === "number") ? dati.xpAttuali : xpAttuali;
