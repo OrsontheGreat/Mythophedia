@@ -1008,7 +1008,7 @@ html.forza-landscape .close-btn { font-size: 1.6rem; }
 
   display: -webkit-box;
 
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 5;
 
   -webkit-box-orient: vertical;
 

@@ -4028,7 +4028,11 @@ const SCHEMI_PACCHETTI_RESTO = {
 
   10: { nome: "Respiro del Drago", costo: 15, valuta: "ambra", descrizione: "1 Mitica (Lvl 5) garantita + 0.1% possibilità Drago Ancestrale (Lvl 6) extra" },
 
-  11: { nome: "Il Tesoro dei Draghi Antichi", costo: 40, valuta: "ambra", descrizione: "1 Mitica (Lvl 5) garantita + 20% possibilità di un Drago Leggendario (Lvl 6) extra" }
+  11: { nome: "Il Tesoro dei Draghi Antichi", costo: 40, valuta: "ambra", descrizione: "1 Mitica (Lvl 5) garantita + 20% possibilità di un Drago Leggendario (Lvl 6) extra" },
+
+  12: { nome: "Creature degli Abissi e dei Cieli", costo: 600, valuta: "dracme", descrizione: "4 carte con tratto Nuoto o Volo, rarità mista (70% Comune, 25% Non Comune, 5% Rara)" },
+
+  13: { nome: "Creature delle Vette e dei Rami", costo: 600, valuta: "dracme", descrizione: "4 carte con tratto Equilibrio o Arrampicata, rarità mista (70% Comune, 25% Non Comune, 5% Rara)" }
 
 };
 
@@ -4037,6 +4041,21 @@ const SCHEMI_PACCHETTI_RESTO = {
 // MYTHOPHEDIA - SCRIPT.JS - BLOCCO 12
 
 // ==========================================
+
+function estraiCartaPerTratto(trattiAmmessi) {
+  const rand = Math.random();
+  const lvl = rand < 0.70 ? 1 : (rand < 0.95 ? 2 : 3);
+  let pool = CARTE_FISSE.filter(c => c.livello === lvl && c.tratti && c.tratti.some(t => trattiAmmessi.includes(t)));
+  if (pool.length === 0) pool = CARTE_FISSE.filter(c => c.tratti && c.tratti.some(t => trattiAmmessi.includes(t)));
+  const ref = pool[Math.floor(Math.random() * pool.length)];
+  return {
+    id: "carta_" + ref.livello + "_" + Date.now() + "_" + Math.floor(Math.random()*10000),
+    nome: ref.nome, cultura: ref.cultura, tratti: ref.tratti || [], immagine: ref.immagine, livello: ref.livello, stelle: 0,
+    statistiche: { ferocia: ref.statisticheFisse.ferocia, balzo: ref.statisticheFisse.balzo, corazza: ref.statisticheFisse.corazza, istinto: ref.statisticheFisse.istinto }, isJolly: false,
+    occupataInDifesa: false, coordinatePresidio: null, mondoPresidio: null, sottomondoPresidio: null,
+    bloccataInDuello: false, faticaMondo: 0, fatigueGuerra: 0, inizioRiposo: null, ultimoAggiornamentoFatica: null
+  };
+}
 
 function estraiCartaPerLivello(lvl, forzaJolly = false) {
 
@@ -4129,6 +4148,10 @@ function acquistaPacchetto(id) {
   else if (id === 10) { nuoveCarte.push(estraiCartaPerLivello(5)); if(Math.random() < 0.001) nuoveCarte.push(estraiCartaPerLivello(6)); }
 
   else if (id === 11) { nuoveCarte.push(estraiCartaPerLivello(5)); if(Math.random() < 0.20) nuoveCarte.push(estraiCartaPerLivello(6)); }
+
+  else if (id === 12) { for(let i=0; i<4; i++) nuoveCarte.push(estraiCartaPerTratto(["nuoto", "volo"])); }
+
+  else if (id === 13) { for(let i=0; i<4; i++) nuoveCarte.push(estraiCartaPerTratto(["equilibrio", "arrampicata"])); }
 
  
 
@@ -4358,6 +4381,22 @@ function renderizzaMercato() {
 
   modalGrid.insertAdjacentHTML("beforeend", slotCardHTML);
 
+  const slotXLCardHTML = `
+
+    <div class="creature-card" style="justify-content: space-between; text-align: center; padding: 15px; height: 100%; border-color: #ffb703;">
+
+      <div class="card-name" style="color: #ffb703; font-size: 1rem;">Espansione Deck XL</div>
+
+      <div class="card-icon" style="font-size: 2rem; margin: 10px 0;">📦</div>
+
+      <p style="font-size: 0.75rem; color: #cbd5e0; margin-bottom: 10px; font-family: sans-serif; min-height: 40px;">Aggiunge immediatamente +30 slot massimi per conservare le tue carte, con 500 Dracme di risparmio rispetto a comprare tre Espansioni singole.</p>
+
+      <button type="button" class="events-btn" id="buy-slots-xl-btn" style="padding: 8px; font-size: 0.75rem; margin-top: auto; background: linear-gradient(to bottom, #2b6cb0, #2b4c7e); border-color: #2b4c7e;">5500 🪙</button>
+
+    </div>`;
+
+  modalGrid.insertAdjacentHTML("beforeend", slotXLCardHTML);
+
   assicuraStatoTributoRa();
   const scambiRimasti = TRIBUTO_RA_MAX_GIORNO - tributoRaStato.scambiOggi;
   const tributoDisabilitato = scambiRimasti <= 0 || dracmeAttuali < TRIBUTO_RA_COSTO;
@@ -4423,6 +4462,22 @@ function renderizzaMercato() {
     salvaProgressoCloud();
 
     alert(`Espanso! Massimi: ${slotMassimiDeck}`); 
+
+  });
+
+  document.getElementById("buy-slots-xl-btn").addEventListener("click", () => {
+
+    if (dracmeAttuali < 5500) { alert("Dracme insufficienti!"); return; }
+
+    dracmeAttuali -= 5500; slotMassimiDeck += 30;
+
+    document.getElementById("dracme-count").innerText = dracmeAttuali;
+
+    aggiornaPulsantiLateraliRarita();
+
+    salvaProgressoCloud();
+
+    alert(`Espanso! Massimi: ${slotMassimiDeck}`);
 
   });
 
@@ -7001,7 +7056,9 @@ function generaDomandaAmazzone(nomiEsclusi) {
 
   // Maschero ogni occorrenza diretta del nome della creatura (in qualunque punto della frase),
   // così la risposta non viene mai svelata dal testo stesso, indipendentemente dalla scheda.
-  const regexNome = new RegExp(carta.nome.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi");
+  // Cattura anche un eventuale articolo elidente ("l'") subito prima del nome, altrimenti la
+  // sostituzione lascerebbe un apostrofo orfano quando il nome inizia per vocale (es. "l'Amadriade").
+  const regexNome = new RegExp("(l['’])?" + carta.nome.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi");
   const testo = fraseBase.replace(regexNome, "questa creatura");
 
   const altriNomi = CARTE_FISSE.map(c => c.nome).filter(n => n !== carta.nome);
