@@ -5980,9 +5980,10 @@ const INSEGUIMENTO_TARGET = "🦌";
 const INSEGUIMENTO_DECOY = ["🐺", "🦊", "🐗", "🐻", "🦅", "🐇", "🦉", "🐿️"];
 
 const INSEGUIMENTO_PREMI = [
-  { soglia: 20, dracme: 320, ambra: 2 },
-  { soglia: 15, dracme: 250, ambra: 0 },
-  { soglia: 12, dracme: 150, ambra: 0 },
+  { soglia: 20, dracme: 350, ambra: 4 },
+  { soglia: 16, dracme: 260, ambra: 3 },
+  { soglia: 13, dracme: 180, ambra: 2 },
+  { soglia: 10, dracme: 100, ambra: 1 },
   { soglia: 9, dracme: 80, ambra: 0 },
   { soglia: 6, dracme: 40, ambra: 0 },
   { soglia: 3, dracme: 15, ambra: 0 }
@@ -6627,17 +6628,17 @@ let trappolaStato = { tentativiOggi: 0, dataUltimoTentativo: "" };
 
 const TRAPPOLA_TENTATIVI_MAX = 1;
 const TRAPPOLA_VITE_MAX = 3;
-const TRAPPOLA_COLPI_NECESSARI = 6;
+const TRAPPOLA_COLPI_NECESSARI = 9;
 const TRAPPOLA_TEMPO_INIZIALE_MS = 1300;
-const TRAPPOLA_TEMPO_RIDUZIONE_MS = 55;
+const TRAPPOLA_TEMPO_RIDUZIONE_MS = 90;
 const TRAPPOLA_TEMPO_MINIMO_MS = 550;
 const TRAPPOLA_NOMI_CORSIE = ["Sinistra", "Centro", "Destra"];
 
 const TRAPPOLA_PREMI_VITTORIA = [
-  { roundMax: 7, dracme: 220, frammenti: 1 },
-  { roundMax: 9, dracme: 140, frammenti: 0 },
-  { roundMax: 12, dracme: 80, frammenti: 0 },
-  { roundMax: 16, dracme: 40, frammenti: 0 },
+  { roundMax: 9, dracme: 220, frammenti: 1 },
+  { roundMax: 11, dracme: 140, frammenti: 0 },
+  { roundMax: 14, dracme: 80, frammenti: 0 },
+  { roundMax: 18, dracme: 40, frammenti: 0 },
   { roundMax: Infinity, dracme: 20, frammenti: 0 }
 ];
 
