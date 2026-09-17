@@ -5791,14 +5791,17 @@ function collegaEventiAugia() {
 let cavalleStato = { tentativiOggi: 0, dataUltimoTentativo: "" };
 
 const CAVALLE_TAPPE = [
-  { nome: "Podargo", probabilita: 0.65, moltiplicatore: 1.5 },
-  { nome: "Lampone", probabilita: 0.50, moltiplicatore: 2.3 },
-  { nome: "Xanto", probabilita: 0.38, moltiplicatore: 3.8 },
-  { nome: "Dino", probabilita: 0.25, moltiplicatore: 6.5 }
+  { nome: "Podargo", probabilita: 0.75, moltiplicatore: 1.5 },
+  { nome: "Lampone", probabilita: 0.65, moltiplicatore: 2.3 },
+  { nome: "Xanto", probabilita: 0.55, moltiplicatore: 3.8 },
+  { nome: "Dino", probabilita: 0.40, moltiplicatore: 6.5 }
 ];
 
 const CAVALLE_PUNTATE = [50, 100, 200];
+const CAVALLE_PUNTATE_AMBRA = [1, 2, 3];
 const CAVALLE_TENTATIVI_MAX = 3;
+
+let cavalleValuta = "dracme";
 
 let cavalleInPartita = false;
 let cavallePuntata = 0;
@@ -5822,15 +5825,17 @@ function attendiCavalle(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-function iniziaPartitaCavalle(puntata) {
+function iniziaPartitaCavalle(puntata, valuta) {
   if (cavalleBloccaClick) return;
   assicuraStatoCavalle();
   if (cavalleStato.tentativiOggi >= CAVALLE_TENTATIVI_MAX) return;
-  if (dracmeAttuali < puntata) return;
+  const saldoDisponibile = valuta === "ambra" ? ambraAttuale : dracmeAttuali;
+  if (saldoDisponibile < puntata) return;
 
-  dracmeAttuali -= puntata;
+  if (valuta === "ambra") { ambraAttuale -= puntata; } else { dracmeAttuali -= puntata; }
   cavalleStato.tentativiOggi++;
   cavallePuntata = puntata;
+  cavalleValuta = valuta;
   cavalleTappaAttuale = 0;
   cavalleMoltiplicatoreAttuale = 1;
   cavalleInPartita = true;
@@ -5867,17 +5872,19 @@ async function affrontaTappaCavalle() {
 
     if (cavalleTappaAttuale >= CAVALLE_TAPPE.length) {
       const vincitaFinale = Math.round(cavallePuntata * cavalleMoltiplicatoreAttuale);
-      dracmeAttuali += vincitaFinale;
+      const etichettaValuta = cavalleValuta === "ambra" ? "Frammenti d'Ambra" : "Dracme";
+      if (cavalleValuta === "ambra") { ambraAttuale += vincitaFinale; } else { dracmeAttuali += vincitaFinale; }
       ambraAttuale += 2;
       segnaFaticaCompletata("cavalle");
       cavalleGiocoFinito = true;
-      cavalleEsitoTesto = `🏆 Hai domato tutte e quattro le cavalle! Vinci ${vincitaFinale} Dracme e 2 Frammenti d'Ambra.`;
+      cavalleEsitoTesto = `🏆 Hai domato tutte e quattro le cavalle! Vinci ${vincitaFinale} ${etichettaValuta} e 2 Frammenti d'Ambra.`;
       aggiornaTopbarProfilo();
       salvaProgressoCloud();
     }
   } else {
     cavalleGiocoFinito = true;
-    cavalleEsitoTesto = `💀 ${tappa.nome} non ti ha risparmiato. Hai perso la puntata di ${cavallePuntata} Dracme.`;
+    const etichettaValuta = cavalleValuta === "ambra" ? "Frammenti d'Ambra" : "Dracme";
+    cavalleEsitoTesto = `💀 ${tappa.nome} non ti ha risparmiato. Hai perso la puntata di ${cavallePuntata} ${etichettaValuta}.`;
   }
 
   cavalleBloccaClick = false;
@@ -5887,12 +5894,13 @@ async function affrontaTappaCavalle() {
 function ritiraCavalle() {
   if (cavalleBloccaClick || cavalleTappaAttuale === 0) return;
   const vincita = Math.round(cavallePuntata * cavalleMoltiplicatoreAttuale);
-  dracmeAttuali += vincita;
+  const etichettaValuta = cavalleValuta === "ambra" ? "Frammenti d'Ambra" : "Dracme";
+  if (cavalleValuta === "ambra") { ambraAttuale += vincita; } else { dracmeAttuali += vincita; }
   let frammenti = 0;
   if (cavalleTappaAttuale >= 3) { frammenti = 1; ambraAttuale += 1; }
   if (cavalleTappaAttuale >= 2) segnaFaticaCompletata("cavalle");
   cavalleGiocoFinito = true;
-  cavalleEsitoTesto = `Ti sei ritirato in tempo, portando a casa ${vincita} Dracme${frammenti > 0 ? " e 1 Frammento d'Ambra" : ""}.`;
+  cavalleEsitoTesto = `Ti sei ritirato in tempo, portando a casa ${vincita} ${etichettaValuta}${frammenti > 0 ? " e 1 Frammento d'Ambra" : ""}.`;
   aggiornaTopbarProfilo();
   salvaProgressoCloud();
   renderContenutoFatiche();
@@ -5911,18 +5919,26 @@ function htmlSchermataCavalle() {
     const tentativiRimasti = CAVALLE_TENTATIVI_MAX - cavalleStato.tentativiOggi;
     const disponibile = tentativiRimasti > 0;
 
-    const bottoniPuntata = CAVALLE_PUNTATE.map(p => `
-      <button type="button" class="cavalle-puntata-btn events-btn events-btn-small" data-puntata="${p}" ${(!disponibile || dracmeAttuali < p) ? "disabled" : ""}>
+    const bottoniPuntataDracme = CAVALLE_PUNTATE.map(p => `
+      <button type="button" class="cavalle-puntata-btn events-btn events-btn-small" data-puntata="${p}" data-valuta="dracme" ${(!disponibile || dracmeAttuali < p) ? "disabled" : ""}>
         ${p} Dracme
+      </button>`).join("");
+
+    const bottoniPuntataAmbra = CAVALLE_PUNTATE_AMBRA.map(p => `
+      <button type="button" class="cavalle-puntata-btn events-btn events-btn-small" data-puntata="${p}" data-valuta="ambra" ${(!disponibile || ambraAttuale < p) ? "disabled" : ""}>
+        ${p} Frammento${p > 1 ? "i" : ""} d'Ambra
       </button>`).join("");
 
     return `
       <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; gap:14px; padding:14px;">
         <div style="background:rgba(15,10,5,0.6); border-radius:10px; padding:14px; color:#e0d5c1; font-size:0.85rem; max-width:360px; text-align:center;">
           <p style="color:#c9a054; font-style:italic; margin-bottom:8px;">Le cavalle del re Diomede erano nutrite con carne umana, feroci e imprevedibili: Eracle le domò dando in pasto lo stesso Diomede alle sue creature.</p>
-          <p>Scegli quante Dracme rischiare. Ad ogni cavalla superata il moltiplicatore cresce — puoi ritirarti quando vuoi, ma un passo falso ti costa l'intera puntata.</p>
+          <p>Scegli cosa rischiare, in Dracme o in Frammenti d'Ambra. Ad ogni cavalla superata il moltiplicatore cresce — puoi ritirarti quando vuoi, ma un passo falso ti costa l'intera puntata.</p>
         </div>
-        <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center;">${bottoniPuntata}</div>
+        <p style="color:#a89a7a; font-size:0.75rem; margin:0;">Puntata in Dracme</p>
+        <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center;">${bottoniPuntataDracme}</div>
+        <p style="color:#a89a7a; font-size:0.75rem; margin:0;">Puntata in Frammenti d'Ambra</p>
+        <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center;">${bottoniPuntataAmbra}</div>
         <p style="color:#a89a7a; font-size:0.8rem;">Tentativi rimasti oggi: <b style="color:#ffcc66;">${tentativiRimasti} / ${CAVALLE_TENTATIVI_MAX}</b></p>
       </div>`;
   }
@@ -5940,13 +5956,14 @@ function htmlSchermataCavalle() {
   const tappa = CAVALLE_TAPPE[cavalleTappaAttuale];
   const vincitaAttuale = Math.round(cavallePuntata * cavalleMoltiplicatoreAttuale);
   const vincitaPotenziale = Math.round(cavallePuntata * tappa.moltiplicatore);
+  const etichettaValutaInCorso = cavalleValuta === "ambra" ? "Frammenti d'Ambra" : "Dracme";
 
   return `
     <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; gap:14px; padding:14px;">
       <div style="background:rgba(15,10,5,0.6); border-radius:10px; padding:14px; color:#e0d5c1; font-size:0.85rem; max-width:360px; text-align:center;">
         <p style="font-size:1rem; color:#ffcc66; font-weight:bold; margin-bottom:6px;">🐴 ${tappa.nome}</p>
-        <p>Puntata: <b>${cavallePuntata}</b> Dracme — Se la superi: <b style="color:#c9a054;">${vincitaPotenziale}</b> Dracme (×${tappa.moltiplicatore})</p>
-        ${cavalleTappaAttuale > 0 ? `<p style="margin-top:6px; color:#7ee787;">Se ti ritiri ora incassi: <b>${vincitaAttuale}</b> Dracme</p>` : ""}
+        <p>Puntata: <b>${cavallePuntata}</b> ${etichettaValutaInCorso} — Se la superi: <b style="color:#c9a054;">${vincitaPotenziale}</b> ${etichettaValutaInCorso} (×${tappa.moltiplicatore})</p>
+        ${cavalleTappaAttuale > 0 ? `<p style="margin-top:6px; color:#7ee787;">Se ti ritiri ora incassi: <b>${vincitaAttuale}</b> ${etichettaValutaInCorso}</p>` : ""}
       </div>
       <div id="cavalle-esito-tappa" style="min-height:22px; color:#ffcc66; font-weight:bold; font-size:0.9rem;"></div>
       <div style="display:flex; gap:10px;">
@@ -5958,7 +5975,7 @@ function htmlSchermataCavalle() {
 
 function collegaEventiCavalle() {
   document.querySelectorAll(".cavalle-puntata-btn").forEach(btn => {
-    btn.addEventListener("click", () => iniziaPartitaCavalle(parseInt(btn.dataset.puntata)));
+    btn.addEventListener("click", () => iniziaPartitaCavalle(parseInt(btn.dataset.puntata), btn.dataset.valuta));
   });
 
   document.getElementById("cavalle-rischia-btn")?.addEventListener("click", affrontaTappaCavalle);
