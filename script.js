@@ -2132,10 +2132,7 @@ function controllaFineSettimanaMondo(chiaveMappa, vecchiaMappa, callback) {
 
       let dracmeVinte = Math.round(dracmeBase * molt);
 
-      // I Frammenti d'Ambra restano una ricompensa esclusiva dei mondi più difficili (Cultori e Libero)
-      let mondoDaAmbra = mondoSelezionatoCorrente.id === "c" || mondoSelezionatoCorrente.id === "l";
-
-      let ambraVinta = mondoDaAmbra ? Math.round(ambraBase * molt) : 0;
+      let ambraVinta = Math.round(ambraBase * molt);
 
       dracmeAttuali += dracmeVinte;
 
@@ -7418,11 +7415,11 @@ let giardinoStato = { tentativiOggi: 0, dataUltimoTentativo: "" };
 const GIARDINO_TENTATIVI_MAX = 3;
 const GIARDINO_ALBERI = 6;
 const GIARDINO_PREMI = [
-  { soglia: 10, dracme: 280, frammenti: 1 },
-  { soglia: 8, dracme: 190, frammenti: 0 },
-  { soglia: 6, dracme: 115, frammenti: 0 },
-  { soglia: 4, dracme: 60, frammenti: 0 },
-  { soglia: 2, dracme: 20, frammenti: 0 }
+  { soglia: 10, dracme: 350, frammenti: 2 },
+  { soglia: 8, dracme: 250, frammenti: 1 },
+  { soglia: 6, dracme: 150, frammenti: 0 },
+  { soglia: 4, dracme: 80, frammenti: 0 },
+  { soglia: 2, dracme: 30, frammenti: 0 }
 ];
 
 let giardinoInPartita = false;
