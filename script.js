@@ -3721,6 +3721,72 @@ const STELLA_COLORI_EVO = {
 
 const STELLA_NOMI_EVO = { 1: "Ambra", 2: "Giada", 3: "Zaffiro", 4: "Ametista", 5: "Rosa Antico", 6: "Oro", 7: "Platino", 8: "Opale" };
 
+function trovaSacrificiIdonei(cartaBersaglio) {
+  let lvlRichiesto = cartaBersaglio.livello === 1 ? 1 : cartaBersaglio.livello - 1;
+  let stelleRichieste = Math.max(0, cartaBersaglio.stelle - 1);
+  return deckGiocatore.filter(c => c.id !== cartaBersaglio.id && c.livello === lvlRichiesto && (c.isJolly || c.stelle === stelleRichieste) && !c.occupataInDifesa && !c.bloccataInDuello && !c.plastificata && calcolaVigorePercentuale(c) > 0);
+}
+
+function trovaCarteProntePerEvolvere() {
+  return deckGiocatore.filter(c => !c.isJolly && !c.occupataInDifesa && !c.bloccataInDuello && !c.plastificata && calcolaVigorePercentuale(c) > 0 && c.livello < 6 && trovaSacrificiIdonei(c).length >= 4);
+}
+
+function mostraCarteProntePerEvolvere() {
+  const pronte = trovaCarteProntePerEvolvere();
+
+  const righeHTML = pronte.map(c => `
+    <div class="pronte-evolvere-riga" data-id="${c.id}" style="display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:8px; background:rgba(255,204,102,0.08); border:1px solid #c9a054; cursor:pointer;">
+      <div style="font-size:1.4rem;">${miniImmagineCarta(c, 34)}</div>
+      <div style="flex:1;">
+        <div style="font-weight:bold; color:#ffcc66; font-size:0.85rem;">${c.nome}</div>
+        <div style="font-size:0.7rem; color:#a89a7a;">${ETICHETTE_LIVELLI[c.livello]} — ${c.stelle} ★ → ${c.stelle + 1} ★</div>
+      </div>
+      <span style="font-size:0.75rem; color:#7ee787; font-weight:bold;">Evolvi ▶</span>
+    </div>`).join("");
+
+  document.getElementById("battle-title-outcome").innerText = "🔥 Pronte per Evolvere";
+  document.getElementById("battle-report-content").innerHTML = `
+    <div style="text-align:center; margin-bottom:10px;">
+      <p style="color:#a89a7a; font-size:0.8rem;">${pronte.length > 0 ? "Tocca una creatura per aprire l'evoluzione con i sacrifici già pronti." : "Nessuna creatura ha abbastanza sacrifici idonei disponibili in questo momento."}</p>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:6px; width:100%; max-width:420px; margin:0 auto;">${righeHTML}</div>
+    <div style="text-align:center; margin-top:14px;">
+      <button type="button" id="btn-chiudi-pronte-evolvere" class="events-btn events-btn-main" style="max-width:200px;">Chiudi</button>
+    </div>`;
+
+  document.querySelectorAll(".pronte-evolvere-riga").forEach(riga => {
+    riga.addEventListener("click", () => {
+      const carta = deckGiocatore.find(c => c.id === riga.dataset.id);
+      if (!carta) return;
+      document.getElementById("battle-result-modal").classList.add("hidden");
+      avviaEvoluzioneGuidata(carta);
+    });
+  });
+
+  document.getElementById("btn-chiudi-pronte-evolvere").addEventListener("click", () => {
+    document.getElementById("battle-result-modal").classList.add("hidden");
+  });
+
+  document.getElementById("battle-result-modal").classList.remove("hidden");
+}
+
+function avviaEvoluzioneGuidata(carta) {
+  apriFinestraEvoluzione(carta);
+
+  const sacrifici = trovaSacrificiIdonei(carta);
+  const nonJolly = sacrifici.filter(c => !c.isJolly);
+  const jolly = sacrifici.filter(c => c.isJolly);
+  const scelti = jolly.concat(nonJolly).slice(0, 4);
+
+  for (let i = 0; i < 4; i++) {
+    const select = document.getElementById(`sacr-slot-${i}`);
+    if (select && scelti[i]) select.value = scelti[i].id;
+  }
+  popolaSelectSacrifici();
+}
+
+document.getElementById("btn-pronte-evolvere")?.addEventListener("click", mostraCarteProntePerEvolvere);
+
 function apriFinestraEvoluzione(carta) {
 
   try {
