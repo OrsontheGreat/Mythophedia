@@ -3731,8 +3731,31 @@ function trovaCarteProntePerEvolvere() {
   return deckGiocatore.filter(c => !c.isJolly && !c.occupataInDifesa && !c.bloccataInDuello && !c.plastificata && calcolaVigorePercentuale(c) > 0 && c.livello < 6 && trovaSacrificiIdonei(c).length >= 4);
 }
 
-function mostraCarteProntePerEvolvere() {
-  const pronte = trovaCarteProntePerEvolvere();
+function ordinaCarteProntePerEvolvere(carte, criterio) {
+  const copia = carte.slice();
+  if (criterio === "rarita_asc") copia.sort((a, b) => a.livello - b.livello);
+  else if (criterio === "nome") copia.sort((a, b) => a.nome.localeCompare(b.nome));
+  else if (criterio === "stelle_desc") copia.sort((a, b) => b.stelle - a.stelle);
+  else if (criterio === "stelle_asc") copia.sort((a, b) => a.stelle - b.stelle);
+  else copia.sort((a, b) => b.livello - a.livello); // rarita_desc, criterio di base
+  return copia;
+}
+
+function mostraCarteProntePerEvolvere(criterio) {
+  criterio = criterio || "rarita_desc";
+  const pronte = ordinaCarteProntePerEvolvere(trovaCarteProntePerEvolvere(), criterio);
+
+  const opzioniOrdinamento = [
+    { valore: "rarita_desc", testo: "Rarità (dalla più alta)" },
+    { valore: "rarita_asc", testo: "Rarità (dalla più bassa)" },
+    { valore: "stelle_desc", testo: "Stelle (dalla più evoluta)" },
+    { valore: "stelle_asc", testo: "Stelle (dalla meno evoluta)" },
+    { valore: "nome", testo: "Nome (A-Z)" }
+  ];
+  const selectHTML = `
+    <select id="pronte-evolvere-ordina" class="sort-select" style="max-width:220px; margin:0 auto 10px;">
+      ${opzioniOrdinamento.map(o => `<option value="${o.valore}" ${o.valore === criterio ? "selected" : ""}>${o.testo}</option>`).join("")}
+    </select>`;
 
   const righeHTML = pronte.map(c => `
     <div class="pronte-evolvere-riga" data-id="${c.id}" style="display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:8px; background:rgba(255,204,102,0.08); border:1px solid #c9a054; cursor:pointer;">
@@ -3746,13 +3769,18 @@ function mostraCarteProntePerEvolvere() {
 
   document.getElementById("battle-title-outcome").innerText = "🔥 Pronte per Evolvere";
   document.getElementById("battle-report-content").innerHTML = `
-    <div style="text-align:center; margin-bottom:10px;">
+    <div style="text-align:center; margin-bottom:6px;">
       <p style="color:#a89a7a; font-size:0.8rem;">${pronte.length > 0 ? "Tocca una creatura per aprire l'evoluzione con i sacrifici già pronti." : "Nessuna creatura ha abbastanza sacrifici idonei disponibili in questo momento."}</p>
     </div>
+    ${pronte.length > 0 ? selectHTML : ""}
     <div style="display:flex; flex-direction:column; gap:6px; width:100%; max-width:420px; margin:0 auto;">${righeHTML}</div>
     <div style="text-align:center; margin-top:14px;">
       <button type="button" id="btn-chiudi-pronte-evolvere" class="events-btn events-btn-main" style="max-width:200px;">Chiudi</button>
     </div>`;
+
+  document.getElementById("pronte-evolvere-ordina")?.addEventListener("change", (e) => {
+    mostraCarteProntePerEvolvere(e.target.value);
+  });
 
   document.querySelectorAll(".pronte-evolvere-riga").forEach(riga => {
     riga.addEventListener("click", () => {
@@ -3785,7 +3813,7 @@ function avviaEvoluzioneGuidata(carta) {
   popolaSelectSacrifici();
 }
 
-document.getElementById("btn-pronte-evolvere")?.addEventListener("click", mostraCarteProntePerEvolvere);
+document.getElementById("btn-pronte-evolvere")?.addEventListener("click", () => mostraCarteProntePerEvolvere());
 
 function apriFinestraEvoluzione(carta) {
 
