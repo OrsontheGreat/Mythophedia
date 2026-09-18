@@ -3728,7 +3728,7 @@ function trovaSacrificiIdonei(cartaBersaglio) {
 }
 
 function trovaCarteProntePerEvolvere() {
-  return deckGiocatore.filter(c => !c.isJolly && !c.occupataInDifesa && !c.bloccataInDuello && !c.plastificata && calcolaVigorePercentuale(c) > 0 && c.livello < 6 && trovaSacrificiIdonei(c).length >= 4);
+  return deckGiocatore.filter(c => !c.isJolly && !c.occupataInDifesa && !c.bloccataInDuello && calcolaVigorePercentuale(c) > 0 && c.livello < 6 && trovaSacrificiIdonei(c).length >= 4);
 }
 
 function ordinaCarteProntePerEvolvere(carte, criterio) {
