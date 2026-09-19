@@ -206,10 +206,10 @@ function potenziaMenuATendina() {
         selTratto.className = "sort-select";
         selTratto.innerHTML = `
           <option value="">Tutti i tratti</option>
-          <option value="arrampicata">Solo Arrampicata</option>
-          <option value="equilibrio">Solo Equilibrio</option>
-          <option value="volo">Solo Volo</option>
-          <option value="nuoto">Solo Nuoto</option>
+          <option value="arrampicata">Arrampicata</option>
+          <option value="equilibrio">Equilibrio</option>
+          <option value="volo">Volo</option>
+          <option value="nuoto">Nuoto</option>
           <option value="nessuno">Solo senza tratto</option>`;
         selTratto.value = fakeSelectUltimoFiltroTratto;
 
@@ -10443,10 +10443,10 @@ function htmlSelezioneCarteFatiche() {
         </select>
         <select id="fatiche20-tratto-select" class="sort-select">
           <option value="">Tutti i tratti</option>
-          <option value="arrampicata">Solo Arrampicata</option>
-          <option value="equilibrio">Solo Equilibrio</option>
-          <option value="volo">Solo Volo</option>
-          <option value="nuoto">Solo Nuoto</option>
+          <option value="arrampicata">Arrampicata</option>
+          <option value="equilibrio">Equilibrio</option>
+          <option value="volo">Volo</option>
+          <option value="nuoto">Nuoto</option>
           <option value="nessuno">Solo senza tratto</option>
         </select>
       </div>
