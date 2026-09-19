@@ -10224,6 +10224,7 @@ const CERBERO_NOMI_STAT = { ferocia: "Ferocia", balzo: "Balzo", corazza: "Corazz
 let cerberoInPartita = false;
 let cerberoGiocoFinito = false;
 let cerberoCartaScelta = null;
+let cerberoCartaSelezionataId = null;
 let cerberoStatistiche = [];
 let cerberoTestaAttuale = 0;
 let cerberoTotaleDracmeRun = 0;
@@ -10259,14 +10260,14 @@ function iniziaPartitaCerbero() {
   assicuraStatoCerbero();
   if (!tutteLeFaticheCompletate() || cerberoStato.tentativiOggi >= CERBERO_TENTATIVI_MAX) return;
 
-  const idCarta = document.getElementById("cerbero-select-carta")?.value;
-  const carta = deckGiocatore.find(c => c.id === idCarta);
+  const carta = deckGiocatore.find(c => c.id === cerberoCartaSelezionataId);
   if (!carta) { alert("Scegli la tua creatura migliore per affrontare Cerbero!"); return; }
 
   cerberoStato.tentativiOggi++;
   salvaProgressoCloud();
 
   cerberoCartaScelta = carta;
+  cerberoCartaSelezionataId = null;
   cerberoStatistiche = statisticheCasualiCerbero();
   cerberoTestaAttuale = 0;
   cerberoTotaleDracmeRun = 0;
@@ -10369,21 +10370,29 @@ function htmlSchermataCerbero() {
     const disponibile = tentativiRimasti > 0;
 
     const eleggibili = carteEleggibiliIdra().sort((a, b) => b.livello - a.livello);
-    const opzioniHTML = eleggibili.map(c => {
-      const datiCarta = JSON.stringify({ nome: c.nome, immagine: c.immagine, tratti: c.tratti || [], stelle: c.stelle, livello: c.livello, statistiche: c.statistiche }).replace(/"/g, "&quot;");
-      return `<option value="${c.id}" data-carta="${datiCarta}">${c.nome} (Lvl ${c.livello})</option>`;
+    const cartaSceltaId = cerberoCartaSelezionataId;
+
+    const griglioHTML = eleggibili.map(c => {
+      const selezionata = c.id === cartaSceltaId;
+      return `
+        <div class="cerbero-carta-scelta" data-id="${c.id}" style="background:${selezionata ? 'rgba(126,231,135,0.15)' : 'rgba(0,0,0,0.35)'}; border:2px solid ${selezionata ? '#7ee787' : '#2f2620'}; border-radius:8px; padding:6px; text-align:center; width:88px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:2px;">
+          <div style="font-size:1.4rem;">${miniImmagineCarta(c, 32)}</div>
+          <div style="font-size:0.65rem; font-weight:bold; color:#e0d5c1; min-height:2.1em; display:flex; align-items:center;">${c.nome}</div>
+          <div style="font-size:0.55rem; letter-spacing:-1px;">${"★".repeat(c.stelle)}${"☆".repeat(Math.max(0, 8 - c.stelle))}</div>
+          <div style="font-size:0.6rem; color:#a89a7a;">F:${c.statistiche.ferocia} B:${c.statistiche.balzo}<br>C:${c.statistiche.corazza} I:${c.statistiche.istinto}</div>
+        </div>`;
     }).join("");
 
     return `
-      <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; gap:12px; padding:14px;">
-        <div style="background:rgba(15,10,5,0.6); border-radius:10px; padding:12px; color:#e0d5c1; font-size:0.82rem; max-width:400px; text-align:center;">
-          <p style="color:#c9a054; font-style:italic; margin-bottom:6px;">Cerbero, il cane a tre teste che sorveglia le Porte degli Inferi, fu l'ultima e più temuta fatica di Eracle: scendere nell'Ade stesso e riportarlo in catene alla luce del sole.</p>
-          <p>Scegli la tua creatura migliore: affronterà le tre teste in sequenza, ognuna su una statistica diversa e via via più esigente. Serve superarle tutte per il premio pieno.</p>
+      <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; gap:10px; padding:14px;">
+        <div style="background:rgba(15,10,5,0.6); border-radius:10px; padding:10px; color:#e0d5c1; font-size:0.8rem; max-width:400px; text-align:center;">
+          <p style="color:#c9a054; font-style:italic; margin-bottom:4px;">Cerbero, il cane a tre teste che sorveglia le Porte degli Inferi, fu l'ultima e più temuta fatica di Eracle: scendere nell'Ade stesso e riportarlo in catene alla luce del sole.</p>
+          <p>Scegli la tua creatura migliore: affronterà le tre teste in sequenza, ognuna su una statistica diversa e via via più esigente.</p>
         </div>
-        <select id="cerbero-select-carta" class="deploy-select" style="width:100%; max-width:380px; padding:8px;" ${(!disponibile || eleggibili.length === 0) ? "disabled" : ""}>
-          ${eleggibili.length > 0 ? opzioniHTML : `<option>Nessuna creatura disponibile</option>`}
-        </select>
-        <button type="button" id="cerbero-inizia-btn" class="events-btn events-btn-main" style="max-width:260px;" ${(!disponibile || eleggibili.length === 0) ? "disabled" : ""}>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:center; max-height:180px; overflow-y:auto; max-width:420px;">
+          ${eleggibili.length > 0 ? griglioHTML : `<p style="color:#a89a7a;">Nessuna creatura disponibile</p>`}
+        </div>
+        <button type="button" id="cerbero-inizia-btn" class="events-btn events-btn-main" style="max-width:260px;" ${(!disponibile || !cartaSceltaId) ? "disabled" : ""}>
           ${disponibile ? "🐕 Scendi negli Inferi" : "Nessun tentativo rimasto oggi"}
         </button>
         <p style="color:#a89a7a; font-size:0.8rem;">Tentativi rimasti oggi: <b style="color:#ffcc66;">${tentativiRimasti} / ${CERBERO_TENTATIVI_MAX}</b></p>
@@ -10419,6 +10428,13 @@ function collegaEventiCerbero() {
   document.getElementById("cerbero-inizia-btn")?.addEventListener("click", iniziaPartitaCerbero);
   document.getElementById("cerbero-combatti-btn")?.addEventListener("click", affrontaTestaCerbero);
   document.getElementById("cerbero-chiudi-btn")?.addEventListener("click", chiudiPartitaCerbero);
+
+  document.querySelectorAll(".cerbero-carta-scelta").forEach(el => {
+    el.addEventListener("click", () => {
+      cerberoCartaSelezionataId = el.dataset.id;
+      renderContenutoFatiche();
+    });
+  });
 }
 
 let fatiche20FiltroRarita = "";
